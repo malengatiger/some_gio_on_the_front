@@ -1,3 +1,5 @@
 # Gio Flutter FrontEnd
 
-This repo contains a Flutter app that fronts the Gio Monitor backend
+Geo is a powerful project monitoring tool designed to revolutionize the way projects are managed. With its real-time visual monitoring capabilities, Geo provides a dynamic and intuitive solution for tracking project progress, identifying bottlenecks, and ensuring timely interventions. By capturing and presenting project data in a visual timeline, Geo offers a comprehensive overview of milestones, tasks, and critical updates, empowering project teams to make informed decisions with speed and accuracy. Whether you're a project manager, team member, or stakeholder, Geo enhances collaboration, transparency, and accountability, enabling organizations to drive better outcomes and achieve project success. With its user-friendly interface and seamless integration with existing project management tools, Geo is the ultimate companion for efficient and effective project management.
+
+This repo contains a suite of Flutter apps (iOS, Android, Web) that fronts the Gio Monitor backend
