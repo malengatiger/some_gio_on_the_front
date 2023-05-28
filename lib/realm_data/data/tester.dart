@@ -1,10 +1,12 @@
+import 'package:geo_monitor/realm_data/data/realm_api.dart';
 import 'package:geo_monitor/realm_data/data/schemas.dart';
 import 'package:realm/realm.dart';
 
+import '../../library/functions.dart';
 import '../../main.dart';
 
 void createCities() async {
-  print('starting ...');
+  pp('starting ...');
 
 
   // realm.deleteAll();
@@ -43,7 +45,7 @@ void createCities() async {
 List<City> getCities() {
   final cities = realm.all<City>();
   for (var value in cities) {
-    print('🥬🥬🥬 ... city: ${value.name} ${value.cityLocation?.coordinates}');
+    pp('🥬🥬🥬 ... city: ${value.name} ${value.cityLocation?.coordinates}');
   }
   return cities.toList();
 }

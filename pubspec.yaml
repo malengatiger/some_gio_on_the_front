@@ -85,6 +85,10 @@ dependencies:
   graphql_flutter: ^5.1.1
   flutter_rating_bar: ^4.0.1
   lat_lng_to_timezone: ^0.2.0
+  riverpod_annotation:
+  riverpod: ^2.3.6
+  flutter_riverpod: ^2.3.6
+
 
 
 
