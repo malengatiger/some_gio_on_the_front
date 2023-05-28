@@ -1,14 +1,17 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geo_monitor/device_location/device_location_bloc.dart';
 import 'package:geo_monitor/library/cache_manager.dart';
 import 'package:geo_monitor/library/data/location_response.dart';
 import 'package:geo_monitor/library/generic_functions.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:map_launcher/map_launcher.dart' as ml;
+import 'package:url_launcher/url_launcher.dart';
+// import 'package:map_launcher/map_launcher.dart' as ml;
 
 import '../../data/user.dart';
 import '../../functions.dart';
@@ -122,11 +125,21 @@ class LocationResponseMapState extends State<LocationResponseMap>
       {required double latitude, required double longitude}) async {
     pp('$mm 🍎 🍎 🍎 start Google Maps Directions .....');
 
-    final availableMaps = await ml.MapLauncher.installedMaps;
-    pp('$mm 🍎 🍎 🍎 availableMaps: $availableMaps'); // [AvailableMap { mapName: Google Maps, mapType: google }, ...]
+    var loc = await locationBloc.getLocation();
+    var origin = '${loc.latitude},${loc.longitude}';
+    // Android
+    var url = 'https://www.google.com/maps/dir/?api=1&origin=$origin&destination=$latitude,$longitude';
+    if (Platform.isIOS) {
+      // iOS
+      url =
+      'http://maps.apple.com/?ll=$latitude,$longitude';
+    }
 
-    var coordinates = ml.Coords(latitude, longitude);
-    await availableMaps.first.showDirections(destination: coordinates);
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   void _animateCamera(

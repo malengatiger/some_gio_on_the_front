@@ -17,7 +17,7 @@ class PositionAdapter extends TypeAdapter<Position> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return Position(
-      coordinates: (fields[1] as List).cast<dynamic>(),
+      coordinates: (fields[1] as List).cast<double>(),
       type: fields[0] as String?,
     );
   }

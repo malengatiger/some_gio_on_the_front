@@ -57,8 +57,8 @@ class Audio extends HiveObject {
       required this.audioId,
       required this.durationInSeconds,
       required this.organizationId,
-        required this.translatedMessage,
-        required this.translatedTitle,
+      required this.translatedMessage,
+      required this.translatedTitle,
       required this.userUrl,
       required this.projectName}); // Audio({required this.url, this.userId, required this.created});
 

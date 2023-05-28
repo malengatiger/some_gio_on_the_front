@@ -80,6 +80,7 @@ class Initializer {
         FirebaseMessaging.instance, cacheManager, locationRequestHandler);
 
     pp('$mx initializeGioServices: ...resources and blocs etc set up ok!  \n\n');
+    testRealmJson();
 
   }
 

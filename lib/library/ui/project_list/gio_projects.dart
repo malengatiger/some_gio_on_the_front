@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:badges/badges.dart' as bd;
 import 'package:flutter/material.dart';
@@ -9,10 +10,11 @@ import 'package:geo_monitor/library/ui/media/time_line/project_media_timeline.da
 import 'package:geo_monitor/library/ui/project_list/project_list_card.dart';
 import 'package:geo_monitor/ui/activity/geo_activity.dart';
 import 'package:geo_monitor/ui/dashboard/project_dashboard_mobile.dart';
-import 'package:map_launcher/map_launcher.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../device_location/device_location_bloc.dart';
 import '../../../l10n/translation_handler.dart';
 import '../../../ui/audio/audio_recorder.dart';
 import '../../api/data_api_og.dart';
@@ -479,11 +481,21 @@ class GioProjectsState extends State<GioProjects>
       {required double latitude, required double longitude}) async {
     pp('$mm 🍎 🍎 🍎 start Google Maps Directions .....');
 
-    final availableMaps = await MapLauncher.installedMaps;
-    pp('$mm 🍎 🍎 🍎 availableMaps: $availableMaps'); // [AvailableMap { mapName: Google Maps, mapType: google }, ...]
+    var loc = await locationBloc.getLocation();
+    var origin = '${loc.latitude},${loc.longitude}';
+    // Android
+    var url = 'https://www.google.com/maps/dir/?api=1&origin=$origin&destination=$latitude,$longitude';
+    if (Platform.isIOS) {
+      // iOS
+      url =
+      'http://maps.apple.com/?ll=$latitude,$longitude';
+    }
 
-    var coordinates = Coords(latitude, longitude);
-    await availableMaps.first.showDirections(destination: coordinates);
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   _onPositionSelected(Position p1) {

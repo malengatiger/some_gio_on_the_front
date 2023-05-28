@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/api/data_api_og.dart';
 import 'package:geo_monitor/library/bloc/fcm_bloc.dart';
 import 'package:geo_monitor/library/cache_manager.dart';
 import 'package:geo_monitor/library/data/audio.dart';
 import 'package:geo_monitor/ui/audio/player_controls.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:siri_wave/siri_wave.dart';
 
 import '../../l10n/translation_handler.dart';
@@ -64,10 +64,10 @@ class GioAudioPlayerState extends State<GioAudioPlayer> {
   bool busy = false;
   //
   /// Set config for all platforms
-  AudioContextConfig audioContextConfig = AudioContextConfig();
+  //AudioContextConfig audioContextConfig = AudioContextConfig();
 
   /// Set config for each platform individually
-  AudioContext audioContext = const AudioContext();
+  //AudioContext audioContext = const AudioContext();
   late StreamSubscription<SettingsModel> settingsSubscriptionFCM;
 
   @override
@@ -116,63 +116,54 @@ class GioAudioPlayerState extends State<GioAudioPlayer> {
 
     try {
       // await AudioPlayer.global..changeLogLevel(AudioLogger.logLevel);
-      AudioLogger.logLevel = AudioLogLevel.info;
-      await AudioPlayer.global.setAudioContext(AudioContextConfig().build());
+      //AudioLogger.logLevel = AudioLogLevel.info;
+      //await AudioPlayer.global.setAudioContext(AudioContextConfig().build());
       // AudioPlayer.global.setGlobalAudioContext(AudioContextConfig().build());
       player = AudioPlayer();
-      player.setAudioContext(const AudioContext(
-        android: AudioContextAndroid(/*...*/),
-        iOS: AudioContextIOS(/*...*/),
-      ));
-      await player.setReleaseMode(ReleaseMode.release);
-      await player.setVolume(1.0);
+      player.playbackEventStream.listen((event) async {
+        switch(event.processingState) {
+          case ProcessingState.loading:
+            pp('$mm ');
+            break;
+          case ProcessingState.idle:
+            pp('$mm ProcessingState.loading');
+            break;
+          case ProcessingState.buffering:
+            pp('$mm ');
+            break;
+          case ProcessingState.ready:
+            pp('$mm ProcessingState.buffering');
+            break;
+          case ProcessingState.completed:
+            pp('$mm ProcessingState.completed');
+            await player.stop();
+            setState(() {
+              isPlaying = false;
+              isPaused = false;
+              isStopped = true;
+              _showWave = false;
+              isLoading = false;
+            });
+            break;
 
-      player.onPlayerComplete.listen((event) async {
-        pp('$mm onPlayerComplete');
-        await player.stop();
-        setState(() {
-          isPlaying = false;
-          isPaused = false;
-          isStopped = true;
-          _showWave = false;
-          isLoading = false;
-        });
-      });
-
-      player.onPlayerStateChanged.listen((PlayerState playerState) {
-        pp('$mm onPlayerStateChanged, playerState: 🔵 $playerState');
-        switch (playerState) {
-          case PlayerState.completed:
-            break;
-          case PlayerState.stopped:
-            // TODO: Handle this case.
-            break;
-          case PlayerState.playing:
-            // TODO: Handle this case.
-            break;
-          case PlayerState.paused:
-            // TODO: Handle this case.
-            break;
+        }
+      }, onError: (Object e, StackTrace st) {
+        if (e is PlayerException) {
+          pp('Error code: ${e.code}');
+          pp('Error message: ${e.message}');
+        } else {
+          pp('An error occurred: $e');
         }
       });
-
-      player.onDurationChanged.listen((Duration dur) {
-        // pp('$mm onDurationChanged: 🔵 $dur');
+      player.durationStream.listen((event) {
         if (mounted) {
           setState(() {
-            duration = dur;
+            duration = event;
           });
         }
       });
 
-      player.onPositionChanged.listen((Duration dur) {
-        // pp('$mm onPositionChanged: 🔵 $dur');
-        if (mounted) {
-          setState(() {
-            duration = dur;
-          });
-        }
-      });
+
       pp('$mm AudioPlayer initialized, will start playing audio.');
 
       setState(() {
@@ -190,7 +181,10 @@ class GioAudioPlayerState extends State<GioAudioPlayer> {
     pp('$mm ... audio durationInSeconds: ${widget.audio.durationInSeconds} seconds');
 
     try {
-      await player.play(UrlSource(widget.audio.url!));
+
+      //await player.play(UrlSource(widget.audio.url!));
+      await player.setAudioSource(AudioSource.uri(Uri.parse(widget.audio.url!)));
+      await player.play();
       setState(() {
         isPlaying = true;
         isPaused = false;
@@ -215,7 +209,7 @@ class GioAudioPlayerState extends State<GioAudioPlayer> {
         isLoading = false;
       });
     } catch (e) {
-      pp('$mm player ERROR: $e');
+      pp('$mm player pause ERROR: $e');
     }
   }
 
@@ -239,31 +233,10 @@ class GioAudioPlayerState extends State<GioAudioPlayer> {
         }
       }
     } catch (e) {
-      pp('$mm player ERROR: $e');
+      pp('$mm player stop ERROR: $e');
     }
   }
 
-  void _close() {
-    widget.onCloseRequested();
-  }
-
-  void _resume() async {
-    pp('$mm ... stop playing; like NOW!!!');
-    try {
-      await player.resume();
-    } catch (e) {
-      pp('$mm player ERROR: $e');
-    }
-  }
-
-  void _seek(int seekTo) async {
-    pp('$mm ... stop playing; like NOW!!!');
-    try {
-      await player.seek(Duration(seconds: seekTo));
-    } catch (e) {
-      pp('$mm player ERROR: $e');
-    }
-  }
 
   void _onFavorite() async {
     pp('$mm on favorite tapped - do da bizness! navigate to RatingAdder');

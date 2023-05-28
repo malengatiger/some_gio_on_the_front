@@ -1,13 +1,46 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:realm/realm.dart';
 
 part 'schemas.g.dart';
 
 @RealmModel()
+@JsonSerializable(explicitToJson: true)
 class _City {
+  @PrimaryKey()
   late ObjectId? id;
-  late String? cityId, countryId, province, country, created;
-  late String? name;
+  late String? cityId;
+  late String? countryId, province, country, created, name;
   late _Position? cityLocation;
+}
+
+extension CityJ on City {
+  static City fromJson(Map<String, dynamic> json) {
+    var mCity = City(json['id'],
+        name: json['name'],
+        cityId: json['cityId'],
+        countryId: json['countryId'],
+        country: json['country'],
+        province: json['province'],
+        cityLocation: json['cityLocation'] == null
+            ? null
+            : PositionJ.fromJson(json['cityLocation']!),
+        created: json['created']);
+    return mCity;
+  }
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> map = {};
+    map['cityId'] = cityId;
+    map['countryId'] = countryId;
+    map['country'] = country;
+    map['province'] = province;
+    map['name'] = name;
+    map['created'] = created;
+    if (cityLocation != null) {
+      map['cityLocation'] = cityLocation!.toJson();
+    }
+    return map;
+  }
 }
 
 @RealmModel(ObjectType.embeddedObject)
@@ -16,29 +49,28 @@ class _Position {
   late List<double> coordinates = [];
 }
 
-@RealmModel()
-class _AppError {
-  late ObjectId? id;
-  late String? errorMessage;
-  late String? manufacturer;
-  late String? model;
-  late String? created;
-  late String? brand;
-  late String? userId;
-  late String? organizationId;
-  late String? userName;
-  late _Position? errorPosition;
-  late String? iosName;
-  late String? versionCodeName;
-  late String? baseOS;
-  late String? deviceType;
-  late String? iosSystemName;
-  late String? userUrl;
-  late String? uploadedDate;
+///extension to provide toJson fromJson for Position
+extension PositionJ on Position {
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> map = {};
+    map['type'] = type;
+    map['coordinates'] = coordinates;
+    return map;
+  }
+
+  static Position fromJson(Map<String, dynamic> json) {
+    var position = Position(
+      type: json['type'],
+      coordinates: json['coordinates'],
+    );
+    return position;
+  }
 }
 
 @RealmModel()
 class _Audio {
+  @PrimaryKey()
+  late ObjectId id;
   late String? audioId;
   late int? durationInSeconds = 0;
   late String? created;
@@ -58,9 +90,66 @@ class _Audio {
   late String? caption;
 }
 
+extension AudioJ on Audio {
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> map = {
+      'url': url,
+      'userUrl': userUrl,
+      'projectPositionId': projectPositionId,
+      'projectPolygonId': projectPolygonId,
+      'caption': caption,
+      'created': created,
+      'translatedMessage': translatedMessage,
+      'translatedTitle': translatedTitle,
+      'durationInSeconds': durationInSeconds,
+      'userId': userId,
+      'audioId': audioId,
+      'organizationId': organizationId,
+      'userName': userName,
+      'distanceFromProjectPosition': distanceFromProjectPosition,
+      'projectId': projectId,
+      'projectName': projectName,
+      'projectPosition':
+          projectPosition == null ? null : projectPosition!.toJson()
+    };
+    return map;
+  }
+
+  static Audio fromJson(Map<String, dynamic> data) {
+    Position? pos;
+    if (data['projectPosition']) {
+      pos = Position(
+          type: 'Point', coordinates: data['projectPosition']['coordinates']);
+    }
+    var audio = Audio(data['id'],
+        url: data['url'],
+        userUrl: data['userUrl'],
+        projectPositionId: data['projectPositionId'],
+        projectPolygonId: data['projectPolygonId'],
+        translatedMessage: data['translatedMessage'],
+        translatedTitle: data['translatedTitle'],
+        caption: data['caption'],
+        durationInSeconds: data['durationInSeconds'],
+        created: data['created'],
+        userId: data['userId'],
+        organizationId: data['organizationId'],
+        audioId: data['audioId'],
+        userName: data['userName'],
+        distanceFromProjectPosition: data['distanceFromProjectPosition'],
+        projectId: data['projectId'],
+        projectName: data['projectName'],
+        projectPosition: pos);
+
+    return audio;
+  }
+}
+
 @RealmModel()
 class _Photo {
-  late String photoId;
+  @PrimaryKey()
+  late ObjectId id;
+
+  late String? photoId;
   late String? created;
   late String? url;
   late String? thumbnailUrl;
@@ -80,9 +169,65 @@ class _Photo {
   late String? caption;
 }
 
+extension PhotoJ on Photo {
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> map = {
+      'url': url,
+      'userUrl': userUrl,
+      'thumbnailUrl': thumbnailUrl,
+      'projectPositionId': projectPositionId,
+      'projectPolygonId': projectPolygonId,
+      'caption': caption,
+      'created': created,
+      'translatedMessage': translatedMessage,
+      'translatedTitle': translatedTitle,
+      'userId': userId,
+      'photoId': photoId,
+      'organizationId': organizationId,
+      'userName': userName,
+      'distanceFromProjectPosition': distanceFromProjectPosition,
+      'projectId': projectId,
+      'projectName': projectName,
+      'projectPosition':
+      projectPosition == null ? null : projectPosition!.toJson()
+    };
+    return map;
+  }
+
+  static Photo fromJson(Map<String, dynamic> data) {
+    Position? pos;
+    if (data['projectPosition']) {
+      pos = Position(
+          type: 'Point', coordinates: data['projectPosition']['coordinates']);
+    }
+    var photo = Photo(data['id'],
+        url: data['url'],
+        userUrl: data['userUrl'],
+        projectPositionId: data['projectPositionId'],
+        projectPolygonId: data['projectPolygonId'],
+        translatedMessage: data['translatedMessage'],
+        translatedTitle: data['translatedTitle'],
+        caption: data['caption'],
+        created: data['created'],
+        userId: data['userId'],
+        organizationId: data['organizationId'],
+        photoId: data['photoId'],
+        userName: data['userName'],
+        distanceFromProjectPosition: data['distanceFromProjectPosition'],
+        projectId: data['projectId'],
+        projectName: data['projectName'],
+        projectPosition: pos);
+
+    return photo;
+  }
+}
+
+
 @RealmModel()
 class _Video {
-  late String videoId;
+  @PrimaryKey()
+  late ObjectId objectId;
+  late String? videoId;
   late String? created;
   late String? url;
   late String? thumbnailUrl;
@@ -102,9 +247,64 @@ class _Video {
   late String? caption;
   late int? durationInSeconds = 0;
 }
+extension VideoJ on Video {
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> map = {
+      'url': url,
+      'userUrl': userUrl,
+      'projectPositionId': projectPositionId,
+      'projectPolygonId': projectPolygonId,
+      'caption': caption,
+      'created': created,
+      'translatedMessage': translatedMessage,
+      'translatedTitle': translatedTitle,
+      'durationInSeconds': durationInSeconds,
+      'userId': userId,
+      'videoId': videoId,
+      'organizationId': organizationId,
+      'userName': userName,
+      'distanceFromProjectPosition': distanceFromProjectPosition,
+      'projectId': projectId,
+      'projectName': projectName,
+      'projectPosition':
+      projectPosition == null ? null : projectPosition!.toJson()
+    };
+    return map;
+  }
+
+  static Video fromJson(Map<String, dynamic> data) {
+    Position? pos;
+    if (data['projectPosition']) {
+      pos = Position(
+          type: 'Point', coordinates: data['projectPosition']['coordinates']);
+    }
+    var video = Video(data['id'],
+        url: data['url'],
+        userUrl: data['userUrl'],
+        projectPositionId: data['projectPositionId'],
+        projectPolygonId: data['projectPolygonId'],
+        translatedMessage: data['translatedMessage'],
+        translatedTitle: data['translatedTitle'],
+        caption: data['caption'],
+        durationInSeconds: data['durationInSeconds'],
+        created: data['created'],
+        userId: data['userId'],
+        organizationId: data['organizationId'],
+        videoId: data['videoId'],
+        userName: data['userName'],
+        distanceFromProjectPosition: data['distanceFromProjectPosition'],
+        projectId: data['projectId'],
+        projectName: data['projectName'],
+        projectPosition: pos);
+
+    return video;
+  }
+}
+
 
 @RealmModel()
 class _Organization {
+  @PrimaryKey()
   late String? organizationId;
   late String? name;
   late String? admin;
@@ -115,12 +315,49 @@ class _Organization {
   late String? translatedMessage;
   late String? translatedTitle;
 }
+extension OrganizationJ on Organization {
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> map = {
+      'name': name,
+      'admin': admin,
+      'countryId': countryId,
+      'countryName': countryName,
+      'email': email,
+      'created': created,
+      'translatedMessage': translatedMessage,
+      'translatedTitle': translatedTitle,
+      'organizationId': organizationId,
+    };
+    return map;
+  }
+
+  static Organization fromJson(Map<String, dynamic> data) {
+    Position? pos;
+    if (data['projectPosition']) {
+      pos = Position(
+          type: 'Point', coordinates: data['projectPosition']['coordinates']);
+    }
+    var org = Organization(data['id'],
+        name: data['name'],
+        admin: data['admin'],
+        countryId: data['countryId'],
+        countryName: data['countryName'],
+        translatedMessage: data['translatedMessage'],
+        translatedTitle: data['translatedTitle'],
+        email: data['email'],
+        created: data['created']);
+
+    return org;
+  }
+}
 
 @RealmModel()
 class _Project {
+  @PrimaryKey()
   late String? projectId;
   late String? name;
   late List<_City> nearestCities = [];
+  @Indexed()
   late String? organizationId;
   late String? organizationName;
   late String? description;
@@ -131,10 +368,13 @@ class _Project {
 @RealmModel()
 class _ProjectPosition {
   late String? projectName;
+  @Indexed()
   late String? projectId;
   late String? caption;
   late String? created;
+  @PrimaryKey()
   late String? projectPositionId;
+  @Indexed()
   late String? organizationId;
   late _Position? position;
   late _PlaceMark? placemark;
@@ -168,7 +408,9 @@ class _ProjectPolygon {
   late String? projectId;
   late String? caption;
   late String? created;
+  @PrimaryKey()
   late String? projectPolygonId;
+  @Indexed()
   late String? organizationId;
   late String? organizationName;
   late List<_Position> positions = [];
@@ -189,8 +431,10 @@ class _Rating {
   late String? photoId;
   late String? userId;
   late String? userName;
+  @Indexed()
   late String? organizationId;
   late int? ratingCode;
+  @Indexed()
   late String? projectId;
   late String? projectName;
   late String? videoId;
@@ -219,12 +463,14 @@ class _SettingsModel {
 
 @RealmModel()
 class _DataCounts {
+  @Indexed()
   late String? projectId;
   late int? projects;
   late int? users;
   late String? created;
   late String? photos;
   late String? userId;
+  @Indexed()
   late String? organizationId;
   late int? videos;
   late int? audios;
@@ -237,13 +483,16 @@ class _DataCounts {
 @RealmModel()
 class _GeofenceEvent {
   late String? status;
+  @PrimaryKey()
   late String? geofenceEventId;
   late String? date;
   late String? projectPositionId;
   late String? projectName;
   late _User? user;
+  @Indexed()
   late String? organizationId;
   late _Position? position;
+  @Indexed()
   late String? projectId;
   late String? locale = "en";
   late String? translatedMessage;
@@ -253,6 +502,7 @@ class _GeofenceEvent {
 @RealmModel()
 class _User {
   late String? name;
+  @PrimaryKey()
   late String? userId;
   late String? email;
   late String? gender;
@@ -262,6 +512,7 @@ class _User {
   late String? organizationName;
   late String? fcmRegistration;
   late String? countryId;
+  @Indexed()
   late String? organizationId;
   late _Position? position;
   late String? password;
@@ -276,8 +527,11 @@ class _User {
 
 @RealmModel()
 class _GioSubscription {
-  late String? subscriptionId, date;
+  @PrimaryKey()
+  late String? subscriptionId;
+  late String? date;
   late _User? user;
+  @Indexed()
   late String? organizationId;
   late String? organizationName, updated;
   late int? intDate, intUpdated, subscriptionType, active;
@@ -285,7 +539,8 @@ class _GioSubscription {
 
 @RealmModel()
 class _Pricing {
-  late String? countryId, date;
+  late String? countryId;
+  late String date;
   late String? countryName;
   late double? monthlyPrice, annualPrice;
 }
@@ -296,7 +551,9 @@ class _OrgMessage {
   late String? userId;
   late String? message;
   late String? created;
+  @Indexed()
   late String? organizationId;
+  @Indexed()
   late String? projectId;
   late String? projectName;
   late String? adminId;
@@ -308,6 +565,7 @@ class _OrgMessage {
 
 @RealmModel()
 class _LocationRequest {
+  @Indexed()
   late String? organizationId;
   late String? requesterId;
   late String? created;
@@ -323,6 +581,7 @@ class _LocationRequest {
 class _LocationResponse {
   late String? date;
   late String? userId;
+  @Indexed()
   late String? organizationId;
   late String? userName;
   late String? locationResponseId;
@@ -336,14 +595,17 @@ class _LocationResponse {
 
 @RealmModel()
 class _ActivityModel {
+  @PrimaryKey()
   late String? activityModelId;
   late String? activityType;
   late String? date;
   late String? userId;
   late String? userName;
+  @Indexed()
   late String? projectId;
   late String? projectName;
   late String? organizationName;
+  @Indexed()
   late String? organizationId;
   late _Photo? photo;
   late _Video? video;
@@ -365,6 +627,7 @@ class _ActivityModel {
 
 @RealmModel()
 class _Country {
+  @Indexed()
   late String? name;
   late String? countryId;
   late String? countryCode;
@@ -374,10 +637,13 @@ class _Country {
 
 @RealmModel()
 class _FieldMonitorSchedule {
+  @PrimaryKey()
   late String? fieldMonitorScheduleId;
   late String? fieldMonitorId;
   late String? adminId;
+  @Indexed()
   late String? organizationId;
+  @Indexed()
   late String? projectId;
   late String? projectName;
   late String? date;
@@ -386,6 +652,81 @@ class _FieldMonitorSchedule {
   late int? perWeek;
   late int? perMonth;
   late String? userId;
+}
+
+@RealmModel()
+class _AppError {
+  late ObjectId? id;
+  late String? errorMessage;
+  late String? manufacturer;
+  late String? model;
+  late String? created;
+  late String? brand;
+  late String? userId;
+  late String? organizationId;
+  late String? userName;
+  late _Position? errorPosition;
+  late String? iosName;
+  late String? versionCodeName;
+  late String? baseOS;
+  late String? deviceType;
+  late String? iosSystemName;
+  late String? userUrl;
+  late String? uploadedDate;
+}
+
+extension AppErrorJ on AppError {
+  static AppError fromJson(Map<String, dynamic> data) {
+    Position? pos;
+    if (data['errorPosition'] != null) {
+      pos = Position(
+        type: data['errorPosition']['type'],
+        coordinates: data['errorPosition']['coordinates'],
+      );
+    }
+
+    var err = AppError(
+      userUrl: data['userUrl'],
+      errorMessage: data['errorMessage'],
+      manufacturer: data['manufacturer'],
+      model: data['model'],
+      baseOS: data['baseOS'],
+      deviceType: data['deviceType'],
+      created: data['created'],
+      organizationId: data['organizationId'],
+      iosSystemName: data['iosSystemName'],
+      uploadedDate: data['uploadedDate'],
+      userId: data['userId'],
+      brand: data['brand'],
+      userName: data['userName'],
+      iosName: data['iosName'],
+      versionCodeName: data['versionCodeName'],
+      errorPosition: pos,
+    );
+    return err;
+  }
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> map = {
+      'errorMessage': errorMessage,
+      'userUrl': userUrl,
+      'iosSystemName': iosSystemName,
+      'model': model,
+      'created': created,
+      'deviceType': deviceType,
+      'baseOS': baseOS,
+      'userId': userId,
+      'organizationId': organizationId,
+      'brand': brand,
+      'uploadedDate': uploadedDate,
+      'userName': userName,
+      'iosName': iosName,
+      'versionCodeName': versionCodeName,
+      'manufacturer': manufacturer,
+      'errorPosition': errorPosition == null ? null : errorPosition!.toJson()
+    };
+    return map;
+  }
 }
 
 enum ActivityType {

@@ -9,7 +9,7 @@ class Position extends HiveObject {
   @HiveField(0)
   String? type = 'Point';
   @HiveField(1)
-  List coordinates = [];
+  List<double> coordinates = [];
   Position({
     required this.coordinates,
     required this.type,

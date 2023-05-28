@@ -11,11 +11,11 @@ void createCities() async {
 
   // realm.deleteAll();
 
-  var city1 = City(id: ObjectId(),cityId: 'city001', name: 'Harties', cityLocation: Position(coordinates: [0.0,0.1], type: 'Point'));
-  var city2 = City(id: ObjectId(),cityId: 'city002', name: 'Brits', cityLocation: Position(coordinates: [0.0,0.1], type: 'Point'));
-  var city3 = City(id: ObjectId(),cityId: 'city003', name: 'Fourways', cityLocation: Position(coordinates: [0.0,0.1], type: 'Point'));
-  var city4 = City(id: ObjectId(),cityId: 'city004', name: 'Sandton', cityLocation: Position(coordinates: [0.0,0.1], type: 'Point'));
-  var city5 = City(id: ObjectId(),cityId: 'city005', name: 'Harties', cityLocation: Position(coordinates: [0.0,0.1], type: 'Point'));
+  var city1 = City(ObjectId(),cityId: 'city001', name: 'Harties', cityLocation: Position(coordinates: [0.0,0.1], type: 'Point'));
+  var city2 = City(ObjectId(),cityId: 'city002', name: 'Brits', cityLocation: Position(coordinates: [0.0,0.1], type: 'Point'));
+  var city3 = City(ObjectId(),cityId: 'city003', name: 'Fourways', cityLocation: Position(coordinates: [0.0,0.1], type: 'Point'));
+  var city4 = City(ObjectId(),cityId: 'city004', name: 'Sandton', cityLocation: Position(coordinates: [0.0,0.1], type: 'Point'));
+  var city5 = City(ObjectId(),cityId: 'city005', name: 'Harties', cityLocation: Position(coordinates: [0.0,0.1], type: 'Point'));
 
   var appError = AppError(id: ObjectId(), errorMessage: 'error message', manufacturer: 'Samsung', model: 'S20');
 

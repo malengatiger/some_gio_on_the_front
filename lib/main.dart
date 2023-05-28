@@ -100,14 +100,16 @@ import 'package:geo_monitor/library/bloc/isolate_handler.dart';
 import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/bloc/project_bloc.dart';
 import 'package:geo_monitor/library/functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart';
 import 'package:geo_monitor/splash/splash_page.dart';
 import 'package:geo_monitor/stitch/stitch_service.dart';
 import 'package:geo_monitor/ui/dashboard/dashboard_main.dart';
 import 'package:geo_monitor/ui/intro/intro_main.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:realm/realm.dart';
 import 'package:universal_platform/universal_platform.dart';
 
-
+import 'firebase_options.dart';
 import 'library/api/data_api_og.dart';
 import 'library/api/prefs_og.dart';
 import 'library/bloc/cloud_storage_bloc.dart';
@@ -125,10 +127,15 @@ fb.User? fbAuthedUser;
 final mx =
     '${E.heartGreen}${E.heartGreen}${E.heartGreen}${E.heartGreen} main: ';
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
-GlobalKey<ScaffoldMessengerState>();
+    GlobalKey<ScaffoldMessengerState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  firebaseApp = await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform);
+  pp('$mx initializeGioServices: '
+      ' Firebase App has been initialized: ${firebaseApp.name}, checking for authed current user');
+  fbAuthedUser = fb.FirebaseAuth.instance.currentUser;
 
   // runApp(ProviderScope(
   //     child: DevicePreview(
@@ -137,8 +144,39 @@ void main() async {
   //     return const GeoApp();
   //   },
   // )));
-  runApp(const ProviderScope(
-      child: GeoApp()));
+  runApp(const ProviderScope(child: GeoApp()));
+}
+
+void testRealmJson() {
+  AppError ae = AppError(id: ObjectId(), errorMessage: 'some error',
+      manufacturer: 'Apple', brand: 'iPhone 11 Pro', created: DateTime.now().toUtc().toIso8601String(),
+      userName: 'Aubrey',
+      errorPosition: Position(coordinates: [76.85876, -73.79865]));
+
+  City c = City(ObjectId(),
+      cityId: 'ii1324',
+      name: "Pecanwood",
+      created: DateTime.now().toUtc().toIso8601String(),
+      country: 'mZantsi',
+      countryId: 'iutoyto98y',
+      province: 'Gauteng',
+      cityLocation: Position(coordinates: [76.85876, -73.79865]));
+
+  var map = c.toJson();
+  var map2 = ae.toJson();
+  pp('\n\n ........ 🔵🔵🔵🔵🔵🔵 TESTING REALM  🔵🔵🔵🔵🔵🔵');
+  pp('🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵 city json map:  🌸🌸 $map');
+  pp('🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵 appError json map:  🍎🍎🍎 $map2');
+
+  pp('🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵 city json map:  🌸🌸 ${map['cityLocation']}');
+
+  City d = CityJ.fromJson(map);
+  AppError dx = AppErrorJ.fromJson(map2);
+
+  pp('🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵 city map produced json:  🌸🌸 ${d.toJson()}');
+  pp('🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵 appError map produced json:  🍎🍎🍎 ${dx.toJson()}');
+  pp('\n\n DONE WITH REALM !!');
+
 }
 
 class GeoApp extends ConsumerWidget {
@@ -293,7 +331,10 @@ class LandingPageState extends State<LandingPage> {
   Widget getWidget() {
     if (busy) {
       pp('$mx getWidget: BUSY! returning empty sizeBox because initialization is still going on ...');
-      return const Center(child: SizedBox(height: 24, width: 24,
+      return const Center(
+          child: SizedBox(
+        height: 24,
+        width: 24,
         child: CircularProgressIndicator(),
       ));
     }
@@ -335,21 +376,21 @@ class LandingPageState extends State<LandingPage> {
   @override
   Widget build(BuildContext context) {
     pp('$mx build method starting ....');
-    return SafeArea(child: Scaffold(
+    return SafeArea(
+        child: Scaffold(
       body: busy
           ? Center(
-        child: SizedBox(
-          width: 200,
-          height: 200,
-          child: Image.asset(
-            'assets/gio.png',
-            height: 120,
-            width: 100,
-          ),
-        ),
-      )
+              child: SizedBox(
+                width: 200,
+                height: 200,
+                child: Image.asset(
+                  'assets/gio.png',
+                  height: 120,
+                  width: 100,
+                ),
+              ),
+            )
           : getWidget(),
     ));
   }
 }
-

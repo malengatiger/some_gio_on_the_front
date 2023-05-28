@@ -222,7 +222,7 @@ class ProjectLocationHandlerState extends State<ProjectLocationHandler>
       var org = await prefsOGx.getUser();
       final sett = await cacheManager.getSettings();
       final projectLocationAdded =
-          await translator.translate('projectLocationAdded', sett!.locale!);
+          await translator.translate('projectLocationAdded', sett.locale!);
       final messageFromGeo =
           await translator.translate('messageFromGeo', sett!.locale!);
 
@@ -237,7 +237,7 @@ class ProjectLocationHandlerState extends State<ProjectLocationHandler>
           organizationId: org!.organizationId,
           created: DateTime.now().toUtc().toIso8601String(),
           position:
-              mon.Position(type: 'Point', coordinates: [longitude, latitude]),
+              mon.Position(type: 'Point', coordinates: [longitude!, latitude!]),
           projectId: widget.project.projectId,
           nearestCities: cities,
           projectPositionId: const Uuid().v4());

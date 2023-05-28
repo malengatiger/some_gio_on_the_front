@@ -7,8 +7,8 @@ part of 'schemas.dart';
 // **************************************************************************
 
 class City extends _City with RealmEntity, RealmObjectBase, RealmObject {
-  City({
-    ObjectId? id,
+  City(
+    ObjectId? id, {
     String? cityId,
     String? countryId,
     String? province,
@@ -87,7 +87,8 @@ class City extends _City with RealmEntity, RealmObjectBase, RealmObject {
   static SchemaObject _initSchema() {
     RealmObjectBase.registerFactory(City._);
     return const SchemaObject(ObjectType.realmObject, City, 'City', [
-      SchemaProperty('id', RealmPropertyType.objectid, optional: true),
+      SchemaProperty('id', RealmPropertyType.objectid,
+          optional: true, primaryKey: true),
       SchemaProperty('cityId', RealmPropertyType.string, optional: true),
       SchemaProperty('countryId', RealmPropertyType.string, optional: true),
       SchemaProperty('province', RealmPropertyType.string, optional: true),
@@ -151,193 +152,11 @@ class Position extends _Position
   }
 }
 
-class AppError extends _AppError
-    with RealmEntity, RealmObjectBase, RealmObject {
-  AppError({
-    ObjectId? id,
-    String? errorMessage,
-    String? manufacturer,
-    String? model,
-    String? created,
-    String? brand,
-    String? userId,
-    String? organizationId,
-    String? userName,
-    Position? errorPosition,
-    String? iosName,
-    String? versionCodeName,
-    String? baseOS,
-    String? deviceType,
-    String? iosSystemName,
-    String? userUrl,
-    String? uploadedDate,
-  }) {
-    RealmObjectBase.set(this, 'id', id);
-    RealmObjectBase.set(this, 'errorMessage', errorMessage);
-    RealmObjectBase.set(this, 'manufacturer', manufacturer);
-    RealmObjectBase.set(this, 'model', model);
-    RealmObjectBase.set(this, 'created', created);
-    RealmObjectBase.set(this, 'brand', brand);
-    RealmObjectBase.set(this, 'userId', userId);
-    RealmObjectBase.set(this, 'organizationId', organizationId);
-    RealmObjectBase.set(this, 'userName', userName);
-    RealmObjectBase.set(this, 'errorPosition', errorPosition);
-    RealmObjectBase.set(this, 'iosName', iosName);
-    RealmObjectBase.set(this, 'versionCodeName', versionCodeName);
-    RealmObjectBase.set(this, 'baseOS', baseOS);
-    RealmObjectBase.set(this, 'deviceType', deviceType);
-    RealmObjectBase.set(this, 'iosSystemName', iosSystemName);
-    RealmObjectBase.set(this, 'userUrl', userUrl);
-    RealmObjectBase.set(this, 'uploadedDate', uploadedDate);
-  }
-
-  AppError._();
-
-  @override
-  ObjectId? get id => RealmObjectBase.get<ObjectId>(this, 'id') as ObjectId?;
-  @override
-  set id(ObjectId? value) => RealmObjectBase.set(this, 'id', value);
-
-  @override
-  String? get errorMessage =>
-      RealmObjectBase.get<String>(this, 'errorMessage') as String?;
-  @override
-  set errorMessage(String? value) =>
-      RealmObjectBase.set(this, 'errorMessage', value);
-
-  @override
-  String? get manufacturer =>
-      RealmObjectBase.get<String>(this, 'manufacturer') as String?;
-  @override
-  set manufacturer(String? value) =>
-      RealmObjectBase.set(this, 'manufacturer', value);
-
-  @override
-  String? get model => RealmObjectBase.get<String>(this, 'model') as String?;
-  @override
-  set model(String? value) => RealmObjectBase.set(this, 'model', value);
-
-  @override
-  String? get created =>
-      RealmObjectBase.get<String>(this, 'created') as String?;
-  @override
-  set created(String? value) => RealmObjectBase.set(this, 'created', value);
-
-  @override
-  String? get brand => RealmObjectBase.get<String>(this, 'brand') as String?;
-  @override
-  set brand(String? value) => RealmObjectBase.set(this, 'brand', value);
-
-  @override
-  String? get userId => RealmObjectBase.get<String>(this, 'userId') as String?;
-  @override
-  set userId(String? value) => RealmObjectBase.set(this, 'userId', value);
-
-  @override
-  String? get organizationId =>
-      RealmObjectBase.get<String>(this, 'organizationId') as String?;
-  @override
-  set organizationId(String? value) =>
-      RealmObjectBase.set(this, 'organizationId', value);
-
-  @override
-  String? get userName =>
-      RealmObjectBase.get<String>(this, 'userName') as String?;
-  @override
-  set userName(String? value) => RealmObjectBase.set(this, 'userName', value);
-
-  @override
-  Position? get errorPosition =>
-      RealmObjectBase.get<Position>(this, 'errorPosition') as Position?;
-  @override
-  set errorPosition(covariant Position? value) =>
-      RealmObjectBase.set(this, 'errorPosition', value);
-
-  @override
-  String? get iosName =>
-      RealmObjectBase.get<String>(this, 'iosName') as String?;
-  @override
-  set iosName(String? value) => RealmObjectBase.set(this, 'iosName', value);
-
-  @override
-  String? get versionCodeName =>
-      RealmObjectBase.get<String>(this, 'versionCodeName') as String?;
-  @override
-  set versionCodeName(String? value) =>
-      RealmObjectBase.set(this, 'versionCodeName', value);
-
-  @override
-  String? get baseOS => RealmObjectBase.get<String>(this, 'baseOS') as String?;
-  @override
-  set baseOS(String? value) => RealmObjectBase.set(this, 'baseOS', value);
-
-  @override
-  String? get deviceType =>
-      RealmObjectBase.get<String>(this, 'deviceType') as String?;
-  @override
-  set deviceType(String? value) =>
-      RealmObjectBase.set(this, 'deviceType', value);
-
-  @override
-  String? get iosSystemName =>
-      RealmObjectBase.get<String>(this, 'iosSystemName') as String?;
-  @override
-  set iosSystemName(String? value) =>
-      RealmObjectBase.set(this, 'iosSystemName', value);
-
-  @override
-  String? get userUrl =>
-      RealmObjectBase.get<String>(this, 'userUrl') as String?;
-  @override
-  set userUrl(String? value) => RealmObjectBase.set(this, 'userUrl', value);
-
-  @override
-  String? get uploadedDate =>
-      RealmObjectBase.get<String>(this, 'uploadedDate') as String?;
-  @override
-  set uploadedDate(String? value) =>
-      RealmObjectBase.set(this, 'uploadedDate', value);
-
-  @override
-  Stream<RealmObjectChanges<AppError>> get changes =>
-      RealmObjectBase.getChanges<AppError>(this);
-
-  @override
-  AppError freeze() => RealmObjectBase.freezeObject<AppError>(this);
-
-  static SchemaObject get schema => _schema ??= _initSchema();
-  static SchemaObject? _schema;
-  static SchemaObject _initSchema() {
-    RealmObjectBase.registerFactory(AppError._);
-    return const SchemaObject(ObjectType.realmObject, AppError, 'AppError', [
-      SchemaProperty('id', RealmPropertyType.objectid, optional: true),
-      SchemaProperty('errorMessage', RealmPropertyType.string, optional: true),
-      SchemaProperty('manufacturer', RealmPropertyType.string, optional: true),
-      SchemaProperty('model', RealmPropertyType.string, optional: true),
-      SchemaProperty('created', RealmPropertyType.string, optional: true),
-      SchemaProperty('brand', RealmPropertyType.string, optional: true),
-      SchemaProperty('userId', RealmPropertyType.string, optional: true),
-      SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
-      SchemaProperty('userName', RealmPropertyType.string, optional: true),
-      SchemaProperty('errorPosition', RealmPropertyType.object,
-          optional: true, linkTarget: 'Position'),
-      SchemaProperty('iosName', RealmPropertyType.string, optional: true),
-      SchemaProperty('versionCodeName', RealmPropertyType.string,
-          optional: true),
-      SchemaProperty('baseOS', RealmPropertyType.string, optional: true),
-      SchemaProperty('deviceType', RealmPropertyType.string, optional: true),
-      SchemaProperty('iosSystemName', RealmPropertyType.string, optional: true),
-      SchemaProperty('userUrl', RealmPropertyType.string, optional: true),
-      SchemaProperty('uploadedDate', RealmPropertyType.string, optional: true),
-    ]);
-  }
-}
-
 class Audio extends _Audio with RealmEntity, RealmObjectBase, RealmObject {
   static var _defaultsSet = false;
 
-  Audio({
+  Audio(
+    ObjectId id, {
     String? audioId,
     int? durationInSeconds = 0,
     String? created,
@@ -361,6 +180,7 @@ class Audio extends _Audio with RealmEntity, RealmObjectBase, RealmObject {
         'durationInSeconds': 0,
       });
     }
+    RealmObjectBase.set(this, 'id', id);
     RealmObjectBase.set(this, 'audioId', audioId);
     RealmObjectBase.set(this, 'durationInSeconds', durationInSeconds);
     RealmObjectBase.set(this, 'created', created);
@@ -382,6 +202,11 @@ class Audio extends _Audio with RealmEntity, RealmObjectBase, RealmObject {
   }
 
   Audio._();
+
+  @override
+  ObjectId get id => RealmObjectBase.get<ObjectId>(this, 'id') as ObjectId;
+  @override
+  set id(ObjectId value) => RealmObjectBase.set(this, 'id', value);
 
   @override
   String? get audioId =>
@@ -505,6 +330,7 @@ class Audio extends _Audio with RealmEntity, RealmObjectBase, RealmObject {
   static SchemaObject _initSchema() {
     RealmObjectBase.registerFactory(Audio._);
     return const SchemaObject(ObjectType.realmObject, Audio, 'Audio', [
+      SchemaProperty('id', RealmPropertyType.objectid, primaryKey: true),
       SchemaProperty('audioId', RealmPropertyType.string, optional: true),
       SchemaProperty('durationInSeconds', RealmPropertyType.int,
           optional: true),
@@ -536,7 +362,8 @@ class Audio extends _Audio with RealmEntity, RealmObjectBase, RealmObject {
 
 class Photo extends _Photo with RealmEntity, RealmObjectBase, RealmObject {
   Photo(
-    String photoId, {
+    ObjectId id, {
+    String? photoId,
     String? created,
     String? url,
     String? thumbnailUrl,
@@ -555,6 +382,7 @@ class Photo extends _Photo with RealmEntity, RealmObjectBase, RealmObject {
     String? translatedTitle,
     String? caption,
   }) {
+    RealmObjectBase.set(this, 'id', id);
     RealmObjectBase.set(this, 'photoId', photoId);
     RealmObjectBase.set(this, 'created', created);
     RealmObjectBase.set(this, 'url', url);
@@ -579,9 +407,15 @@ class Photo extends _Photo with RealmEntity, RealmObjectBase, RealmObject {
   Photo._();
 
   @override
-  String get photoId => RealmObjectBase.get<String>(this, 'photoId') as String;
+  ObjectId get id => RealmObjectBase.get<ObjectId>(this, 'id') as ObjectId;
   @override
-  set photoId(String value) => RealmObjectBase.set(this, 'photoId', value);
+  set id(ObjectId value) => RealmObjectBase.set(this, 'id', value);
+
+  @override
+  String? get photoId =>
+      RealmObjectBase.get<String>(this, 'photoId') as String?;
+  @override
+  set photoId(String? value) => RealmObjectBase.set(this, 'photoId', value);
 
   @override
   String? get created =>
@@ -704,7 +538,8 @@ class Photo extends _Photo with RealmEntity, RealmObjectBase, RealmObject {
   static SchemaObject _initSchema() {
     RealmObjectBase.registerFactory(Photo._);
     return const SchemaObject(ObjectType.realmObject, Photo, 'Photo', [
-      SchemaProperty('photoId', RealmPropertyType.string),
+      SchemaProperty('id', RealmPropertyType.objectid, primaryKey: true),
+      SchemaProperty('photoId', RealmPropertyType.string, optional: true),
       SchemaProperty('created', RealmPropertyType.string, optional: true),
       SchemaProperty('url', RealmPropertyType.string, optional: true),
       SchemaProperty('thumbnailUrl', RealmPropertyType.string, optional: true),
@@ -737,7 +572,8 @@ class Video extends _Video with RealmEntity, RealmObjectBase, RealmObject {
   static var _defaultsSet = false;
 
   Video(
-    String videoId, {
+    ObjectId objectId, {
+    String? videoId,
     String? created,
     String? url,
     String? thumbnailUrl,
@@ -762,6 +598,7 @@ class Video extends _Video with RealmEntity, RealmObjectBase, RealmObject {
         'durationInSeconds': 0,
       });
     }
+    RealmObjectBase.set(this, 'objectId', objectId);
     RealmObjectBase.set(this, 'videoId', videoId);
     RealmObjectBase.set(this, 'created', created);
     RealmObjectBase.set(this, 'url', url);
@@ -787,9 +624,16 @@ class Video extends _Video with RealmEntity, RealmObjectBase, RealmObject {
   Video._();
 
   @override
-  String get videoId => RealmObjectBase.get<String>(this, 'videoId') as String;
+  ObjectId get objectId =>
+      RealmObjectBase.get<ObjectId>(this, 'objectId') as ObjectId;
   @override
-  set videoId(String value) => RealmObjectBase.set(this, 'videoId', value);
+  set objectId(ObjectId value) => RealmObjectBase.set(this, 'objectId', value);
+
+  @override
+  String? get videoId =>
+      RealmObjectBase.get<String>(this, 'videoId') as String?;
+  @override
+  set videoId(String? value) => RealmObjectBase.set(this, 'videoId', value);
 
   @override
   String? get created =>
@@ -919,7 +763,8 @@ class Video extends _Video with RealmEntity, RealmObjectBase, RealmObject {
   static SchemaObject _initSchema() {
     RealmObjectBase.registerFactory(Video._);
     return const SchemaObject(ObjectType.realmObject, Video, 'Video', [
-      SchemaProperty('videoId', RealmPropertyType.string),
+      SchemaProperty('objectId', RealmPropertyType.objectid, primaryKey: true),
+      SchemaProperty('videoId', RealmPropertyType.string, optional: true),
       SchemaProperty('created', RealmPropertyType.string, optional: true),
       SchemaProperty('url', RealmPropertyType.string, optional: true),
       SchemaProperty('thumbnailUrl', RealmPropertyType.string, optional: true),
@@ -952,8 +797,8 @@ class Video extends _Video with RealmEntity, RealmObjectBase, RealmObject {
 
 class Organization extends _Organization
     with RealmEntity, RealmObjectBase, RealmObject {
-  Organization({
-    String? organizationId,
+  Organization(
+    String? organizationId, {
     String? name,
     String? admin,
     String? countryId,
@@ -1045,7 +890,7 @@ class Organization extends _Organization
     return const SchemaObject(
         ObjectType.realmObject, Organization, 'Organization', [
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
+          optional: true, primaryKey: true),
       SchemaProperty('name', RealmPropertyType.string, optional: true),
       SchemaProperty('admin', RealmPropertyType.string, optional: true),
       SchemaProperty('countryId', RealmPropertyType.string, optional: true),
@@ -1061,8 +906,8 @@ class Organization extends _Organization
 }
 
 class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
-  Project({
-    String? projectId,
+  Project(
+    String? projectId, {
     String? name,
     String? organizationId,
     String? organizationName,
@@ -1149,12 +994,13 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
   static SchemaObject _initSchema() {
     RealmObjectBase.registerFactory(Project._);
     return const SchemaObject(ObjectType.realmObject, Project, 'Project', [
-      SchemaProperty('projectId', RealmPropertyType.string, optional: true),
+      SchemaProperty('projectId', RealmPropertyType.string,
+          optional: true, primaryKey: true),
       SchemaProperty('name', RealmPropertyType.string, optional: true),
       SchemaProperty('nearestCities', RealmPropertyType.object,
           linkTarget: 'City', collectionType: RealmCollectionType.list),
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
+          optional: true, indexed: true),
       SchemaProperty('organizationName', RealmPropertyType.string,
           optional: true),
       SchemaProperty('description', RealmPropertyType.string, optional: true),
@@ -1168,12 +1014,12 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
 
 class ProjectPosition extends _ProjectPosition
     with RealmEntity, RealmObjectBase, RealmObject {
-  ProjectPosition({
+  ProjectPosition(
+    String? projectPositionId, {
     String? projectName,
     String? projectId,
     String? caption,
     String? created,
-    String? projectPositionId,
     String? organizationId,
     Position? position,
     PlaceMark? placemark,
@@ -1317,13 +1163,14 @@ class ProjectPosition extends _ProjectPosition
     return const SchemaObject(
         ObjectType.realmObject, ProjectPosition, 'ProjectPosition', [
       SchemaProperty('projectName', RealmPropertyType.string, optional: true),
-      SchemaProperty('projectId', RealmPropertyType.string, optional: true),
+      SchemaProperty('projectId', RealmPropertyType.string,
+          optional: true, indexed: true),
       SchemaProperty('caption', RealmPropertyType.string, optional: true),
       SchemaProperty('created', RealmPropertyType.string, optional: true),
       SchemaProperty('projectPositionId', RealmPropertyType.string,
-          optional: true),
+          optional: true, primaryKey: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
+          optional: true, indexed: true),
       SchemaProperty('position', RealmPropertyType.object,
           optional: true, linkTarget: 'Position'),
       SchemaProperty('placemark', RealmPropertyType.object,
@@ -1477,12 +1324,12 @@ class PlaceMark extends _PlaceMark
 
 class ProjectPolygon extends _ProjectPolygon
     with RealmEntity, RealmObjectBase, RealmObject {
-  ProjectPolygon({
+  ProjectPolygon(
+    String? projectPolygonId, {
     String? projectName,
     String? projectId,
     String? caption,
     String? created,
-    String? projectPolygonId,
     String? organizationId,
     String? organizationName,
     String? name,
@@ -1630,9 +1477,9 @@ class ProjectPolygon extends _ProjectPolygon
       SchemaProperty('caption', RealmPropertyType.string, optional: true),
       SchemaProperty('created', RealmPropertyType.string, optional: true),
       SchemaProperty('projectPolygonId', RealmPropertyType.string,
-          optional: true),
+          optional: true, primaryKey: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
+          optional: true, indexed: true),
       SchemaProperty('organizationName', RealmPropertyType.string,
           optional: true),
       SchemaProperty('positions', RealmPropertyType.object,
@@ -1783,9 +1630,10 @@ class Rating extends _Rating with RealmEntity, RealmObjectBase, RealmObject {
       SchemaProperty('userId', RealmPropertyType.string, optional: true),
       SchemaProperty('userName', RealmPropertyType.string, optional: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
+          optional: true, indexed: true),
       SchemaProperty('ratingCode', RealmPropertyType.int, optional: true),
-      SchemaProperty('projectId', RealmPropertyType.string, optional: true),
+      SchemaProperty('projectId', RealmPropertyType.string,
+          optional: true, indexed: true),
       SchemaProperty('projectName', RealmPropertyType.string, optional: true),
       SchemaProperty('videoId', RealmPropertyType.string, optional: true),
       SchemaProperty('ratingId', RealmPropertyType.string, optional: true),
@@ -2101,14 +1949,15 @@ class DataCounts extends _DataCounts
     RealmObjectBase.registerFactory(DataCounts._);
     return const SchemaObject(
         ObjectType.realmObject, DataCounts, 'DataCounts', [
-      SchemaProperty('projectId', RealmPropertyType.string, optional: true),
+      SchemaProperty('projectId', RealmPropertyType.string,
+          optional: true, indexed: true),
       SchemaProperty('projects', RealmPropertyType.int, optional: true),
       SchemaProperty('users', RealmPropertyType.int, optional: true),
       SchemaProperty('created', RealmPropertyType.string, optional: true),
       SchemaProperty('photos', RealmPropertyType.string, optional: true),
       SchemaProperty('userId', RealmPropertyType.string, optional: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
+          optional: true, indexed: true),
       SchemaProperty('videos', RealmPropertyType.int, optional: true),
       SchemaProperty('audios', RealmPropertyType.int, optional: true),
       SchemaProperty('projectPositions', RealmPropertyType.int, optional: true),
@@ -2124,9 +1973,9 @@ class GeofenceEvent extends _GeofenceEvent
     with RealmEntity, RealmObjectBase, RealmObject {
   static var _defaultsSet = false;
 
-  GeofenceEvent({
+  GeofenceEvent(
+    String? geofenceEventId, {
     String? status,
-    String? geofenceEventId,
     String? date,
     String? projectPositionId,
     String? projectName,
@@ -2249,7 +2098,7 @@ class GeofenceEvent extends _GeofenceEvent
         ObjectType.realmObject, GeofenceEvent, 'GeofenceEvent', [
       SchemaProperty('status', RealmPropertyType.string, optional: true),
       SchemaProperty('geofenceEventId', RealmPropertyType.string,
-          optional: true),
+          optional: true, primaryKey: true),
       SchemaProperty('date', RealmPropertyType.string, optional: true),
       SchemaProperty('projectPositionId', RealmPropertyType.string,
           optional: true),
@@ -2257,10 +2106,11 @@ class GeofenceEvent extends _GeofenceEvent
       SchemaProperty('user', RealmPropertyType.object,
           optional: true, linkTarget: 'User'),
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
+          optional: true, indexed: true),
       SchemaProperty('position', RealmPropertyType.object,
           optional: true, linkTarget: 'Position'),
-      SchemaProperty('projectId', RealmPropertyType.string, optional: true),
+      SchemaProperty('projectId', RealmPropertyType.string,
+          optional: true, indexed: true),
       SchemaProperty('locale', RealmPropertyType.string, optional: true),
       SchemaProperty('translatedMessage', RealmPropertyType.string,
           optional: true),
@@ -2273,9 +2123,9 @@ class GeofenceEvent extends _GeofenceEvent
 class User extends _User with RealmEntity, RealmObjectBase, RealmObject {
   static var _defaultsSet = false;
 
-  User({
+  User(
+    String? userId, {
     String? name,
-    String? userId,
     String? email,
     String? gender,
     String? cellphone,
@@ -2459,7 +2309,8 @@ class User extends _User with RealmEntity, RealmObjectBase, RealmObject {
     RealmObjectBase.registerFactory(User._);
     return const SchemaObject(ObjectType.realmObject, User, 'User', [
       SchemaProperty('name', RealmPropertyType.string, optional: true),
-      SchemaProperty('userId', RealmPropertyType.string, optional: true),
+      SchemaProperty('userId', RealmPropertyType.string,
+          optional: true, primaryKey: true),
       SchemaProperty('email', RealmPropertyType.string, optional: true),
       SchemaProperty('gender', RealmPropertyType.string, optional: true),
       SchemaProperty('cellphone', RealmPropertyType.string, optional: true),
@@ -2471,7 +2322,7 @@ class User extends _User with RealmEntity, RealmObjectBase, RealmObject {
           optional: true),
       SchemaProperty('countryId', RealmPropertyType.string, optional: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
+          optional: true, indexed: true),
       SchemaProperty('position', RealmPropertyType.object,
           optional: true, linkTarget: 'Position'),
       SchemaProperty('password', RealmPropertyType.string, optional: true),
@@ -2490,8 +2341,8 @@ class User extends _User with RealmEntity, RealmObjectBase, RealmObject {
 
 class GioSubscription extends _GioSubscription
     with RealmEntity, RealmObjectBase, RealmObject {
-  GioSubscription({
-    String? subscriptionId,
+  GioSubscription(
+    String? subscriptionId, {
     String? date,
     User? user,
     String? organizationId,
@@ -2590,12 +2441,12 @@ class GioSubscription extends _GioSubscription
     return const SchemaObject(
         ObjectType.realmObject, GioSubscription, 'GioSubscription', [
       SchemaProperty('subscriptionId', RealmPropertyType.string,
-          optional: true),
+          optional: true, primaryKey: true),
       SchemaProperty('date', RealmPropertyType.string, optional: true),
       SchemaProperty('user', RealmPropertyType.object,
           optional: true, linkTarget: 'User'),
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
+          optional: true, indexed: true),
       SchemaProperty('organizationName', RealmPropertyType.string,
           optional: true),
       SchemaProperty('updated', RealmPropertyType.string, optional: true),
@@ -2608,9 +2459,9 @@ class GioSubscription extends _GioSubscription
 }
 
 class Pricing extends _Pricing with RealmEntity, RealmObjectBase, RealmObject {
-  Pricing({
+  Pricing(
+    String date, {
     String? countryId,
-    String? date,
     String? countryName,
     double? monthlyPrice,
     double? annualPrice,
@@ -2631,9 +2482,9 @@ class Pricing extends _Pricing with RealmEntity, RealmObjectBase, RealmObject {
   set countryId(String? value) => RealmObjectBase.set(this, 'countryId', value);
 
   @override
-  String? get date => RealmObjectBase.get<String>(this, 'date') as String?;
+  String get date => RealmObjectBase.get<String>(this, 'date') as String;
   @override
-  set date(String? value) => RealmObjectBase.set(this, 'date', value);
+  set date(String value) => RealmObjectBase.set(this, 'date', value);
 
   @override
   String? get countryName =>
@@ -2669,7 +2520,7 @@ class Pricing extends _Pricing with RealmEntity, RealmObjectBase, RealmObject {
     RealmObjectBase.registerFactory(Pricing._);
     return const SchemaObject(ObjectType.realmObject, Pricing, 'Pricing', [
       SchemaProperty('countryId', RealmPropertyType.string, optional: true),
-      SchemaProperty('date', RealmPropertyType.string, optional: true),
+      SchemaProperty('date', RealmPropertyType.string),
       SchemaProperty('countryName', RealmPropertyType.string, optional: true),
       SchemaProperty('monthlyPrice', RealmPropertyType.double, optional: true),
       SchemaProperty('annualPrice', RealmPropertyType.double, optional: true),
@@ -2799,8 +2650,9 @@ class OrgMessage extends _OrgMessage
       SchemaProperty('message', RealmPropertyType.string, optional: true),
       SchemaProperty('created', RealmPropertyType.string, optional: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
-      SchemaProperty('projectId', RealmPropertyType.string, optional: true),
+          optional: true, indexed: true),
+      SchemaProperty('projectId', RealmPropertyType.string,
+          optional: true, indexed: true),
       SchemaProperty('projectName', RealmPropertyType.string, optional: true),
       SchemaProperty('adminId', RealmPropertyType.string, optional: true),
       SchemaProperty('adminName', RealmPropertyType.string, optional: true),
@@ -2911,7 +2763,7 @@ class LocationRequest extends _LocationRequest
     return const SchemaObject(
         ObjectType.realmObject, LocationRequest, 'LocationRequest', [
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
+          optional: true, indexed: true),
       SchemaProperty('requesterId', RealmPropertyType.string, optional: true),
       SchemaProperty('created', RealmPropertyType.string, optional: true),
       SchemaProperty('requesterName', RealmPropertyType.string, optional: true),
@@ -3046,7 +2898,7 @@ class LocationResponse extends _LocationResponse
       SchemaProperty('date', RealmPropertyType.string, optional: true),
       SchemaProperty('userId', RealmPropertyType.string, optional: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
+          optional: true, indexed: true),
       SchemaProperty('userName', RealmPropertyType.string, optional: true),
       SchemaProperty('locationResponseId', RealmPropertyType.string,
           optional: true),
@@ -3068,8 +2920,8 @@ class ActivityModel extends _ActivityModel
     with RealmEntity, RealmObjectBase, RealmObject {
   static var _defaultsSet = false;
 
-  ActivityModel({
-    String? activityModelId,
+  ActivityModel(
+    String? activityModelId, {
     String? activityType,
     String? date,
     String? userId,
@@ -3310,17 +3162,18 @@ class ActivityModel extends _ActivityModel
     return const SchemaObject(
         ObjectType.realmObject, ActivityModel, 'ActivityModel', [
       SchemaProperty('activityModelId', RealmPropertyType.string,
-          optional: true),
+          optional: true, primaryKey: true),
       SchemaProperty('activityType', RealmPropertyType.string, optional: true),
       SchemaProperty('date', RealmPropertyType.string, optional: true),
       SchemaProperty('userId', RealmPropertyType.string, optional: true),
       SchemaProperty('userName', RealmPropertyType.string, optional: true),
-      SchemaProperty('projectId', RealmPropertyType.string, optional: true),
+      SchemaProperty('projectId', RealmPropertyType.string,
+          optional: true, indexed: true),
       SchemaProperty('projectName', RealmPropertyType.string, optional: true),
       SchemaProperty('organizationName', RealmPropertyType.string,
           optional: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
+          optional: true, indexed: true),
       SchemaProperty('photo', RealmPropertyType.object,
           optional: true, linkTarget: 'Photo'),
       SchemaProperty('video', RealmPropertyType.object,
@@ -3421,7 +3274,8 @@ class Country extends _Country with RealmEntity, RealmObjectBase, RealmObject {
   static SchemaObject _initSchema() {
     RealmObjectBase.registerFactory(Country._);
     return const SchemaObject(ObjectType.realmObject, Country, 'Country', [
-      SchemaProperty('name', RealmPropertyType.string, optional: true),
+      SchemaProperty('name', RealmPropertyType.string,
+          optional: true, indexed: true),
       SchemaProperty('countryId', RealmPropertyType.string, optional: true),
       SchemaProperty('countryCode', RealmPropertyType.string, optional: true),
       SchemaProperty('population', RealmPropertyType.int, optional: true),
@@ -3433,8 +3287,8 @@ class Country extends _Country with RealmEntity, RealmObjectBase, RealmObject {
 
 class FieldMonitorSchedule extends _FieldMonitorSchedule
     with RealmEntity, RealmObjectBase, RealmObject {
-  FieldMonitorSchedule({
-    String? fieldMonitorScheduleId,
+  FieldMonitorSchedule(
+    String? fieldMonitorScheduleId, {
     String? fieldMonitorId,
     String? adminId,
     String? organizationId,
@@ -3550,13 +3404,14 @@ class FieldMonitorSchedule extends _FieldMonitorSchedule
     return const SchemaObject(
         ObjectType.realmObject, FieldMonitorSchedule, 'FieldMonitorSchedule', [
       SchemaProperty('fieldMonitorScheduleId', RealmPropertyType.string,
-          optional: true),
+          optional: true, primaryKey: true),
       SchemaProperty('fieldMonitorId', RealmPropertyType.string,
           optional: true),
       SchemaProperty('adminId', RealmPropertyType.string, optional: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
-          optional: true),
-      SchemaProperty('projectId', RealmPropertyType.string, optional: true),
+          optional: true, indexed: true),
+      SchemaProperty('projectId', RealmPropertyType.string,
+          optional: true, indexed: true),
       SchemaProperty('projectName', RealmPropertyType.string, optional: true),
       SchemaProperty('date', RealmPropertyType.string, optional: true),
       SchemaProperty('organizationName', RealmPropertyType.string,
@@ -3565,6 +3420,189 @@ class FieldMonitorSchedule extends _FieldMonitorSchedule
       SchemaProperty('perWeek', RealmPropertyType.int, optional: true),
       SchemaProperty('perMonth', RealmPropertyType.int, optional: true),
       SchemaProperty('userId', RealmPropertyType.string, optional: true),
+    ]);
+  }
+}
+
+class AppError extends _AppError
+    with RealmEntity, RealmObjectBase, RealmObject {
+  AppError({
+    ObjectId? id,
+    String? errorMessage,
+    String? manufacturer,
+    String? model,
+    String? created,
+    String? brand,
+    String? userId,
+    String? organizationId,
+    String? userName,
+    Position? errorPosition,
+    String? iosName,
+    String? versionCodeName,
+    String? baseOS,
+    String? deviceType,
+    String? iosSystemName,
+    String? userUrl,
+    String? uploadedDate,
+  }) {
+    RealmObjectBase.set(this, 'id', id);
+    RealmObjectBase.set(this, 'errorMessage', errorMessage);
+    RealmObjectBase.set(this, 'manufacturer', manufacturer);
+    RealmObjectBase.set(this, 'model', model);
+    RealmObjectBase.set(this, 'created', created);
+    RealmObjectBase.set(this, 'brand', brand);
+    RealmObjectBase.set(this, 'userId', userId);
+    RealmObjectBase.set(this, 'organizationId', organizationId);
+    RealmObjectBase.set(this, 'userName', userName);
+    RealmObjectBase.set(this, 'errorPosition', errorPosition);
+    RealmObjectBase.set(this, 'iosName', iosName);
+    RealmObjectBase.set(this, 'versionCodeName', versionCodeName);
+    RealmObjectBase.set(this, 'baseOS', baseOS);
+    RealmObjectBase.set(this, 'deviceType', deviceType);
+    RealmObjectBase.set(this, 'iosSystemName', iosSystemName);
+    RealmObjectBase.set(this, 'userUrl', userUrl);
+    RealmObjectBase.set(this, 'uploadedDate', uploadedDate);
+  }
+
+  AppError._();
+
+  @override
+  ObjectId? get id => RealmObjectBase.get<ObjectId>(this, 'id') as ObjectId?;
+  @override
+  set id(ObjectId? value) => RealmObjectBase.set(this, 'id', value);
+
+  @override
+  String? get errorMessage =>
+      RealmObjectBase.get<String>(this, 'errorMessage') as String?;
+  @override
+  set errorMessage(String? value) =>
+      RealmObjectBase.set(this, 'errorMessage', value);
+
+  @override
+  String? get manufacturer =>
+      RealmObjectBase.get<String>(this, 'manufacturer') as String?;
+  @override
+  set manufacturer(String? value) =>
+      RealmObjectBase.set(this, 'manufacturer', value);
+
+  @override
+  String? get model => RealmObjectBase.get<String>(this, 'model') as String?;
+  @override
+  set model(String? value) => RealmObjectBase.set(this, 'model', value);
+
+  @override
+  String? get created =>
+      RealmObjectBase.get<String>(this, 'created') as String?;
+  @override
+  set created(String? value) => RealmObjectBase.set(this, 'created', value);
+
+  @override
+  String? get brand => RealmObjectBase.get<String>(this, 'brand') as String?;
+  @override
+  set brand(String? value) => RealmObjectBase.set(this, 'brand', value);
+
+  @override
+  String? get userId => RealmObjectBase.get<String>(this, 'userId') as String?;
+  @override
+  set userId(String? value) => RealmObjectBase.set(this, 'userId', value);
+
+  @override
+  String? get organizationId =>
+      RealmObjectBase.get<String>(this, 'organizationId') as String?;
+  @override
+  set organizationId(String? value) =>
+      RealmObjectBase.set(this, 'organizationId', value);
+
+  @override
+  String? get userName =>
+      RealmObjectBase.get<String>(this, 'userName') as String?;
+  @override
+  set userName(String? value) => RealmObjectBase.set(this, 'userName', value);
+
+  @override
+  Position? get errorPosition =>
+      RealmObjectBase.get<Position>(this, 'errorPosition') as Position?;
+  @override
+  set errorPosition(covariant Position? value) =>
+      RealmObjectBase.set(this, 'errorPosition', value);
+
+  @override
+  String? get iosName =>
+      RealmObjectBase.get<String>(this, 'iosName') as String?;
+  @override
+  set iosName(String? value) => RealmObjectBase.set(this, 'iosName', value);
+
+  @override
+  String? get versionCodeName =>
+      RealmObjectBase.get<String>(this, 'versionCodeName') as String?;
+  @override
+  set versionCodeName(String? value) =>
+      RealmObjectBase.set(this, 'versionCodeName', value);
+
+  @override
+  String? get baseOS => RealmObjectBase.get<String>(this, 'baseOS') as String?;
+  @override
+  set baseOS(String? value) => RealmObjectBase.set(this, 'baseOS', value);
+
+  @override
+  String? get deviceType =>
+      RealmObjectBase.get<String>(this, 'deviceType') as String?;
+  @override
+  set deviceType(String? value) =>
+      RealmObjectBase.set(this, 'deviceType', value);
+
+  @override
+  String? get iosSystemName =>
+      RealmObjectBase.get<String>(this, 'iosSystemName') as String?;
+  @override
+  set iosSystemName(String? value) =>
+      RealmObjectBase.set(this, 'iosSystemName', value);
+
+  @override
+  String? get userUrl =>
+      RealmObjectBase.get<String>(this, 'userUrl') as String?;
+  @override
+  set userUrl(String? value) => RealmObjectBase.set(this, 'userUrl', value);
+
+  @override
+  String? get uploadedDate =>
+      RealmObjectBase.get<String>(this, 'uploadedDate') as String?;
+  @override
+  set uploadedDate(String? value) =>
+      RealmObjectBase.set(this, 'uploadedDate', value);
+
+  @override
+  Stream<RealmObjectChanges<AppError>> get changes =>
+      RealmObjectBase.getChanges<AppError>(this);
+
+  @override
+  AppError freeze() => RealmObjectBase.freezeObject<AppError>(this);
+
+  static SchemaObject get schema => _schema ??= _initSchema();
+  static SchemaObject? _schema;
+  static SchemaObject _initSchema() {
+    RealmObjectBase.registerFactory(AppError._);
+    return const SchemaObject(ObjectType.realmObject, AppError, 'AppError', [
+      SchemaProperty('id', RealmPropertyType.objectid, optional: true),
+      SchemaProperty('errorMessage', RealmPropertyType.string, optional: true),
+      SchemaProperty('manufacturer', RealmPropertyType.string, optional: true),
+      SchemaProperty('model', RealmPropertyType.string, optional: true),
+      SchemaProperty('created', RealmPropertyType.string, optional: true),
+      SchemaProperty('brand', RealmPropertyType.string, optional: true),
+      SchemaProperty('userId', RealmPropertyType.string, optional: true),
+      SchemaProperty('organizationId', RealmPropertyType.string,
+          optional: true),
+      SchemaProperty('userName', RealmPropertyType.string, optional: true),
+      SchemaProperty('errorPosition', RealmPropertyType.object,
+          optional: true, linkTarget: 'Position'),
+      SchemaProperty('iosName', RealmPropertyType.string, optional: true),
+      SchemaProperty('versionCodeName', RealmPropertyType.string,
+          optional: true),
+      SchemaProperty('baseOS', RealmPropertyType.string, optional: true),
+      SchemaProperty('deviceType', RealmPropertyType.string, optional: true),
+      SchemaProperty('iosSystemName', RealmPropertyType.string, optional: true),
+      SchemaProperty('userUrl', RealmPropertyType.string, optional: true),
+      SchemaProperty('uploadedDate', RealmPropertyType.string, optional: true),
     ]);
   }
 }
