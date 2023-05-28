@@ -10,7 +10,7 @@ class _City {
   late _Position? cityLocation;
 }
 
-@RealmModel()
+@RealmModel(ObjectType.embeddedObject)
 class _Position {
   late String? type = 'Point';
   late List<double> coordinates = [];
@@ -370,6 +370,22 @@ class _Country {
   late String? countryCode;
   late int? population = 0;
   late _Position? position;
+}
+
+@RealmModel()
+class _FieldMonitorSchedule {
+  late String? fieldMonitorScheduleId;
+  late String? fieldMonitorId;
+  late String? adminId;
+  late String? organizationId;
+  late String? projectId;
+  late String? projectName;
+  late String? date;
+  late String? organizationName;
+  late int? perDay;
+  late int? perWeek;
+  late int? perMonth;
+  late String? userId;
 }
 
 enum ActivityType {

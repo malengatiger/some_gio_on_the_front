@@ -101,7 +101,7 @@ class City extends _City with RealmEntity, RealmObjectBase, RealmObject {
 }
 
 class Position extends _Position
-    with RealmEntity, RealmObjectBase, RealmObject {
+    with RealmEntity, RealmObjectBase, EmbeddedObject {
   static var _defaultsSet = false;
 
   Position({
@@ -143,7 +143,7 @@ class Position extends _Position
   static SchemaObject? _schema;
   static SchemaObject _initSchema() {
     RealmObjectBase.registerFactory(Position._);
-    return const SchemaObject(ObjectType.realmObject, Position, 'Position', [
+    return const SchemaObject(ObjectType.embeddedObject, Position, 'Position', [
       SchemaProperty('type', RealmPropertyType.string, optional: true),
       SchemaProperty('coordinates', RealmPropertyType.double,
           collectionType: RealmCollectionType.list),
@@ -3427,6 +3427,144 @@ class Country extends _Country with RealmEntity, RealmObjectBase, RealmObject {
       SchemaProperty('population', RealmPropertyType.int, optional: true),
       SchemaProperty('position', RealmPropertyType.object,
           optional: true, linkTarget: 'Position'),
+    ]);
+  }
+}
+
+class FieldMonitorSchedule extends _FieldMonitorSchedule
+    with RealmEntity, RealmObjectBase, RealmObject {
+  FieldMonitorSchedule({
+    String? fieldMonitorScheduleId,
+    String? fieldMonitorId,
+    String? adminId,
+    String? organizationId,
+    String? projectId,
+    String? projectName,
+    String? date,
+    String? organizationName,
+    int? perDay,
+    int? perWeek,
+    int? perMonth,
+    String? userId,
+  }) {
+    RealmObjectBase.set(this, 'fieldMonitorScheduleId', fieldMonitorScheduleId);
+    RealmObjectBase.set(this, 'fieldMonitorId', fieldMonitorId);
+    RealmObjectBase.set(this, 'adminId', adminId);
+    RealmObjectBase.set(this, 'organizationId', organizationId);
+    RealmObjectBase.set(this, 'projectId', projectId);
+    RealmObjectBase.set(this, 'projectName', projectName);
+    RealmObjectBase.set(this, 'date', date);
+    RealmObjectBase.set(this, 'organizationName', organizationName);
+    RealmObjectBase.set(this, 'perDay', perDay);
+    RealmObjectBase.set(this, 'perWeek', perWeek);
+    RealmObjectBase.set(this, 'perMonth', perMonth);
+    RealmObjectBase.set(this, 'userId', userId);
+  }
+
+  FieldMonitorSchedule._();
+
+  @override
+  String? get fieldMonitorScheduleId =>
+      RealmObjectBase.get<String>(this, 'fieldMonitorScheduleId') as String?;
+  @override
+  set fieldMonitorScheduleId(String? value) =>
+      RealmObjectBase.set(this, 'fieldMonitorScheduleId', value);
+
+  @override
+  String? get fieldMonitorId =>
+      RealmObjectBase.get<String>(this, 'fieldMonitorId') as String?;
+  @override
+  set fieldMonitorId(String? value) =>
+      RealmObjectBase.set(this, 'fieldMonitorId', value);
+
+  @override
+  String? get adminId =>
+      RealmObjectBase.get<String>(this, 'adminId') as String?;
+  @override
+  set adminId(String? value) => RealmObjectBase.set(this, 'adminId', value);
+
+  @override
+  String? get organizationId =>
+      RealmObjectBase.get<String>(this, 'organizationId') as String?;
+  @override
+  set organizationId(String? value) =>
+      RealmObjectBase.set(this, 'organizationId', value);
+
+  @override
+  String? get projectId =>
+      RealmObjectBase.get<String>(this, 'projectId') as String?;
+  @override
+  set projectId(String? value) => RealmObjectBase.set(this, 'projectId', value);
+
+  @override
+  String? get projectName =>
+      RealmObjectBase.get<String>(this, 'projectName') as String?;
+  @override
+  set projectName(String? value) =>
+      RealmObjectBase.set(this, 'projectName', value);
+
+  @override
+  String? get date => RealmObjectBase.get<String>(this, 'date') as String?;
+  @override
+  set date(String? value) => RealmObjectBase.set(this, 'date', value);
+
+  @override
+  String? get organizationName =>
+      RealmObjectBase.get<String>(this, 'organizationName') as String?;
+  @override
+  set organizationName(String? value) =>
+      RealmObjectBase.set(this, 'organizationName', value);
+
+  @override
+  int? get perDay => RealmObjectBase.get<int>(this, 'perDay') as int?;
+  @override
+  set perDay(int? value) => RealmObjectBase.set(this, 'perDay', value);
+
+  @override
+  int? get perWeek => RealmObjectBase.get<int>(this, 'perWeek') as int?;
+  @override
+  set perWeek(int? value) => RealmObjectBase.set(this, 'perWeek', value);
+
+  @override
+  int? get perMonth => RealmObjectBase.get<int>(this, 'perMonth') as int?;
+  @override
+  set perMonth(int? value) => RealmObjectBase.set(this, 'perMonth', value);
+
+  @override
+  String? get userId => RealmObjectBase.get<String>(this, 'userId') as String?;
+  @override
+  set userId(String? value) => RealmObjectBase.set(this, 'userId', value);
+
+  @override
+  Stream<RealmObjectChanges<FieldMonitorSchedule>> get changes =>
+      RealmObjectBase.getChanges<FieldMonitorSchedule>(this);
+
+  @override
+  FieldMonitorSchedule freeze() =>
+      RealmObjectBase.freezeObject<FieldMonitorSchedule>(this);
+
+  static SchemaObject get schema => _schema ??= _initSchema();
+  static SchemaObject? _schema;
+  static SchemaObject _initSchema() {
+    RealmObjectBase.registerFactory(FieldMonitorSchedule._);
+    return const SchemaObject(
+        ObjectType.realmObject, FieldMonitorSchedule, 'FieldMonitorSchedule', [
+      SchemaProperty('fieldMonitorScheduleId', RealmPropertyType.string,
+          optional: true),
+      SchemaProperty('fieldMonitorId', RealmPropertyType.string,
+          optional: true),
+      SchemaProperty('adminId', RealmPropertyType.string, optional: true),
+      SchemaProperty('organizationId', RealmPropertyType.string,
+          optional: true),
+      SchemaProperty('projectId', RealmPropertyType.string, optional: true),
+      SchemaProperty('projectName', RealmPropertyType.string, optional: true),
+      SchemaProperty('date', RealmPropertyType.string, optional: true),
+      SchemaProperty('organizationName', RealmPropertyType.string,
+          optional: true),
+      SchemaProperty('perDay', RealmPropertyType.int, optional: true),
+      SchemaProperty('perWeek', RealmPropertyType.int, optional: true),
+      SchemaProperty('perMonth', RealmPropertyType.int, optional: true),
+      SchemaProperty('userId', RealmPropertyType.string, optional: true),
     ]);
   }
 }
