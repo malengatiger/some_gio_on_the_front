@@ -907,8 +907,10 @@ class Organization extends _Organization
 
 class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
   Project(
-    String? projectId, {
+    ObjectId? id, {
+    String? projectId,
     String? name,
+    String? created,
     String? organizationId,
     String? organizationName,
     String? description,
@@ -916,8 +918,10 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
     String? translatedTitle,
     Iterable<City> nearestCities = const [],
   }) {
+    RealmObjectBase.set(this, 'id', id);
     RealmObjectBase.set(this, 'projectId', projectId);
     RealmObjectBase.set(this, 'name', name);
+    RealmObjectBase.set(this, 'created', created);
     RealmObjectBase.set(this, 'organizationId', organizationId);
     RealmObjectBase.set(this, 'organizationName', organizationName);
     RealmObjectBase.set(this, 'description', description);
@@ -930,6 +934,11 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
   Project._();
 
   @override
+  ObjectId? get id => RealmObjectBase.get<ObjectId>(this, 'id') as ObjectId?;
+  @override
+  set id(ObjectId? value) => RealmObjectBase.set(this, 'id', value);
+
+  @override
   String? get projectId =>
       RealmObjectBase.get<String>(this, 'projectId') as String?;
   @override
@@ -939,6 +948,12 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
   String? get name => RealmObjectBase.get<String>(this, 'name') as String?;
   @override
   set name(String? value) => RealmObjectBase.set(this, 'name', value);
+
+  @override
+  String? get created =>
+      RealmObjectBase.get<String>(this, 'created') as String?;
+  @override
+  set created(String? value) => RealmObjectBase.set(this, 'created', value);
 
   @override
   RealmList<City> get nearestCities =>
@@ -994,9 +1009,11 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
   static SchemaObject _initSchema() {
     RealmObjectBase.registerFactory(Project._);
     return const SchemaObject(ObjectType.realmObject, Project, 'Project', [
-      SchemaProperty('projectId', RealmPropertyType.string,
+      SchemaProperty('id', RealmPropertyType.objectid,
           optional: true, primaryKey: true),
+      SchemaProperty('projectId', RealmPropertyType.string, optional: true),
       SchemaProperty('name', RealmPropertyType.string, optional: true),
+      SchemaProperty('created', RealmPropertyType.string, optional: true),
       SchemaProperty('nearestCities', RealmPropertyType.object,
           linkTarget: 'City', collectionType: RealmCollectionType.list),
       SchemaProperty('organizationId', RealmPropertyType.string,
@@ -1015,11 +1032,12 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
 class ProjectPosition extends _ProjectPosition
     with RealmEntity, RealmObjectBase, RealmObject {
   ProjectPosition(
-    String? projectPositionId, {
+    String? id, {
     String? projectName,
     String? projectId,
     String? caption,
     String? created,
+    String? projectPositionId,
     String? organizationId,
     Position? position,
     PlaceMark? placemark,
@@ -1035,6 +1053,7 @@ class ProjectPosition extends _ProjectPosition
     RealmObjectBase.set(this, 'projectId', projectId);
     RealmObjectBase.set(this, 'caption', caption);
     RealmObjectBase.set(this, 'created', created);
+    RealmObjectBase.set(this, 'id', id);
     RealmObjectBase.set(this, 'projectPositionId', projectPositionId);
     RealmObjectBase.set(this, 'organizationId', organizationId);
     RealmObjectBase.set(this, 'position', position);
@@ -1075,6 +1094,11 @@ class ProjectPosition extends _ProjectPosition
       RealmObjectBase.get<String>(this, 'created') as String?;
   @override
   set created(String? value) => RealmObjectBase.set(this, 'created', value);
+
+  @override
+  String? get id => RealmObjectBase.get<String>(this, 'id') as String?;
+  @override
+  set id(String? value) => RealmObjectBase.set(this, 'id', value);
 
   @override
   String? get projectPositionId =>
@@ -1167,8 +1191,10 @@ class ProjectPosition extends _ProjectPosition
           optional: true, indexed: true),
       SchemaProperty('caption', RealmPropertyType.string, optional: true),
       SchemaProperty('created', RealmPropertyType.string, optional: true),
-      SchemaProperty('projectPositionId', RealmPropertyType.string,
+      SchemaProperty('id', RealmPropertyType.string,
           optional: true, primaryKey: true),
+      SchemaProperty('projectPositionId', RealmPropertyType.string,
+          optional: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
           optional: true, indexed: true),
       SchemaProperty('position', RealmPropertyType.object,
@@ -1325,17 +1351,15 @@ class PlaceMark extends _PlaceMark
 class ProjectPolygon extends _ProjectPolygon
     with RealmEntity, RealmObjectBase, RealmObject {
   ProjectPolygon(
-    String? projectPolygonId, {
+    String? id, {
     String? projectName,
     String? projectId,
-    String? caption,
     String? created,
+    String? projectPolygonId,
     String? organizationId,
     String? organizationName,
-    String? name,
     String? userId,
     String? userName,
-    String? possibleAddress,
     String? translatedMessage,
     String? translatedTitle,
     Iterable<Position> positions = const [],
@@ -1343,15 +1367,13 @@ class ProjectPolygon extends _ProjectPolygon
   }) {
     RealmObjectBase.set(this, 'projectName', projectName);
     RealmObjectBase.set(this, 'projectId', projectId);
-    RealmObjectBase.set(this, 'caption', caption);
     RealmObjectBase.set(this, 'created', created);
+    RealmObjectBase.set(this, 'id', id);
     RealmObjectBase.set(this, 'projectPolygonId', projectPolygonId);
     RealmObjectBase.set(this, 'organizationId', organizationId);
     RealmObjectBase.set(this, 'organizationName', organizationName);
-    RealmObjectBase.set(this, 'name', name);
     RealmObjectBase.set(this, 'userId', userId);
     RealmObjectBase.set(this, 'userName', userName);
-    RealmObjectBase.set(this, 'possibleAddress', possibleAddress);
     RealmObjectBase.set(this, 'translatedMessage', translatedMessage);
     RealmObjectBase.set(this, 'translatedTitle', translatedTitle);
     RealmObjectBase.set<RealmList<Position>>(
@@ -1376,16 +1398,15 @@ class ProjectPolygon extends _ProjectPolygon
   set projectId(String? value) => RealmObjectBase.set(this, 'projectId', value);
 
   @override
-  String? get caption =>
-      RealmObjectBase.get<String>(this, 'caption') as String?;
-  @override
-  set caption(String? value) => RealmObjectBase.set(this, 'caption', value);
-
-  @override
   String? get created =>
       RealmObjectBase.get<String>(this, 'created') as String?;
   @override
   set created(String? value) => RealmObjectBase.set(this, 'created', value);
+
+  @override
+  String? get id => RealmObjectBase.get<String>(this, 'id') as String?;
+  @override
+  set id(String? value) => RealmObjectBase.set(this, 'id', value);
 
   @override
   String? get projectPolygonId =>
@@ -1423,11 +1444,6 @@ class ProjectPolygon extends _ProjectPolygon
       throw RealmUnsupportedSetError();
 
   @override
-  String? get name => RealmObjectBase.get<String>(this, 'name') as String?;
-  @override
-  set name(String? value) => RealmObjectBase.set(this, 'name', value);
-
-  @override
   String? get userId => RealmObjectBase.get<String>(this, 'userId') as String?;
   @override
   set userId(String? value) => RealmObjectBase.set(this, 'userId', value);
@@ -1437,13 +1453,6 @@ class ProjectPolygon extends _ProjectPolygon
       RealmObjectBase.get<String>(this, 'userName') as String?;
   @override
   set userName(String? value) => RealmObjectBase.set(this, 'userName', value);
-
-  @override
-  String? get possibleAddress =>
-      RealmObjectBase.get<String>(this, 'possibleAddress') as String?;
-  @override
-  set possibleAddress(String? value) =>
-      RealmObjectBase.set(this, 'possibleAddress', value);
 
   @override
   String? get translatedMessage =>
@@ -1474,10 +1483,11 @@ class ProjectPolygon extends _ProjectPolygon
         ObjectType.realmObject, ProjectPolygon, 'ProjectPolygon', [
       SchemaProperty('projectName', RealmPropertyType.string, optional: true),
       SchemaProperty('projectId', RealmPropertyType.string, optional: true),
-      SchemaProperty('caption', RealmPropertyType.string, optional: true),
       SchemaProperty('created', RealmPropertyType.string, optional: true),
-      SchemaProperty('projectPolygonId', RealmPropertyType.string,
+      SchemaProperty('id', RealmPropertyType.string,
           optional: true, primaryKey: true),
+      SchemaProperty('projectPolygonId', RealmPropertyType.string,
+          optional: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
           optional: true, indexed: true),
       SchemaProperty('organizationName', RealmPropertyType.string,
@@ -1486,11 +1496,8 @@ class ProjectPolygon extends _ProjectPolygon
           linkTarget: 'Position', collectionType: RealmCollectionType.list),
       SchemaProperty('nearestCities', RealmPropertyType.object,
           linkTarget: 'City', collectionType: RealmCollectionType.list),
-      SchemaProperty('name', RealmPropertyType.string, optional: true),
       SchemaProperty('userId', RealmPropertyType.string, optional: true),
       SchemaProperty('userName', RealmPropertyType.string, optional: true),
-      SchemaProperty('possibleAddress', RealmPropertyType.string,
-          optional: true),
       SchemaProperty('translatedMessage', RealmPropertyType.string,
           optional: true),
       SchemaProperty('translatedTitle', RealmPropertyType.string,

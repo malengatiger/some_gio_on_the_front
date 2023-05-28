@@ -332,11 +332,7 @@ extension OrganizationJ on Organization {
   }
 
   static Organization fromJson(Map<String, dynamic> data) {
-    Position? pos;
-    if (data['projectPosition']) {
-      pos = Position(
-          type: 'Point', coordinates: data['projectPosition']['coordinates']);
-    }
+
     var org = Organization(data['id'],
         name: data['name'],
         admin: data['admin'],
@@ -354,8 +350,11 @@ extension OrganizationJ on Organization {
 @RealmModel()
 class _Project {
   @PrimaryKey()
+  late ObjectId? id;
+
   late String? projectId;
   late String? name;
+  late String? created;
   late List<_City> nearestCities = [];
   @Indexed()
   late String? organizationId;
@@ -365,6 +364,38 @@ class _Project {
   late String? translatedTitle;
 }
 
+extension ProjectJ on Project {
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> map = {
+      'name': name,
+      'projectId': projectId,
+      'organizationName': organizationName,
+      'description': description,
+      'id': id,
+      'created': created,
+      'translatedMessage': translatedMessage,
+      'translatedTitle': translatedTitle,
+      'organizationId': organizationId,
+    };
+    return map;
+  }
+
+  static Project fromJson(Map<String, dynamic> data) {
+
+    var org = Project(data['id'],
+        name: data['name'],
+        projectId: data['projectId'],
+        organizationId: data['organizationId'],
+        description: data['description'],
+        translatedMessage: data['translatedMessage'],
+        translatedTitle: data['translatedTitle'],
+        created: data['created']);
+
+    return org;
+  }
+}
+
+
 @RealmModel()
 class _ProjectPosition {
   late String? projectName;
@@ -373,6 +404,7 @@ class _ProjectPosition {
   late String? caption;
   late String? created;
   @PrimaryKey()
+  late String? id;
   late String? projectPositionId;
   @Indexed()
   late String? organizationId;
@@ -386,6 +418,92 @@ class _ProjectPosition {
   late String? translatedMessage;
   late String? translatedTitle;
 }
+extension ProjectPositionJ on ProjectPosition {
+  Map<String, dynamic> toJson() {
+    var citiesJsonList = [];
+    for (var value in nearestCities) {
+      var json = value.toJson();
+      citiesJsonList.add(json);
+    }
+    Map<String, dynamic> map = {
+      'caption': caption,
+      'projectId': projectId,
+      'projectPositionId': projectPositionId,
+      'name': name,
+      'id': id,
+      'userId': userId,
+      'possibleAddress': possibleAddress,
+      'created': created,
+      'translatedMessage': translatedMessage,
+      'translatedTitle': translatedTitle,
+      'organizationId': organizationId,
+      'nearestCities': citiesJsonList,
+      'position': {
+        'type': position?.type,
+        'coordinates': position?.coordinates.toList()
+      }
+    };
+    return map;
+  }
+
+  static ProjectPosition fromJson(Map<String, dynamic> data) {
+
+    var nearestCities = <City>[];
+    List cities = data['nearestCities'];
+    for (var value in cities) {
+      Position? pos = Position(type: value['cityLocation']['type'],
+        coordinates: value['cityLocation']['coordinates'], );
+
+      var city = City(value['id'],
+        province: value['province'],
+        cityId: value['cityId'],
+        countryId: value['countryId'],
+        created: value('created'),
+        country: value['country'],
+        name: value['name'],
+        cityLocation: pos,
+      );
+
+      nearestCities.add(city);
+    }
+
+    PlaceMark? placeMark;
+    if (data['placeMark'] != null) {
+      placeMark = PlaceMark(
+        name: data['placeMark']['name'],
+        country: data['placeMark']['country'],
+        administrativeArea: data['placeMark']['administrativeArea'],
+        isoCountryCode: data['placeMark']['isoCountryCode'],
+        locality: data['placeMark']['locality'],
+        postalCode: data['placeMark']['postalCode'],
+        street: data['placeMark']['street'],
+        subAdministrativeArea: data['placeMark']['subAdministrativeArea'],
+        subLocality: data['placeMark']['subLocality'],
+        subThoroughfare: data['placeMark']['subThoroughfare'],
+        thoroughfare: data['placeMark']['thoroughfare'],
+      );
+    }
+    var projectPosition = ProjectPosition(data['id'],
+        name: data['name'],
+        projectId: data['projectId'],
+        organizationId: data['organizationId'],
+        caption: data['caption'],
+        projectName: data['projectName'],
+        userId: data['userId'],
+        possibleAddress: data['possibleAddress'],
+        projectPositionId: data['projectPositionId'],
+        translatedMessage: data['translatedMessage'],
+        translatedTitle: data['translatedTitle'],
+        placemark: placeMark,
+        nearestCities: nearestCities,
+        position: Position(type: data['position']['type'],
+          coordinates: data['position']['coordinates'], ),
+        created: data['created']);
+
+    return projectPosition;
+  }
+}
+
 
 @RealmModel()
 class _PlaceMark {
@@ -401,26 +519,135 @@ class _PlaceMark {
   late String? isoCountryCode;
   late String? postalCode;
 }
+extension PlaceMarkJ on PlaceMark {
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> map = {
+      'administrativeArea': administrativeArea,
+      'subAdministrativeArea': subAdministrativeArea,
+      'locality': locality,
+      'subLocality': subLocality,
+      'thoroughfare': thoroughfare,
+      'subThoroughfare': subThoroughfare,
+      'name': name,
+      'street': street,
+      'country': country,
+      'isoCountryCode': isoCountryCode,
+      'postalCode': postalCode,
+    };
+    return map;
+  }
+  static PlaceMark fromJson(Map<String, dynamic> data) {
+    var mark = PlaceMark(
+        administrativeArea: data['administrativeArea'],
+        subAdministrativeArea: data['subAdministrativeArea'],
+        locality: data['locality'],
+        subLocality: data['subLocality'],
+        subThoroughfare: data['subThoroughfare'],
+        thoroughfare: data['thoroughfare'],
+        name: data['name'],
+        street: data['street'],
+        country: data['country'],
+        isoCountryCode: data['isoCountryCode'],
+        postalCode: data['postalCode'],
+    );
+
+
+    return mark;
+  }
+}
+
 
 @RealmModel()
 class _ProjectPolygon {
   late String? projectName;
   late String? projectId;
-  late String? caption;
   late String? created;
   @PrimaryKey()
+  late String? id;
   late String? projectPolygonId;
   @Indexed()
   late String? organizationId;
   late String? organizationName;
   late List<_Position> positions = [];
   late List<_City> nearestCities = [];
-  late String? name;
   late String? userId;
   late String? userName;
-  late String? possibleAddress;
   late String? translatedMessage;
   late String? translatedTitle;
+}
+
+extension ProjectPolygonJ on ProjectPolygon {
+  Map<String, dynamic> toJson() {
+    var citiesJsonList = [];
+    for (var value in nearestCities) {
+      var json = value.toJson();
+      citiesJsonList.add(json);
+    }
+    var posJsonList = [];
+    for (var value in positions) {
+      var json = value.toJson();
+      posJsonList.add(json);
+    }
+    Map<String, dynamic> map = {
+      'projectId': projectId,
+      'projectPolygonId': projectPolygonId,
+      'projectName': projectName,
+      'id': id,
+      'userId': userId,
+      'organizationId': organizationId,
+      'created': created,
+      'translatedMessage': translatedMessage,
+      'translatedTitle': translatedTitle,
+      'userName': userName,
+      'nearestCities': citiesJsonList,
+      'positions': posJsonList,
+    };
+    return map;
+  }
+
+  static ProjectPolygon fromJson(Map<String, dynamic> data) {
+
+    var nearestCities = <City>[];
+    List cities = data['nearestCities'];
+    for (var value in cities) {
+      Position? pos = Position(type: value['cityLocation']['type'],
+        coordinates: value['cityLocation']['coordinates'], );
+
+      var city = City(value['id'],
+        province: value['province'],
+        cityId: value['cityId'],
+        countryId: value['countryId'],
+        created: value('created'),
+        country: value['country'],
+        name: value['name'],
+        cityLocation: pos,
+      );
+
+      nearestCities.add(city);
+    }
+    var positions = <Position>[];
+    List mJsonList = data['positions'];
+    for (var value in mJsonList) {
+      Position? pos = Position(type: value['type'],
+        coordinates: value['coordinates'], );
+
+      positions.add(pos);
+    }
+
+    var projectPosition = ProjectPolygon(data['id'],
+        userName: data['userName'],
+        projectId: data['projectId'],
+        organizationId: data['organizationId'],
+        projectName: data['projectName'],
+        userId: data['userId'],
+        projectPolygonId: data['projectPolygonId'],
+        translatedMessage: data['translatedMessage'],
+        translatedTitle: data['translatedTitle'],
+        nearestCities: nearestCities,
+        positions: positions);
+
+    return projectPosition;
+  }
 }
 
 @RealmModel()
@@ -440,6 +667,9 @@ class _Rating {
   late String? videoId;
   late String? ratingId;
   late _Position? position;
+}
+extension RatingJ on Rating {
+
 }
 
 @RealmModel()

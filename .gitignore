@@ -30,3 +30,4 @@ doc/api/
 gradle/local.properties
 
 
+/.idea/sonarlint/
