@@ -40,7 +40,8 @@ class ProjectPolygon extends HiveObject {
 
   @HiveField(11)
   String? translatedTitle;
-
+  @HiveField(12)
+  String? id;
   ProjectPolygon(
       {required this.projectName,
       required this.projectPolygonId,
@@ -49,6 +50,7 @@ class ProjectPolygon extends HiveObject {
       required this.nearestCities,
       required this.organizationId,
       this.name,
+        this.id,
         required this.translatedMessage,
         required this.translatedTitle,
       required this.projectId,
@@ -60,6 +62,7 @@ class ProjectPolygon extends HiveObject {
     projectId = data['projectId'];
     userId = data['userId'];
     userName = data['userName'];
+    id = data['id'];
     projectPolygonId = data['projectPolygonId'];
     name = data['name'];
     organizationId = data['organizationId'];
@@ -103,6 +106,7 @@ class ProjectPolygon extends HiveObject {
       'projectPolygonId': projectPolygonId,
       'created': created,
       'name': name,
+      'id': id,
       'translatedMessage': translatedMessage,
       'translatedTitle': translatedTitle,
       'positions': positionList,

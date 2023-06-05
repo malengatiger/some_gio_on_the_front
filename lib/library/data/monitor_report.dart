@@ -29,11 +29,14 @@ class MonitorReport extends HiveObject {
 
   @HiveField(8)
   String? organizationId;
+  @HiveField(9)
+  String? id;
 
   MonitorReport(
       {required this.projectId,
       required this.monitorReportId,
       this.description,
+        this.id,
       required this.created,
       required this.user,
       required this.photos,
@@ -45,6 +48,7 @@ class MonitorReport extends HiveObject {
     monitorReportId = data['monitorReportId'];
     projectId = data['projectId'];
     organizationId = data['organizationId'];
+    id = data['id'];
     rating = data['rating'];
     created = data['created'];
     description = data['description'];
@@ -76,6 +80,7 @@ class MonitorReport extends HiveObject {
       'projectId': projectId,
       'organizationId': organizationId,
       'rating': rating,
+      'id': id,
       'created': created,
       'description': description,
       'monitorReportId': monitorReportId,

@@ -43,9 +43,13 @@ class Audio extends HiveObject {
   @HiveField(16)
   String? translatedTitle;
 
+  @HiveField(17)
+  String? id;
+
   Audio(
       {required this.url,
       this.caption,
+      this.id,
       this.projectPositionId,
       this.projectPolygonId,
       required this.created,
@@ -66,7 +70,7 @@ class Audio extends HiveObject {
     // pp(data);
     url = data['url'];
     userUrl = data['userUrl'];
-
+    id = data['id'];
     projectPositionId = data['projectPositionId'];
     projectPolygonId = data['projectPolygonId'];
     translatedMessage = data['translatedMessage'];
@@ -94,9 +98,11 @@ class Audio extends HiveObject {
       durationInSeconds = data['durationInSeconds'];
     }
   }
+
   Map<String, dynamic> toJson() {
     Map<String, dynamic> map = {
       'url': url,
+      'id': id,
       'userUrl': userUrl,
       'projectPositionId': projectPositionId,
       'projectPolygonId': projectPolygonId,

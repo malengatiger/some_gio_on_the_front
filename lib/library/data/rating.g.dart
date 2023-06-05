@@ -20,6 +20,7 @@ class RatingAdapter extends TypeAdapter<Rating> {
       remarks: fields[0] as String?,
       photoId: fields[4] as String?,
       videoId: fields[11] as String?,
+      id: fields[14] as String?,
       created: fields[2] as String?,
       userId: fields[5] as String?,
       userName: fields[6] as String?,
@@ -36,7 +37,7 @@ class RatingAdapter extends TypeAdapter<Rating> {
   @override
   void write(BinaryWriter writer, Rating obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.remarks)
       ..writeByte(2)
@@ -62,7 +63,9 @@ class RatingAdapter extends TypeAdapter<Rating> {
       ..writeByte(12)
       ..write(obj.ratingId)
       ..writeByte(13)
-      ..write(obj.position);
+      ..write(obj.position)
+      ..writeByte(14)
+      ..write(obj.id);
   }
 
   @override

@@ -19,6 +19,7 @@ class SettingsModelAdapter extends TypeAdapter<SettingsModel> {
     return SettingsModel(
       distanceFromProject: fields[0] as int?,
       photoSize: fields[1] as int?,
+      id: fields[14] as String?,
       maxVideoLengthInSeconds: fields[2] as int?,
       maxAudioLengthInMinutes: fields[3] as int?,
       themeIndex: fields[4] as int?,
@@ -30,6 +31,7 @@ class SettingsModelAdapter extends TypeAdapter<SettingsModel> {
       locale: fields[11] as String?,
       translatedMessage: fields[12] as String?,
       translatedTitle: fields[13] as String?,
+      refreshRateInMinutes: fields[15] as int?,
       activityStreamHours: fields[9] as int?,
     );
   }
@@ -37,7 +39,7 @@ class SettingsModelAdapter extends TypeAdapter<SettingsModel> {
   @override
   void write(BinaryWriter writer, SettingsModel obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(16)
       ..writeByte(0)
       ..write(obj.distanceFromProject)
       ..writeByte(1)
@@ -65,7 +67,11 @@ class SettingsModelAdapter extends TypeAdapter<SettingsModel> {
       ..writeByte(12)
       ..write(obj.translatedMessage)
       ..writeByte(13)
-      ..write(obj.translatedTitle);
+      ..write(obj.translatedTitle)
+      ..writeByte(14)
+      ..write(obj.id)
+      ..writeByte(15)
+      ..write(obj.refreshRateInMinutes);
   }
 
   @override

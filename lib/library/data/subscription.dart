@@ -4,7 +4,7 @@ import 'package:geo_monitor/library/data/user.dart';
 class GioSubscription {
   String? subscriptionId, date;
   User? user;
-  String? organizationId;
+  String? organizationId, id;
   String? organizationName, updated;
   int? intDate, intUpdated, subscriptionType, active;
 
@@ -14,14 +14,14 @@ class GioSubscription {
       required this.user,
       required this.organizationId,
       required this.organizationName,
-      this.updated,
+      this.updated, this.id,
       required this.intDate,
       this.intUpdated,
       required this.subscriptionType,
       required this.active});
 
   GioSubscription.fromJson(Map<String, dynamic> json) {
-
+    id = json['id'];
         subscriptionId = json['subscriptionId'] as String?;
         date = json['date'] as String?;
         user = json['user'] == null
@@ -40,6 +40,7 @@ class GioSubscription {
       <String, dynamic>{
         'subscriptionId': subscriptionId,
         'date': date,
+        'id': id,
         'user': user == null? null: user!.toJson(),
         'organizationId': organizationId,
         'organizationName': organizationName,

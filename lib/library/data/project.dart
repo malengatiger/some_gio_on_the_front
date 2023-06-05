@@ -47,11 +47,14 @@ class Project extends HiveObject {
 
   @HiveField(15)
   String? translatedTitle;
+  @HiveField(16)
+  String? id;
 
   Project(
       {required this.name,
       required this.description,
       this.organizationId,
+        this.id,
       required this.communities,
       required this.nearestCities,
       required this.photos,
@@ -68,7 +71,7 @@ class Project extends HiveObject {
 
   Project.fromJson(Map data) {
     name = data['name'];
-
+    id = data['id'];
     projectId = data['projectId'];
     description = data['description'];
     organizationId = data['organizationId'];
@@ -174,6 +177,7 @@ class Project extends HiveObject {
     }
     Map<String, dynamic> map = {
       'name': name,
+      'id': id,
       'projectId': projectId,
       'description': description,
       'organizationId': organizationId,

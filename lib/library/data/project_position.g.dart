@@ -22,7 +22,7 @@ class ProjectPositionAdapter extends TypeAdapter<ProjectPosition> {
       projectPositionId: fields[4] as String?,
       created: fields[3] as String?,
       position: fields[6] as Position?,
-      placemark: fields[7] as PlaceMark?,
+      id: fields[15] as String?,
       nearestCities: (fields[8] as List?)?.cast<City>(),
       organizationId: fields[5] as String?,
       name: fields[9] as String?,
@@ -53,8 +53,6 @@ class ProjectPositionAdapter extends TypeAdapter<ProjectPosition> {
       ..write(obj.organizationId)
       ..writeByte(6)
       ..write(obj.position)
-      ..writeByte(7)
-      ..write(obj.placemark)
       ..writeByte(8)
       ..write(obj.nearestCities)
       ..writeByte(9)
@@ -68,7 +66,9 @@ class ProjectPositionAdapter extends TypeAdapter<ProjectPosition> {
       ..writeByte(13)
       ..write(obj.translatedMessage)
       ..writeByte(14)
-      ..write(obj.translatedTitle);
+      ..write(obj.translatedTitle)
+      ..writeByte(15)
+      ..write(obj.id);
   }
 
   @override

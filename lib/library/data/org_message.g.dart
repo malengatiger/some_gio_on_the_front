@@ -20,6 +20,7 @@ class OrgMessageAdapter extends TypeAdapter<OrgMessage> {
       name: fields[0] as String?,
       message: fields[2] as String?,
       userId: fields[1] as String?,
+      id: fields[12] as String?,
       orgMessageId: fields[11] as String?,
       created: fields[3] as String?,
       projectId: fields[5] as String?,
@@ -34,7 +35,7 @@ class OrgMessageAdapter extends TypeAdapter<OrgMessage> {
   @override
   void write(BinaryWriter writer, OrgMessage obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -58,7 +59,9 @@ class OrgMessageAdapter extends TypeAdapter<OrgMessage> {
       ..writeByte(10)
       ..write(obj.result)
       ..writeByte(11)
-      ..write(obj.orgMessageId);
+      ..write(obj.orgMessageId)
+      ..writeByte(12)
+      ..write(obj.id);
   }
 
   @override

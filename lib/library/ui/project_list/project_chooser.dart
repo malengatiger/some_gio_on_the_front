@@ -58,6 +58,8 @@ class ProjectChooserState extends State<ProjectChooser>
     projects = await cacheManager.getOrganizationProjects();
     if (projects.isEmpty) {
       var user = await prefsOGx.getUser();
+      var startDate = DateTime.now().toUtc().subtract(const Duration(days: 400)).toIso8601String();
+      var endDate = DateTime.now().toUtc().toIso8601String();
       projects =
           await dataApiDog.getOrganizationProjects(user!.organizationId!);
     }

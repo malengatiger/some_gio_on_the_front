@@ -1,4 +1,5 @@
 import 'package:geo_monitor/library/data/activity_model.dart';
+import 'package:geo_monitor/library/data/geofence_event.dart';
 import 'package:geo_monitor/library/data/project_polygon.dart';
 import 'package:geo_monitor/library/data/settings_model.dart';
 import 'package:hive/hive.dart';
@@ -38,6 +39,8 @@ class DataBag {
   List<SettingsModel>? settings;
   @HiveField(10)
   List<ActivityModel>? activityModels;
+  @HiveField(11)
+  List<GeofenceEvent>? geofenceEvents;
 
 
   DataBag({
@@ -47,6 +50,7 @@ class DataBag {
     required this.projectPositions,
     required this.projects,
     required this.audios,
+    required this.geofenceEvents,
     required this.date, required this.users,
     required this.activityModels,
     required this.projectPolygons, required this.settings,
@@ -60,6 +64,14 @@ class DataBag {
       for (var element in m) {
         var pos = ActivityModel.fromJson(element);
         activityModels?.add(pos);
+      }
+    }
+    geofenceEvents = [];
+    if (data['geofenceEvents'] != null) {
+      List m = data['geofenceEvents'];
+      for (var element in m) {
+        var pos = GeofenceEvent.fromJson(element);
+        geofenceEvents?.add(pos);
       }
     }
     users = [];
@@ -142,6 +154,12 @@ class DataBag {
         mEvents.add(r.toJson());
       }
     }
+    List geos = [];
+    if (geofenceEvents != null) {
+      for (var r in geofenceEvents!) {
+        geos.add(r.toJson());
+      }
+    }
     List mSettings = [];
     if (settings != null) {
       for (var r in settings!) {
@@ -207,6 +225,7 @@ class DataBag {
       'users': mUsers,
       'audios': mAudios,
       'settings': mSettings,
+      'geofenceEvents': geos,
       'date': date,
       'activityModels': mEvents,
     };

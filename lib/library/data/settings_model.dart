@@ -33,10 +33,15 @@ class SettingsModel {
 
   @HiveField(13)
   String? translatedTitle;
+  @HiveField(14)
+  String? id;
+  @HiveField(15)
+  int? refreshRateInMinutes = 5;
 
   SettingsModel(
       {required this.distanceFromProject,
       required this.photoSize,
+      this.id,
       required this.maxVideoLengthInSeconds,
       required this.maxAudioLengthInMinutes,
       required this.themeIndex,
@@ -48,6 +53,7 @@ class SettingsModel {
       required this.locale,
       required this.translatedMessage,
       required this.translatedTitle,
+      required this.refreshRateInMinutes,
       required this.activityStreamHours});
 
   SettingsModel.fromJson(Map data) {
@@ -56,6 +62,13 @@ class SettingsModel {
     photoSize = data['photoSize'];
     settingsId = data['settingsId'];
     created = data['created'];
+    id = data['id'];
+    if (data['refreshRateInMinutes'] != null) {
+      refreshRateInMinutes = data['refreshRateInMinutes'];
+    } else {
+      refreshRateInMinutes = 10;
+    }
+
     activityStreamHours = data['activityStreamHours'];
     organizationId = data['organizationId'];
     translatedMessage = data['translatedMessage'];
@@ -93,6 +106,8 @@ class SettingsModel {
       'projectId': projectId,
       'organizationId': organizationId,
       'created': created,
+      'id': id,
+      'refreshRateInMinutes': refreshRateInMinutes,
       'numberOfDays': numberOfDays ?? 7,
       'activityStreamHours': activityStreamHours,
       'settingsId': settingsId,

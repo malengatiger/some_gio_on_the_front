@@ -300,6 +300,17 @@ class DataApiDog {
    return org;
   }
 
+  Future<List<Organization>> getOrganizations() async {
+
+    var mList = <Organization>[];
+    List result = await _sendHttpGET('${url}getOrganizations');
+    for (var org in result) {
+      mList.add(Organization.fromJson(org));
+    }
+
+    return mList;
+  }
+
   Future<List<ProjectSummary>> getOrganizationDailySummary(
       String organizationId, String startDate, String endDate) async {
     List<ProjectSummary> mList = [];
@@ -687,6 +698,7 @@ class DataApiDog {
         users: [],
         audios: [],
         projectPositions: [],
+        geofenceEvents: [],
         projectPolygons: [],
         date: DateTime.now().toIso8601String(),
         settings: [], activityModels: []);
@@ -807,12 +819,12 @@ class DataApiDog {
   }
 
   Future<List<Photo>> getOrganizationPhotos(
-      String organizationId, String startDate, String endDate) async {
+      String organizationId) async {
     pp('$xz getOrganizationPhotos: 🍏 id: $organizationId');
 
-    var cmd = 'getOrganizationPhotos';
+    var cmd = 'getAllOrganizationPhotos';
     var u =
-        '$url$cmd?organizationId=$organizationId&startDate=$startDate&endDate=$endDate';
+        '$url$cmd?organizationId=$organizationId';
 
     List result = await _sendHttpGET(u);
     pp('$xz getOrganizationPhotos: 🍏 found: ${result.length} org photos');
@@ -820,17 +832,48 @@ class DataApiDog {
     for (var m in result) {
       list.add(Photo.fromJson(m));
     }
-    await cacheManager.addPhotos(photos: list);
+    return list;
+  }
+  Future<List<ProjectPosition>> getOrganizationPositions(
+      String organizationId) async {
+    pp('$xz getOrganizationPhotos: 🍏 id: $organizationId');
+
+    var cmd = 'getAllOrganizationPositions';
+    var u =
+        '$url$cmd?organizationId=$organizationId';
+
+    List result = await _sendHttpGET(u);
+    pp('$xz getOrganizationPhotos: 🍏 found: ${result.length} org photos');
+    List<ProjectPosition> list = [];
+    for (var m in result) {
+      list.add(ProjectPosition.fromJson(m));
+    }
+    return list;
+  }
+  Future<List<ProjectPolygon>> getOrganizationPolygons(
+      String organizationId) async {
+    pp('$xz getOrganizationPhotos: 🍏 id: $organizationId');
+
+    var cmd = 'getAllOrganizationPolygons';
+    var u =
+        '$url$cmd?organizationId=$organizationId';
+
+    List result = await _sendHttpGET(u);
+    pp('$xz getOrganizationPhotos: 🍏 found: ${result.length} org photos');
+    List<ProjectPolygon> list = [];
+    for (var m in result) {
+      list.add(ProjectPolygon.fromJson(m));
+    }
     return list;
   }
 
   Future<List<Video>> getOrganizationVideos(
-      String organizationId, String startDate, String endDate) async {
+      String organizationId,) async {
     pp('$xz getOrganizationVideos: 🍏 id: $organizationId');
 
-    var cmd = 'getOrganizationVideos';
+    var cmd = 'getAllOrganizationVideos';
     var u =
-        '$url$cmd?organizationId=$organizationId&startDate=$startDate&endDate=$endDate';
+        '$url$cmd?organizationId=$organizationId';
 
     List result = await _sendHttpGET(u);
     List<Video> list = [];
@@ -844,7 +887,7 @@ class DataApiDog {
   Future<List<Audio>> getOrganizationAudios(String organizationId) async {
     pp('$xz getOrganizationAudios: 🍏 id: $organizationId');
 
-    var cmd = 'getOrganizationAudios';
+    var cmd = 'getAllOrganizationAudios';
     var u = '$url$cmd?organizationId=$organizationId';
 
     List result = await _sendHttpGET(u);
@@ -855,11 +898,24 @@ class DataApiDog {
     await cacheManager.addAudios(audios: list);
     return list;
   }
+  Future<List<ActivityModel>> getAllOrganizationActivity(String organizationId) async {
+    pp('$xz getOrganizationAudios: 🍏 id: $organizationId');
+
+    var cmd = 'getAllOrganizationActivity';
+    var u = '$url$cmd?organizationId=$organizationId';
+
+    List result = await _sendHttpGET(u);
+    List<ActivityModel> list = [];
+    for (var m in result) {
+      list.add(ActivityModel.fromJson(m));
+    }
+    return list;
+  }
 
   Future<List<Project>> getOrganizationProjects(String organizationId) async {
     pp('$xz getOrganizationProjects: 🍏 id: $organizationId');
 
-    var cmd = 'getOrganizationProjects';
+    var cmd = 'getAllOrganizationProjects';
     var u = '$url$cmd?organizationId=$organizationId';
 
     List result = await _sendHttpGET(u);
@@ -898,6 +954,19 @@ class DataApiDog {
     for (var b in list) {
       await cacheManager.addGeofenceEvent(geofenceEvent: b);
     }
+    return list;
+  }
+  Future<List<GeofenceEvent>> getGeofenceEventsByOrganization(
+      String organizationId) async {
+    var cmd = 'getGeofenceEventsByOrganization';
+    var u = '$url$cmd?organizationId=$organizationId';
+
+    List result = await _sendHttpGET(u);
+    List<GeofenceEvent> list = [];
+    for (var m in result) {
+      list.add(GeofenceEvent.fromJson(m));
+    }
+
     return list;
   }
 
@@ -1386,7 +1455,20 @@ class DataApiDog {
     }
     pp('🐤🐤🐤🐤 ${list.length} Countries found 🥏');
     list.sort((a, b) => a.name!.compareTo(b.name!));
-    for (var value in list) {}
+    return list;
+  }
+  Future<List<City>> getCitiesByCountry(String countryId) async {
+    var cmd = 'getCitiesByCountry?countryId=$countryId';
+    var u = '$url$cmd';
+
+    List result = await _sendHttpGET(u);
+    List<City> list = [];
+    for (var m in result) {
+      var entry = City.fromJson(m);
+      list.add(entry);
+    }
+    pp('🐤🐤🐤🐤 ${list.length} country $countryId  found ${list.length} cities 🥏');
+    list.sort((a, b) => a.name!.compareTo(b.name!));
     return list;
   }
 
@@ -1399,7 +1481,7 @@ class DataApiDog {
   }
 
   Future _callWebAPIPost(String mUrl, Map? bag) async {
-    pp('$xz http POST call: 🔆 🔆 🔆  calling : 💙  $mUrl  💙 ');
+    // pp('$xz http POST call: 🔆 🔆 🔆  calling : 💙  $mUrl  💙 ');
 
     String? mBag;
     if (bag != null) {
@@ -1482,7 +1564,7 @@ class DataApiDog {
     var start = DateTime.now();
     var token = await appAuth.getAuthToken();
     if (token != null) {
-      pp('$xz _sendHttpGET: 😡😡😡 Firebase Auth Token: 💙️ Token is GOOD! 💙 ');
+      // pp('$xz _sendHttpGET: 😡😡😡 Firebase Auth Token: 💙️ Token is GOOD! 💙 ');
     } else {
       pp('$xz Firebase token missing ${E.redDot}${E.redDot}${E.redDot}${E.redDot}');
       final gex = GeoException(

@@ -66,16 +66,16 @@ class _RecentEventListState extends State<RecentEventList> {
       }
     });
 
-    // bagSub = widget.organizationBloc.dataBagStream.listen((bag) {
-    //   pp('$mm dataBagStream delivered a bag, set ui .');
-    //   activities = bag.activityModels!;
-    //   _sort();
-    //   if (mounted) {
-    //     setState(() {
-    //
-    //     });
-    //   }
-    // });
+    bagSub = widget.organizationBloc.dataBagStream.listen((bag) {
+      pp('$mm dataBagStream delivered a bag, set ui .');
+      activities = bag.activityModels!;
+      _sort();
+      if (mounted) {
+        setState(() {
+
+        });
+      }
+    });
     
     refreshSub = refreshBloc.refreshStream.listen((event) { 
       pp('$mm refreshStream delivered a refresh command: $event, ');

@@ -41,10 +41,14 @@ class ProjectSummary extends HiveObject {
   @HiveField(16)
   String? batchId;
 
+  @HiveField(17)
+  String? id;
+
   ProjectSummary({
     required this.photos,
     required this.audios,
     required this.date,
+    this.id,
     required this.calculatedHourly,
     required this.projectPositions,
     required this.projectPolygons,
@@ -67,7 +71,7 @@ class ProjectSummary extends HiveObject {
     photos = data['photos'];
     videos = data['videos'];
     audios = data['audios'];
-
+    id = data['id'];
     day = data['day'];
     hour = data['hour'];
 
@@ -91,6 +95,7 @@ class ProjectSummary extends HiveObject {
       'audios': audios,
       'date': date,
       'day': day,
+      'id': id,
       'hour': hour,
       'batchId': batchId,
       'startDate': startDate,

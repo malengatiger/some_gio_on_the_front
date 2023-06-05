@@ -20,6 +20,7 @@ class OrganizationAdapter extends TypeAdapter<Organization> {
       name: fields[0] as String?,
       countryId: fields[1] as String?,
       email: fields[3] as String?,
+      id: fields[6] as String?,
       created: fields[5] as String?,
       countryName: fields[4] as String?,
       organizationId: fields[2] as String?,
@@ -29,7 +30,7 @@ class OrganizationAdapter extends TypeAdapter<Organization> {
   @override
   void write(BinaryWriter writer, Organization obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class OrganizationAdapter extends TypeAdapter<Organization> {
       ..writeByte(4)
       ..write(obj.countryName)
       ..writeByte(5)
-      ..write(obj.created);
+      ..write(obj.created)
+      ..writeByte(6)
+      ..write(obj.id);
   }
 
   @override

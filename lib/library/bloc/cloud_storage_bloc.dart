@@ -9,23 +9,28 @@ import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/bloc/photo_for_upload.dart';
 import 'package:geo_monitor/library/bloc/video_for_upload.dart';
 import 'package:geo_monitor/library/cache_manager.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:uuid/uuid.dart';
+import 'package:realm/realm.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 import '../../device_location/device_location_bloc.dart';
 import '../../l10n/translation_handler.dart';
 import '../api/prefs_og.dart';
 import '../data/audio.dart';
 import '../data/photo.dart';
-import '../data/user.dart';
+import '../data/user.dart' as old;
 import '../data/video.dart';
 import '../functions.dart';
 import 'audio_for_upload.dart';
 import 'geo_exception.dart';
 
 final CloudStorageBloc cloudStorageBloc = CloudStorageBloc();
+const photoStorageName = 'geoPhotos3';
+const videoStorageName = 'geoVideos3';
+const audioStorageName = 'geoAudios3';
 
 class CloudStorageBloc {
   final FirebaseStorage _firebaseStorage = FirebaseStorage.instance;
@@ -33,11 +38,7 @@ class CloudStorageBloc {
   static const mm = '☕️☕️☕️☕️☕️☕️ CloudStorageBloc: 💚 ';
 
   bool busy = false;
-  User? _user;
-
-  final photoStorageName = 'geoPhotos3';
-  final videoStorageName = 'geoVideos3';
-  final audioStorageName = 'geoAudios3';
+  old.User? _user;
 
   final StreamController<Photo> _photoStreamController =
       StreamController.broadcast();
@@ -61,8 +62,10 @@ class CloudStorageBloc {
     await uploadPhotos();
     await uploadAudios();
     await uploadVideos();
-    pp('$mm uploadEverything ... ended! ');
+    pp('\n\n$mm uploadEverything ... looks like the job\'s done!!! ');
   }
+
+  //
   Future<int> uploadAudios() async {
     final list = await cacheManager.getAudioForUpload();
     int cnt = 0;
@@ -74,6 +77,7 @@ class CloudStorageBloc {
 
     return cnt;
   }
+
   Future<int> uploadAudio({
     required AudioForUpload audioForUpload,
   }) async {
@@ -82,9 +86,11 @@ class CloudStorageBloc {
     String url = 'unknown';
     UploadTask? uploadTask;
     var file = File(audioForUpload.filePath!);
+    final suffix =
+        '${audioForUpload.organizationId!}_${audioForUpload.project!.projectId}_${DateTime.now().millisecondsSinceEpoch}';
+    var fileName = '/audio$suffix.m4a';
+
     try {
-      var fileName =
-          'audio@${DateTime.now().toUtc().microsecondsSinceEpoch}.m4a';
       var firebaseStorageRef = FirebaseStorage.instance
           .ref()
           .child(audioStorageName)
@@ -128,13 +134,39 @@ class CloudStorageBloc {
           translatedMessage: audioArrived,
           projectPosition: audioForUpload.position,
           distanceFromProjectPosition: distance,
-          projectId: audioForUpload.project!.projectId!!,
-          audioId: const Uuid().v4(),
+          projectId: audioForUpload.project!.projectId!,
+          audioId: Uuid.v4().toString(),
           organizationId: audioForUpload.project!.organizationId,
           projectName: audioForUpload.project!.name,
           durationInSeconds: dur!.inSeconds);
-
+      //
+      final mAudio = mrm.Audio(ObjectId(),
+          url: url,
+          userUrl: user.imageUrl,
+          created: DateTime.now().toUtc().toIso8601String(),
+          userId: user.userId,
+          userName: user.name,
+          translatedTitle: messageFromGeo,
+          translatedMessage: audioArrived,
+          projectPosition: mrm.Position(
+            type: 'Point',
+            latitude: audioForUpload.position!.coordinates[1],
+            longitude: audioForUpload.position!.coordinates[0],
+            coordinates: [
+              audioForUpload.position!.coordinates[0],
+              audioForUpload.position!.coordinates[0]
+            ],
+          ),
+          distanceFromProjectPosition: distance,
+          projectId: audioForUpload.project!.projectId!!,
+          audioId: Uuid.v4().toString(),
+          organizationId: audioForUpload.project!.organizationId,
+          projectName: audioForUpload.project!.name,
+          durationInSeconds: dur!.inSeconds);
       try {
+        var res = realmSyncApi.addAudios([mAudio]);
+        pp('$mm realmSyncApi.addAudios: result: $res');
+
         var result = await dataApiDog.addAudio(audio);
         await cacheManager.removeUploadedAudio(audio: audioForUpload);
         await organizationBloc.addAudioToStream(result);
@@ -149,6 +181,7 @@ class CloudStorageBloc {
     return uploadFinished;
   }
 
+  //
   Future<int> uploadPhotos() async {
     final list = await cacheManager.getPhotosForUpload();
     int cnt = 0;
@@ -159,6 +192,7 @@ class CloudStorageBloc {
     pp("$mm photos uploaded: $cnt");
     return cnt;
   }
+
   Future<int> uploadPhoto({
     required PhotoForUpload photoForUpload,
   }) async {
@@ -172,8 +206,10 @@ class CloudStorageBloc {
     try {
       pp('$mm️ uploadPhoto ☕️☕️☕️☕️☕️☕️☕️ file path: \n${file.path}');
       //upload main file
-      var fileName =
-          'photo@${DateTime.now().toUtc().microsecondsSinceEpoch}.${'jpg'}';
+      final suffix =
+          '${photoForUpload.organizationId}_${photoForUpload.project!.projectId!}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      var fileName = 'photo_$suffix';
       var firebaseStorageRef = FirebaseStorage.instance
           .ref()
           .child(photoStorageName)
@@ -185,8 +221,7 @@ class CloudStorageBloc {
       pp('$mm file url is available, meaning that upload is complete: \n$url');
       _printSnapshot(taskSnapshot);
       // upload thumbnail here
-      final thumbName =
-          'thumbnail@${DateTime.now().toUtc().microsecondsSinceEpoch}.${'jpg'}';
+      final thumbName = 'thumbnail_$suffix';
       final firebaseStorageRef2 = FirebaseStorage.instance
           .ref()
           .child(photoStorageName)
@@ -199,7 +234,6 @@ class CloudStorageBloc {
       pp('$mm thumbnail file url is available, meaning that upload is complete: \n$thumbUrl');
       _printSnapshot(thumbTaskSnapshot);
     } catch (e) {
-      // listener.onError('File upload failed: $e');
       return uploadError;
     }
 
@@ -244,10 +278,42 @@ class CloudStorageBloc {
           width: width,
           projectPositionId: photoForUpload.projectPositionId,
           projectPolygonId: photoForUpload.projectPolygonId,
-          photoId: const Uuid().v4(),
+          photoId: Uuid.v4().toString(),
           landscape: width > height ? 0 : 1,
           userUrl: user!.imageUrl);
 
+      //todo - add using realm
+      var mPhoto = mrm.Photo(ObjectId(),
+          url: url,
+          caption: 'tbd',
+          created: DateTime.now().toUtc().toIso8601String(),
+          userId: _user!.userId,
+          userName: _user!.name,
+          translatedMessage: photoArrived,
+          translatedTitle: messageFromGeo,
+          projectPosition: mrm.Position(
+            type: 'Point',
+            latitude: photoForUpload.position!.coordinates[1],
+            longitude: photoForUpload.position!.coordinates[0],
+            coordinates: [
+              photoForUpload.position!.coordinates[0],
+              photoForUpload.position!.coordinates[0]
+            ],
+          ),
+          distanceFromProjectPosition: distance,
+          projectId: photoForUpload.project!.projectId!,
+          thumbnailUrl: thumbUrl,
+          projectName: photoForUpload.project!.name,
+          organizationId: _user!.organizationId,
+          projectPositionId: photoForUpload.projectPositionId,
+          projectPolygonId: photoForUpload.projectPolygonId,
+          photoId: Uuid.v4().toString(),
+          landscape: width > height ? 0 : 1,
+          userUrl: user.imageUrl);
+
+      var res = realmSyncApi.addPhotos([mPhoto]);
+      pp('\n$mm realmSyncApi.addPhotos completed: result: $res');
+      //todo - remove old method of adding photo
       await dataApiDog.addPhoto(photo);
       await cacheManager.removeUploadedPhoto(photo: photoForUpload);
       pp('\n$mm upload process completed, tell the faithful listener!.');
@@ -262,6 +328,7 @@ class CloudStorageBloc {
     }
   }
 
+  //
   Future<int> uploadVideos() async {
     final list = await cacheManager.getVideosForUpload();
     int cnt = 0;
@@ -272,6 +339,7 @@ class CloudStorageBloc {
     pp("$mm videos uploaded: $cnt");
     return cnt;
   }
+
   Future<int> uploadVideo({
     required VideoForUpload videoForUpload,
   }) async {
@@ -284,8 +352,12 @@ class CloudStorageBloc {
     try {
       pp('$mm️ uploadVideo ☕️☕️☕️☕️☕️☕️☕️file path: \n${file.path}');
       //upload main file
-      var fileName =
-          'video@${DateTime.now().toUtc().microsecondsSinceEpoch}.${'mp4'}';
+      final suffix =
+          '${videoForUpload!.organizationId!}_${videoForUpload.project!.projectId}_${DateTime.now().millisecondsSinceEpoch}';
+      final Directory directory = await getApplicationDocumentsDirectory();
+      var x = '/video_$suffix.mp4';
+      final File mFile = File('${directory.path}$x');
+      var fileName = 'video_$suffix.mp4';
       var firebaseStorageRef = FirebaseStorage.instance
           .ref()
           .child(videoStorageName)
@@ -297,8 +369,7 @@ class CloudStorageBloc {
       pp('$mm file url is available, meaning that upload is complete: \n$url');
       _printSnapshot(taskSnapshot);
       // upload thumbnail here
-      final thumbName =
-          'thumbnail@${DateTime.now().toUtc().microsecondsSinceEpoch}.${'jpg'}';
+      final thumbName = 'thumbnail_$suffix.jpg';
       final firebaseStorageRef2 = FirebaseStorage.instance
           .ref()
           .child(videoStorageName)
@@ -323,7 +394,7 @@ class CloudStorageBloc {
 
       pp('$mm adding video ..... 😡😡 distance: '
           '${distance.toStringAsFixed(2)} metres 😡😡');
-      var u = const Uuid();
+      var u = Uuid.v4().toString();
       final messageTitle = await getFCMMessageTitle();
       final videoArrived = await getFCMMessage('videoArrived');
       video = Video(
@@ -342,11 +413,44 @@ class CloudStorageBloc {
           projectPositionId: videoForUpload.projectPositionId,
           projectPolygonId: videoForUpload.projectPolygonId,
           organizationId: _user!.organizationId,
-          videoId: u.v4(),
+          videoId: u,
           durationInSeconds: null,
           userUrl: _user!.imageUrl,
           size: 0.0);
 
+      //todo - write video to realm ....
+
+      mrm.Video mVid = mrm.Video(
+        ObjectId(),
+        url: video.url,
+        caption: 'tbd',
+        created: DateTime.now().toUtc().toIso8601String(),
+        userId: _user!.userId,
+        userName: _user!.name,
+        translatedTitle: messageTitle,
+        translatedMessage: videoArrived,
+        projectPosition: mrm.Position(
+          type: 'Point',
+          latitude: videoForUpload.position!.coordinates[1],
+          longitude: videoForUpload.position!.coordinates[0],
+          coordinates: [
+            videoForUpload.position!.coordinates[0],
+            videoForUpload.position!.coordinates[0]
+          ],
+        ),
+        distanceFromProjectPosition: distance,
+        projectId: videoForUpload.project!.projectId!,
+        thumbnailUrl: thumbUrl,
+        projectName: videoForUpload.project!.name,
+        projectPositionId: videoForUpload.projectPositionId,
+        projectPolygonId: videoForUpload.projectPolygonId,
+        organizationId: _user!.organizationId,
+        videoId: u,
+        durationInSeconds: null,
+        userUrl: _user!.imageUrl,
+      );
+      var res = realmSyncApi.addVideos([mVid]);
+      pp('$mm realmSyncApi.addVideos: $res');
       await dataApiDog.addVideo(video);
       await cacheManager.removeUploadedVideo(video: videoForUpload);
       pp('$mm video upload process completed, tell the faithful listener!.\n');

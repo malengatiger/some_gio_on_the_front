@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>APNS_ENABLED</key>
+	<true/>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>dev.flutter.background.refresh</string>
@@ -14,6 +16,8 @@
 	<string>Geo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleGetInfoString</key>
+	<string></string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -41,6 +45,16 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>DJISDKAppKey</key>
+	<string>477f2317eb3041e07f249a58</string>
+	<key>FCM_ENABLED</key>
+	<true/>
+	<key>FirebaseApp</key>
+	<array>
+		<string>com.google.firebase.messaging</string>
+	</array>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
 	<key>FirebaseMessagingAutoInitEnabled</key>
 	<false/>
 	<key>ITSAppUsesNonExemptEncryption</key>
@@ -62,8 +76,12 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>The app will need to manage a drone via Bluetooth in order to monitor your projects</string>
 	<key>NSCameraUsageDescription</key>
 	<string>The camera is needed to do your work as Monitor</string>
+	<key>NSHumanReadableCopyright</key>
+	<string></string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Your location is requested by your manager or supervisor via notifications in the background</string>
 	<key>NSLocationAlwaysUsageDescription</key>
@@ -110,14 +128,8 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>CFBundleGetInfoString</key>
-	<string></string>
-	<key>DJISDKAppKey</key>
-	<string>477f2317eb3041e07f249a58</string>
-	<key>NSHumanReadableCopyright</key>
-	<string></string>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>The app will need to manage a drone via Bluetooth in order to monitor your projects</string>
+	<key>firebase_messaging_enabled</key>
+	<true/>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
 </dict>

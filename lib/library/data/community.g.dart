@@ -20,6 +20,7 @@ class CommunityAdapter extends TypeAdapter<Community> {
       name: fields[0] as String?,
       countryId: fields[1] as String?,
       email: fields[3] as String?,
+      id: fields[13] as String?,
       countryName: fields[4] as String?,
       polygon: (fields[8] as List?)?.cast<Position>(),
       created: fields[5] as String?,
@@ -35,7 +36,7 @@ class CommunityAdapter extends TypeAdapter<Community> {
   @override
   void write(BinaryWriter writer, Community obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -59,7 +60,9 @@ class CommunityAdapter extends TypeAdapter<Community> {
       ..writeByte(11)
       ..write(obj.ratings)
       ..writeByte(12)
-      ..write(obj.nearestCities);
+      ..write(obj.nearestCities)
+      ..writeByte(13)
+      ..write(obj.id);
   }
 
   @override

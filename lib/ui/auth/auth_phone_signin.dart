@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:geo_monitor/initializer.dart';
 import 'package:geo_monitor/library/api/data_api_og.dart';
+import 'package:geo_monitor/library/bloc/fcm_bloc.dart';
 import 'package:geo_monitor/library/bloc/isolate_handler.dart';
 import 'package:geo_monitor/library/data/settings_model.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 
 import 'package:pin_code_fields/pin_code_fields.dart';
 
@@ -91,6 +94,9 @@ class AuthPhoneSignInState extends State<AuthPhoneSignIn>
   }
 
   void _onSignedIn(ur.User user) async {
+    pp('$mm _onSignedIn ... user: ${user.toJson()}, starting dataHandler');
+    await initializer.initializeGioServices();
+    realmSyncApi = RealmSyncApi();
     dataHandler.getOrganizationData();
     if (mounted) {
       Navigator.of(context).pop(user);
@@ -179,7 +185,7 @@ class _AuthPhoneSigninCardState extends State<AuthPhoneSigninCard> {
   final _formKey = GlobalKey<FormState>();
   bool _codeHasBeenSent = false;
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-  final mm = '🥬🥬🥬🥬🥬🥬 AuthPhoneSignInMobile: ';
+  final mm = '🥬🥬🥬🥬🥬🥬😡 AuthPhoneSigninCard: 😡';
   String? phoneVerificationId;
   String? code;
   final phoneController = TextEditingController(text: "+19985550000");

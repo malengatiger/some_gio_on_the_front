@@ -16,17 +16,21 @@ class Organization extends HiveObject {
   String? countryName;
   @HiveField(5)
   String? created;
+  @HiveField(6)
+  String? id;
 
   Organization(
       {required this.name,
       required this.countryId,
       required this.email,
+        this.id,
       required this.created,
       required this.countryName,
       required this.organizationId});
 
   Organization.fromJson(Map data) {
     name = data['name'];
+    id = data['id'];
     countryId = data['countryId'];
     organizationId = data['organizationId'];
     email = data['email'];
@@ -37,6 +41,7 @@ class Organization extends HiveObject {
   Map<String, dynamic> toJson() {
     Map<String, dynamic> map = {
       'name': name,
+      'id': id,
       'created': created,
       'countryId': countryId,
       'organizationId': organizationId,

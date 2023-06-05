@@ -20,6 +20,7 @@ class ProjectAdapter extends TypeAdapter<Project> {
       name: fields[0] as String?,
       description: fields[2] as String?,
       organizationId: fields[3] as String?,
+      id: fields[16] as String?,
       communities: (fields[11] as List?)?.cast<Community>(),
       nearestCities: (fields[6] as List?)?.cast<City>(),
       photos: (fields[8] as List?)?.cast<Photo>(),
@@ -39,7 +40,7 @@ class ProjectAdapter extends TypeAdapter<Project> {
   @override
   void write(BinaryWriter writer, Project obj) {
     writer
-      ..writeByte(16)
+      ..writeByte(17)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -71,7 +72,9 @@ class ProjectAdapter extends TypeAdapter<Project> {
       ..writeByte(14)
       ..write(obj.translatedMessage)
       ..writeByte(15)
-      ..write(obj.translatedTitle);
+      ..write(obj.translatedTitle)
+      ..writeByte(16)
+      ..write(obj.id);
   }
 
   @override

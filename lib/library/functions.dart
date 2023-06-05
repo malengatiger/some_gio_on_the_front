@@ -924,6 +924,7 @@ showSnackBar(
   ));
 
 }
+@Deprecated('Deprecated, please use getStartEndDatesFromDays')
 Future<Map<String, String>> getStartEndDates({int? numberOfDays}) async {
   int numberOfDays = 7;
   var settings = await prefsOGx.getSettings();
@@ -939,6 +940,25 @@ Future<Map<String, String>> getStartEndDates({int? numberOfDays}) async {
   map['endDate'] = endDate;
 
   return map;
+}
+
+(String, String ) getStartEndDatesFromDays({required int numberOfDays})  {
+
+  var startDate = DateTime.now()
+      .subtract(Duration(days: numberOfDays))
+      .toUtc()
+      .toIso8601String();
+
+  var endDate = DateTime.now().toUtc().toIso8601String();
+  var rec = (startDate, endDate);
+  return rec;
+}
+
+(String, String ) getStartEndDatesFromHours({required int numberOfHours})  {
+  var endDate = DateTime.now().toUtc().toIso8601String();
+  var startDate = DateTime.now().toUtc().subtract(Duration(hours: numberOfHours)).toIso8601String();
+  var rec = (startDate, endDate);
+  return rec;
 }
 
 void sortActivitiesDescending(List<ActivityModel> models) {
@@ -981,9 +1001,10 @@ SettingsModel getBaseSettings() {
       created: DateTime.now().toUtc().toIso8601String(),
       organizationId: null,
       projectId: null,
-      activityStreamHours: 24,
-      numberOfDays: 30,
+      activityStreamHours: 24 * 7,
+      numberOfDays: 120,
       translatedMessage: null,
+      refreshRateInMinutes: 2,
       translatedTitle: null,
       locale: 'en');
 

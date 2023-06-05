@@ -29,11 +29,14 @@ class OrgMessage extends HiveObject {
   String? result;
   @HiveField(11)
   String? orgMessageId;
+  @HiveField(12)
+  String? id;
 
   OrgMessage(
       {required this.name,
         required this.message,
         required this.userId,
+        this.id,
         required this.orgMessageId,
         required this.created,
         required this.projectId,
@@ -46,6 +49,7 @@ class OrgMessage extends HiveObject {
   OrgMessage.fromJson(Map data) {
     name = data['name'];
     userId = data['userId'];
+    id = data['id'];
     orgMessageId = data['orgMessageId'];
     message = data['message'];
     created = data['created'];
@@ -61,6 +65,7 @@ class OrgMessage extends HiveObject {
     Map<String, dynamic> map = {
       'name': name,
       'userId': userId,
+      'id': id,
       'orgMessageId': orgMessageId,
       'message': message,
       'created': created,

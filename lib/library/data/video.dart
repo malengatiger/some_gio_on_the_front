@@ -46,10 +46,13 @@ class Video extends HiveObject {
 
   @HiveField(18)
   String? translatedTitle;
+  @HiveField(19)
+  String? id;
 
   Video(
       {required this.url,
       this.caption,
+        this.id,
       this.projectPositionId,
       this.projectPolygonId,
       required this.created,
@@ -70,6 +73,7 @@ class Video extends HiveObject {
 
   Video.fromJson(Map data) {
     url = data['url'];
+    id = data['id'];
     projectPositionId = data['projectPositionId'];
     projectPolygonId = data['projectPolygonId'];
     caption = data['caption'];
@@ -98,6 +102,7 @@ class Video extends HiveObject {
   Map<String, dynamic> toJson() {
     Map<String, dynamic> map = {
       'url': url,
+      'id': id,
       'projectPositionId': projectPositionId,
       'projectPolygonId': projectPolygonId,
       'caption': caption,

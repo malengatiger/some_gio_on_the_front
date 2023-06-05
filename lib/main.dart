@@ -87,8 +87,8 @@
 // }
 import 'dart:async';
 
-import 'package:animated_splash_screen/animated_splash_screen.dart';
 // import 'package:device_preview/device_preview.dart';
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -100,13 +100,13 @@ import 'package:geo_monitor/library/bloc/isolate_handler.dart';
 import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/bloc/project_bloc.dart';
 import 'package:geo_monitor/library/functions.dart';
-import 'package:geo_monitor/realm_data/data/schemas.dart';
+import 'package:geo_monitor/realm_data/data/realm_skunk.dart';
 import 'package:geo_monitor/splash/splash_page.dart';
 import 'package:geo_monitor/stitch/stitch_service.dart';
 import 'package:geo_monitor/ui/dashboard/dashboard_main.dart';
 import 'package:geo_monitor/ui/intro/intro_main.dart';
+import 'package:geo_monitor/ui/media_getter.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:realm/realm.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 import 'firebase_options.dart';
@@ -147,38 +147,6 @@ void main() async {
   runApp(const ProviderScope(child: GeoApp()));
 }
 
-void testRealmJson() {
-  AppError ae = AppError(id: ObjectId(), errorMessage: 'some error',
-      manufacturer: 'Apple', brand: 'iPhone 11 Pro', created: DateTime.now().toUtc().toIso8601String(),
-      userName: 'Aubrey',
-      errorPosition: Position(coordinates: [76.85876, -73.79865]));
-
-  City c = City(ObjectId(),
-      cityId: 'ii1324',
-      name: "Pecanwood",
-      created: DateTime.now().toUtc().toIso8601String(),
-      country: 'mZantsi',
-      countryId: 'iutoyto98y',
-      province: 'Gauteng',
-      cityLocation: Position(coordinates: [76.85876, -73.79865]));
-
-  var map = c.toJson();
-  var map2 = ae.toJson();
-  pp('\n\n ........ 🔵🔵🔵🔵🔵🔵 TESTING REALM  🔵🔵🔵🔵🔵🔵');
-  pp('🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵 city json map:  🌸🌸 $map');
-  pp('🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵 appError json map:  🍎🍎🍎 $map2');
-
-  pp('🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵 city json map:  🌸🌸 ${map['cityLocation']}');
-
-  City d = CityJ.fromJson(map);
-  AppError dx = AppErrorJ.fromJson(map2);
-
-  pp('🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵 city map produced json:  🌸🌸 ${d.toJson()}');
-  pp('🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵🔵 appError map produced json:  🍎🍎🍎 ${dx.toJson()}');
-  pp('\n\n DONE WITH REALM !!');
-
-}
-
 class GeoApp extends ConsumerWidget {
   const GeoApp({super.key});
 
@@ -211,7 +179,7 @@ class GeoApp extends ConsumerWidget {
             theme: themeBloc.getTheme(themeIndex).lightTheme,
             darkTheme: themeBloc.getTheme(themeIndex).darkTheme,
             themeMode: ThemeMode.system,
-            // home:  const DroneMain()
+            // home:  const MediaGetter(),
             home: AnimatedSplashScreen(
               duration: 5000,
               splash: const SplashWidget(),

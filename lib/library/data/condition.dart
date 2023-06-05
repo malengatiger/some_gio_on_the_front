@@ -27,10 +27,13 @@ class Condition extends HiveObject {
   String? projectId;
   @HiveField(10)
   String? projectName;
+  @HiveField(11)
+  String? id;
 
   Condition(
       {required this.url,
         this.caption,
+        this.id,
         required this.created,
         required this.conditionId,
         required this.userId,
@@ -47,6 +50,7 @@ class Condition extends HiveObject {
     caption = data['caption'];
     created = data['created'];
     userId = data['userId'];
+    id = data['id'];
     conditionId = data['conditionId'];
 
     userName = data['userName'];
@@ -64,6 +68,7 @@ class Condition extends HiveObject {
       'caption': caption,
       'conditionId': conditionId,
       'created': created,
+      'id': id,
       'userId': userId,
       'userName': userName,
       'rating': rating,

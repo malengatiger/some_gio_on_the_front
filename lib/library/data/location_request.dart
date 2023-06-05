@@ -24,12 +24,16 @@ class LocationRequest extends HiveObject {
   @HiveField(8)
   String? translatedTitle;
 
+  @HiveField(9)
+  String? id;
+
   //private String , , , ;
   //     private String , userName, organizationName;
 
   LocationRequest(
       {required this.organizationId,
       this.requesterId,
+        this.id,
       required this.created,
       required this.requesterName,
       required this.userName,
@@ -44,7 +48,7 @@ class LocationRequest extends HiveObject {
     requesterId = data['requesterId'];
     translatedMessage = data['translatedMessage'];
     translatedTitle = data['translatedTitle'];
-
+    id = data['id'];
     userId = data['userId'];
     userName = data['userName'];
     organizationName = data['organizationName'];
@@ -56,6 +60,7 @@ class LocationRequest extends HiveObject {
       'organizationId': organizationId,
       'requesterId': requesterId,
       'created': created,
+      'id': id,
       'translatedMessage': translatedMessage,
       'translatedTitle': translatedTitle,
       'userId': userId,

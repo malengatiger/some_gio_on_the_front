@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:firebase_core/firebase_core.dart';
@@ -7,12 +8,12 @@ import 'package:firebase_messaging/firebase_messaging.dart' as fb;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geo_monitor/library/api/data_api_og.dart';
-import 'package:geo_monitor/library/bloc/data_refresher.dart';
 import 'package:geo_monitor/library/bloc/isolate_handler.dart';
 import 'package:geo_monitor/library/bloc/location_request_handler.dart';
 import 'package:geo_monitor/library/data/activity_model.dart';
+import 'package:geo_monitor/realm_data/data/app_services.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:get_storage/get_storage.dart';
-// import 'package:universal_platform/universal_platform.dart';
 
 import '../../device_location/device_location_bloc.dart';
 import '../api/prefs_og.dart';
@@ -44,17 +45,16 @@ class FCMBloc {
   final fb.FirebaseMessaging firebaseMessaging;
   final CacheManager cacheManager;
   final LocationRequestHandler locationRequestHandler;
+  final RealmAppServices realmAppServices;
 
   FCMBloc(
     this.firebaseMessaging,
     this.cacheManager,
     this.locationRequestHandler,
+    this.realmAppServices,
   ) {
-    isolateHandler = IsolateDataHandler(
-      prefsOGx,
-      appAuth,
-      cacheManager,
-    );
+    isolateHandler =
+        IsolateDataHandler(prefsOGx, appAuth, cacheManager, realmSyncApi);
   }
 
   final StreamController<User> userController = StreamController.broadcast();
@@ -86,27 +86,38 @@ class FCMBloc {
       StreamController.broadcast();
 
   Stream<ActivityModel> get activityStream => _activityController.stream;
+
   Stream<LocationResponse> get locationResponseStream =>
       _locationResponseController.stream;
 
   Stream<GeofenceEvent> get geofenceStream => _geofenceController.stream;
+
   Stream<SettingsModel> get settingsStream => settingsStreamController.stream;
 
   Stream<User> get userStream => userController.stream;
+
   Stream<Project> get projectStream => _projectController.stream;
+
   Stream<ProjectPosition> get projectPositionStream =>
       _projectPositionController.stream;
+
   Stream<ProjectPolygon> get projectPolygonStream =>
       _projectPolygonController.stream;
 
   Stream<Photo> get photoStream => _photoController.stream;
+
   Stream<Video> get videoStream => _videoController.stream;
+
   Stream<Audio> get audioStream => _audioController.stream;
+
   Stream<Condition> get conditionStream => _conditionController.stream;
+
   Stream<OrgMessage> get messageStream => _messageController.stream;
+
   Stream<String> get killStream => _killController.stream;
 
   User? user;
+
   void closeStreams() {
     _geofenceController.close();
     userController.close();
@@ -122,72 +133,99 @@ class FCMBloc {
   }
 
   Future initialize() async {
-    // pp("$mm initialize ....... FIREBASE MESSAGING ...........................");
+    pp("\n\n$mm initialize ....... FIREBASE MESSAGING ...........................");
     user = await prefsOGx.getUser();
-
-    NotificationSettings settings = await firebaseMessaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
-
-    pp('$mm initialize: User granted permission: ${settings.authorizationStatus}');
-
-    firebaseMessaging.setAutoInitEnabled(true);
-    firebaseMessaging.onTokenRefresh.listen((newToken) {
-      pp("$mm onTokenRefresh: 🍎 🍎 🍎 update user: token: $newToken ... 🍎 🍎 ");
-      user!.fcmRegistration = newToken;
-      dataApiDog.updateUser(user!);
-    });
-
-    // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('app_icon');
-
-    final DarwinInitializationSettings initializationSettingsDarwin =
-        DarwinInitializationSettings(
-            onDidReceiveLocalNotification: onDidReceiveLocalNotification);
-
-    const LinuxInitializationSettings initializationSettingsLinux =
-        LinuxInitializationSettings(defaultActionName: 'Open notification');
-
-    final InitializationSettings initializationSettings =
-        InitializationSettings(
-            android: initializationSettingsAndroid,
-            iOS: initializationSettingsDarwin,
-            linux: initializationSettingsLinux);
-
-    FlutterLocalNotificationsPlugin().initialize(initializationSettings,
-        onDidReceiveNotificationResponse: onDidReceiveNotificationResponse);
-
-    fb.FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      // RemoteNotification? notification = message.notification;
-      // AndroidNotification? android = message.notification?.android;
-      if (message.data['activity'] != null) {
-        pp("$mm onMessage: 🍎 🍎 activity message has arrived!  ... 🍎 🍎 ");
-      } else if (message.data['geofenceEvent'] != null) {
-        pp("$mm onMessage: 🍎 🍎 geofenceEvent message has arrived!  ... 🍎 🍎 ");
-      } else if (message.data['locationRequest'] != null) {
-        pp("$mm onMessage: 🍎 🍎 locationRequest message has arrived!  ... 🍎 🍎 ");
-      } else if (message.data['locationResponse'] != null) {
-        pp("$mm onMessage: 🍎 🍎 locationResponse message has arrived!  ... 🍎 🍎 ");
-      } else if (message.data['user'] != null) {
-        pp("$mm onMessage: 🍎 🍎 user message has arrived!  ... 🍎 🍎\n ");
-      } else {
-        pp("$mm onMessage: 🍎 🍎 some other geo message has arrived!  ... 🍎 🍎 ");
+/*
+Name:GioMonitorKey
+Key ID:5Z3VPY2QLR
+Services:Apple Push Notifications service (APNs)
+ */
+    try {
+      if (Platform.isIOS) {
+        try {
+          pp('$mm ERROR ${E.redDot}${E.redDot}${E.redDot} : getting APNS token ...');
+          var token = await FirebaseMessaging.instance.getAPNSToken();
+          pp('$mm APNS token: $token');
+        } catch (e) {
+          pp('$mm ERROR ${E.redDot}${E.redDot}${E.redDot} : failed to get APNS token: $e');
+        }
       }
-      processFCMMessage(message);
-    });
 
-    fb.FirebaseMessaging.onBackgroundMessage(
-        geoFirebaseMessagingBackgroundHandler);
+      NotificationSettings settings = await firebaseMessaging.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
 
-    fb.FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      pp('$mm onMessageOpenedApp:  🍎 🍎 A new onMessageOpenedApp event was published! ${message.data}');
+      pp('$mm initialize: User granted permission, status: ${settings.authorizationStatus}');
+
+      firebaseMessaging.setAutoInitEnabled(true);
+      firebaseMessaging.onTokenRefresh.listen((newToken) {
+        pp("$mm onTokenRefresh: 🍎 🍎 🍎 update user: token: $newToken ... 🍎 🍎 ");
+        user!.fcmRegistration = newToken;
+        dataApiDog.updateUser(user!);
+      });
+
+      // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('app_icon');
+
+      final DarwinInitializationSettings initializationSettingsDarwin =
+          DarwinInitializationSettings(
+              onDidReceiveLocalNotification: onDidReceiveLocalNotification);
+
+      const LinuxInitializationSettings initializationSettingsLinux =
+          LinuxInitializationSettings(defaultActionName: 'Open notification');
+
+      final InitializationSettings initializationSettings =
+          InitializationSettings(
+              android: initializationSettingsAndroid,
+              iOS: initializationSettingsDarwin,
+              linux: initializationSettingsLinux);
+
+      FlutterLocalNotificationsPlugin().initialize(initializationSettings,
+          onDidReceiveNotificationResponse: onDidReceiveNotificationResponse);
+
+      fb.FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        // RemoteNotification? notification = message.notification;
+        // AndroidNotification? android = message.notification?.android;
+        if (message.data['activity'] != null) {
+          pp("$mm onMessage: 🍎 🍎 activity message has arrived!  ... 🍎 🍎 ");
+        } else if (message.data['geofenceEvent'] != null) {
+          pp("$mm onMessage: 🍎 🍎 geofenceEvent message has arrived!  ... 🍎 🍎 ");
+        } else if (message.data['locationRequest'] != null) {
+          pp("$mm onMessage: 🍎 🍎 locationRequest message has arrived!  ... 🍎 🍎 ");
+        } else if (message.data['locationResponse'] != null) {
+          pp("$mm onMessage: 🍎 🍎 locationResponse message has arrived!  ... 🍎 🍎 ");
+        } else if (message.data['user'] != null) {
+          pp("$mm onMessage: 🍎 🍎 user message has arrived!  ... 🍎 🍎\n ");
+        } else {
+          pp("$mm onMessage: 🍎 🍎 some other geo message has arrived!  ... 🍎 🍎 ");
+        }
+        processFCMMessage(message);
+      });
+
+      fb.FirebaseMessaging.onBackgroundMessage(
+          geoFirebaseMessagingBackgroundHandler);
+
+      fb.FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        pp('$mm onMessageOpenedApp:  🍎 🍎 A new onMessageOpenedApp event was published! ${message.data}');
+      });
+    } catch (e) {
+      pp('${E.redDot}${E.redDot} Firebase setup error: $e');
+    }
+    pp("\n\n$mm initialize ....... FIREBASE MESSAGING - done! - will subscribeToTopics() ...........................");
+
+    var msg = await FirebaseMessaging.instance.getInitialMessage();
+    if (msg != null) {
+      processFCMMessage(msg);
+    }
+    FirebaseMessaging.onMessageOpenedApp.listen((event) {
+      processFCMMessage(event);
     });
     subscribeToTopics();
   }
@@ -199,7 +237,7 @@ class FCMBloc {
       return;
     }
 
-    pp("$mm ..... subscribe to Gio FCM Topics ...........................");
+    pp("\n\n$mm ..... attempt to subscribe to Gio FCM Topics ...........................");
     final start = DateTime.now();
     try {
       await firebaseMessaging
@@ -247,12 +285,13 @@ class FCMBloc {
       pp("\n\n$mm subscribeToTopics: 🍎 subscription process has been started for all 14 organization topics 🍎"
           " Elapsed time: ${end.difference(start).inMilliseconds} milliseconds\n");
     } catch (e) {
-      pp('$mm Problem with subscribing to topics! \n$e');
+      pp('\n\n$mm Problem with subscribing to topics! $e\n\n');
     }
     return null;
   }
 
   final blue = '🔵🔵🔵';
+
   Future processFCMMessage(fb.RemoteMessage message) async {
     // pp('$mm processFCMMessage: $blue processing newly arrived FCM message; messageId:: ${message.messageId}');
 

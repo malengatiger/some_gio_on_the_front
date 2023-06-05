@@ -2,9 +2,10 @@ import 'package:hive/hive.dart';
 
 import '../data/city.dart';
 import '../data/photo.dart';
-import '../data/rating_content.dart';
 import '../data/position.dart';
+import '../data/rating_content.dart';
 import '../data/video.dart';
+
 part 'community.g.dart';
 
 @HiveType(typeId: 13)
@@ -33,11 +34,14 @@ class Community extends HiveObject {
   List<RatingContent>? ratings = [];
   @HiveField(12)
   List<City>? nearestCities = [];
+  @HiveField(13)
+  String? id;
 
   Community(
       {required this.name,
       this.countryId,
       this.email,
+      this.id,
       required this.countryName,
       this.polygon,
       required this.created,
@@ -50,6 +54,7 @@ class Community extends HiveObject {
     countryId = data['countryId'];
     communityId = data['communityId'];
     email = data['email'];
+    id = data['id'];
     countryName = data['countryName'];
     communityId = data['communityId'];
     created = data['created'];
@@ -90,6 +95,7 @@ class Community extends HiveObject {
       }
     }
   }
+
   Map<String, dynamic> toJson() {
     List mPolygon = [];
     if (polygon != null) {
@@ -126,6 +132,7 @@ class Community extends HiveObject {
       'countryId': countryId,
       'communityId': communityId,
       'email': email,
+      'id': id,
       'countryName': countryName,
       'polygon': mPolygon,
       'population': population,

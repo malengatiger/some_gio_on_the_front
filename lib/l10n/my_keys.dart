@@ -11,6 +11,9 @@ class MyKeys {
   }
 
   static _buildMap() {
+    hashMap["enterRateInMinutes"] = "Enter the number of minutes for data refresh";
+    hashMap["refreshRateInMinutes"] = "Refresh Rate In Minutes";
+
     hashMap["upgrade"] = "upgrade";
     hashMap["upgradeText"] = "upgradeText";
     hashMap["payment"] = "payment";

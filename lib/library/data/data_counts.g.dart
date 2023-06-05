@@ -19,6 +19,7 @@ class DataCountsAdapter extends TypeAdapter<DataCounts> {
     return DataCounts(
       projectId: fields[0] as String?,
       users: fields[2] as int?,
+      id: fields[14] as String?,
       created: fields[3] as String?,
       userId: fields[5] as String?,
       videos: fields[7] as int?,
@@ -36,7 +37,7 @@ class DataCountsAdapter extends TypeAdapter<DataCounts> {
   @override
   void write(BinaryWriter writer, DataCounts obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.projectId)
       ..writeByte(1)
@@ -62,7 +63,9 @@ class DataCountsAdapter extends TypeAdapter<DataCounts> {
       ..writeByte(12)
       ..write(obj.fieldMonitorSchedules)
       ..writeByte(13)
-      ..write(obj.activities);
+      ..write(obj.activities)
+      ..writeByte(14)
+      ..write(obj.id);
   }
 
   @override

@@ -19,6 +19,7 @@ class PhotoAdapter extends TypeAdapter<Photo> {
     return Photo(
       url: fields[0] as String?,
       caption: fields[2] as String?,
+      id: fields[20] as String?,
       created: fields[3] as String?,
       userId: fields[6] as String?,
       userName: fields[8] as String?,
@@ -43,7 +44,7 @@ class PhotoAdapter extends TypeAdapter<Photo> {
   @override
   void write(BinaryWriter writer, Photo obj) {
     writer
-      ..writeByte(20)
+      ..writeByte(21)
       ..writeByte(0)
       ..write(obj.url)
       ..writeByte(1)
@@ -83,7 +84,9 @@ class PhotoAdapter extends TypeAdapter<Photo> {
       ..writeByte(18)
       ..write(obj.translatedMessage)
       ..writeByte(19)
-      ..write(obj.translatedTitle);
+      ..write(obj.translatedTitle)
+      ..writeByte(20)
+      ..write(obj.id);
   }
 
   @override

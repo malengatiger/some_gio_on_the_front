@@ -1,86 +1,68 @@
-import 'package:json_annotation/json_annotation.dart';
+import 'dart:typed_data';
+
+import 'package:geo_monitor/library/functions.dart';
 import 'package:realm/realm.dart';
 
 part 'schemas.g.dart';
 
 @RealmModel()
-@JsonSerializable(explicitToJson: true)
+//@MapTo('cities')
 class _City {
   @PrimaryKey()
-  late ObjectId? id;
+  @MapTo('_id')
+  late ObjectId id;
+
   late String? cityId;
-  late String? countryId, province, country, created, name;
-  late _Position? cityLocation;
+  late String? countryId;
+  late String? name;
+  late _Position? position;
+  late String? stateId;
+  late String? stateName;
+  late String? countryName;
 }
 
-extension CityJ on City {
-  static City fromJson(Map<String, dynamic> json) {
-    var mCity = City(json['id'],
-        name: json['name'],
-        cityId: json['cityId'],
-        countryId: json['countryId'],
-        country: json['country'],
-        province: json['province'],
-        cityLocation: json['cityLocation'] == null
-            ? null
-            : PositionJ.fromJson(json['cityLocation']!),
-        created: json['created']);
-    return mCity;
-  }
 
-  Map<String, dynamic> toJson() {
-    Map<String, dynamic> map = {};
-    map['cityId'] = cityId;
-    map['countryId'] = countryId;
-    map['country'] = country;
-    map['province'] = province;
-    map['name'] = name;
-    map['created'] = created;
-    if (cityLocation != null) {
-      map['cityLocation'] = cityLocation!.toJson();
-    }
-    return map;
-  }
+@RealmModel()
+//@MapTo('states')
+class _State {
+  @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
+
+  late String? countryId,  name;
+  late _Position? position;
+  late String? stateId;
+  late String? countryName;
 }
 
+//
 @RealmModel(ObjectType.embeddedObject)
 class _Position {
   late String? type = 'Point';
+  late double? latitude;
+  late double? longitude;
   late List<double> coordinates = [];
 }
 
-///extension to provide toJson fromJson for Position
-extension PositionJ on Position {
-  Map<String, dynamic> toJson() {
-    Map<String, dynamic> map = {};
-    map['type'] = type;
-    map['coordinates'] = coordinates;
-    return map;
-  }
-
-  static Position fromJson(Map<String, dynamic> json) {
-    var position = Position(
-      type: json['type'],
-      coordinates: json['coordinates'],
-    );
-    return position;
-  }
-}
-
 @RealmModel()
+//@MapTo('audios')
 class _Audio {
   @PrimaryKey()
+  @MapTo('_id')
   late ObjectId id;
   late String? audioId;
   late int? durationInSeconds = 0;
   late String? created;
   late String? url;
   late String? projectPositionId;
+  @Indexed()
   late String? userId;
   late String? userName;
+  @Indexed()
   late String? organizationId;
   late _Position? projectPosition;
   late double? distanceFromProjectPosition;
+  @Indexed()
   late String? projectId;
   late String? projectName;
   late String? projectPolygonId;
@@ -90,76 +72,26 @@ class _Audio {
   late String? caption;
 }
 
-extension AudioJ on Audio {
-  Map<String, dynamic> toJson() {
-    Map<String, dynamic> map = {
-      'url': url,
-      'userUrl': userUrl,
-      'projectPositionId': projectPositionId,
-      'projectPolygonId': projectPolygonId,
-      'caption': caption,
-      'created': created,
-      'translatedMessage': translatedMessage,
-      'translatedTitle': translatedTitle,
-      'durationInSeconds': durationInSeconds,
-      'userId': userId,
-      'audioId': audioId,
-      'organizationId': organizationId,
-      'userName': userName,
-      'distanceFromProjectPosition': distanceFromProjectPosition,
-      'projectId': projectId,
-      'projectName': projectName,
-      'projectPosition':
-          projectPosition == null ? null : projectPosition!.toJson()
-    };
-    return map;
-  }
-
-  static Audio fromJson(Map<String, dynamic> data) {
-    Position? pos;
-    if (data['projectPosition']) {
-      pos = Position(
-          type: 'Point', coordinates: data['projectPosition']['coordinates']);
-    }
-    var audio = Audio(data['id'],
-        url: data['url'],
-        userUrl: data['userUrl'],
-        projectPositionId: data['projectPositionId'],
-        projectPolygonId: data['projectPolygonId'],
-        translatedMessage: data['translatedMessage'],
-        translatedTitle: data['translatedTitle'],
-        caption: data['caption'],
-        durationInSeconds: data['durationInSeconds'],
-        created: data['created'],
-        userId: data['userId'],
-        organizationId: data['organizationId'],
-        audioId: data['audioId'],
-        userName: data['userName'],
-        distanceFromProjectPosition: data['distanceFromProjectPosition'],
-        projectId: data['projectId'],
-        projectName: data['projectName'],
-        projectPosition: pos);
-
-    return audio;
-  }
-}
-
 @RealmModel()
+//@MapTo('photos')
 class _Photo {
   @PrimaryKey()
+  @MapTo('_id')
   late ObjectId id;
-
   late String? photoId;
   late String? created;
   late String? url;
   late String? thumbnailUrl;
   late int? landscape;
   late String? projectPositionId;
+  @Indexed()
   late String? userId;
   late String? userName;
+  @Indexed()
   late String? organizationId;
   late _Position? projectPosition;
   late double? distanceFromProjectPosition;
+  @Indexed()
   late String? projectId;
   late String? projectName;
   late String? projectPolygonId;
@@ -169,64 +101,13 @@ class _Photo {
   late String? caption;
 }
 
-extension PhotoJ on Photo {
-  Map<String, dynamic> toJson() {
-    Map<String, dynamic> map = {
-      'url': url,
-      'userUrl': userUrl,
-      'thumbnailUrl': thumbnailUrl,
-      'projectPositionId': projectPositionId,
-      'projectPolygonId': projectPolygonId,
-      'caption': caption,
-      'created': created,
-      'translatedMessage': translatedMessage,
-      'translatedTitle': translatedTitle,
-      'userId': userId,
-      'photoId': photoId,
-      'organizationId': organizationId,
-      'userName': userName,
-      'distanceFromProjectPosition': distanceFromProjectPosition,
-      'projectId': projectId,
-      'projectName': projectName,
-      'projectPosition':
-      projectPosition == null ? null : projectPosition!.toJson()
-    };
-    return map;
-  }
-
-  static Photo fromJson(Map<String, dynamic> data) {
-    Position? pos;
-    if (data['projectPosition']) {
-      pos = Position(
-          type: 'Point', coordinates: data['projectPosition']['coordinates']);
-    }
-    var photo = Photo(data['id'],
-        url: data['url'],
-        userUrl: data['userUrl'],
-        projectPositionId: data['projectPositionId'],
-        projectPolygonId: data['projectPolygonId'],
-        translatedMessage: data['translatedMessage'],
-        translatedTitle: data['translatedTitle'],
-        caption: data['caption'],
-        created: data['created'],
-        userId: data['userId'],
-        organizationId: data['organizationId'],
-        photoId: data['photoId'],
-        userName: data['userName'],
-        distanceFromProjectPosition: data['distanceFromProjectPosition'],
-        projectId: data['projectId'],
-        projectName: data['projectName'],
-        projectPosition: pos);
-
-    return photo;
-  }
-}
-
-
 @RealmModel()
+//@MapTo('videos')
 class _Video {
   @PrimaryKey()
-  late ObjectId objectId;
+  @MapTo('_id')
+  late ObjectId id;
+
   late String? videoId;
   late String? created;
   late String? url;
@@ -247,64 +128,15 @@ class _Video {
   late String? caption;
   late int? durationInSeconds = 0;
 }
-extension VideoJ on Video {
-  Map<String, dynamic> toJson() {
-    Map<String, dynamic> map = {
-      'url': url,
-      'userUrl': userUrl,
-      'projectPositionId': projectPositionId,
-      'projectPolygonId': projectPolygonId,
-      'caption': caption,
-      'created': created,
-      'translatedMessage': translatedMessage,
-      'translatedTitle': translatedTitle,
-      'durationInSeconds': durationInSeconds,
-      'userId': userId,
-      'videoId': videoId,
-      'organizationId': organizationId,
-      'userName': userName,
-      'distanceFromProjectPosition': distanceFromProjectPosition,
-      'projectId': projectId,
-      'projectName': projectName,
-      'projectPosition':
-      projectPosition == null ? null : projectPosition!.toJson()
-    };
-    return map;
-  }
-
-  static Video fromJson(Map<String, dynamic> data) {
-    Position? pos;
-    if (data['projectPosition']) {
-      pos = Position(
-          type: 'Point', coordinates: data['projectPosition']['coordinates']);
-    }
-    var video = Video(data['id'],
-        url: data['url'],
-        userUrl: data['userUrl'],
-        projectPositionId: data['projectPositionId'],
-        projectPolygonId: data['projectPolygonId'],
-        translatedMessage: data['translatedMessage'],
-        translatedTitle: data['translatedTitle'],
-        caption: data['caption'],
-        durationInSeconds: data['durationInSeconds'],
-        created: data['created'],
-        userId: data['userId'],
-        organizationId: data['organizationId'],
-        videoId: data['videoId'],
-        userName: data['userName'],
-        distanceFromProjectPosition: data['distanceFromProjectPosition'],
-        projectId: data['projectId'],
-        projectName: data['projectName'],
-        projectPosition: pos);
-
-    return video;
-  }
-}
 
 
 @RealmModel()
+//@MapTo('organizations')
 class _Organization {
   @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
+
   late String? organizationId;
   late String? name;
   late String? admin;
@@ -315,42 +147,36 @@ class _Organization {
   late String? translatedMessage;
   late String? translatedTitle;
 }
-extension OrganizationJ on Organization {
-  Map<String, dynamic> toJson() {
-    Map<String, dynamic> map = {
-      'name': name,
-      'admin': admin,
-      'countryId': countryId,
-      'countryName': countryName,
-      'email': email,
-      'created': created,
-      'translatedMessage': translatedMessage,
-      'translatedTitle': translatedTitle,
-      'organizationId': organizationId,
-    };
-    return map;
-  }
-
-  static Organization fromJson(Map<String, dynamic> data) {
-
-    var org = Organization(data['id'],
-        name: data['name'],
-        admin: data['admin'],
-        countryId: data['countryId'],
-        countryName: data['countryName'],
-        translatedMessage: data['translatedMessage'],
-        translatedTitle: data['translatedTitle'],
-        email: data['email'],
-        created: data['created']);
-
-    return org;
-  }
-}
 
 @RealmModel()
+//@MapTo('paymentRequests')
+class _GioPaymentRequest {
+  @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
+
+  late int? quantity;
+  late String? currency;
+  late String? organizationId;
+  late String? payerReference;
+  late String? externalReference;
+  late String? beneficiaryName;
+  late String? beneficiaryBankId;
+  late String? beneficiaryAccountNumber;
+  late String? merchant;
+  late String? paymentRequestId;
+  late String? subscriptionId;
+  late String? beneficiaryReference;
+  late String? date;
+}
+
+
+@RealmModel()
+//@MapTo('projects')
 class _Project {
   @PrimaryKey()
-  late ObjectId? id;
+  @MapTo('_id')
+  late ObjectId id;
 
   late String? projectId;
   late String? name;
@@ -364,39 +190,9 @@ class _Project {
   late String? translatedTitle;
 }
 
-extension ProjectJ on Project {
-  Map<String, dynamic> toJson() {
-    Map<String, dynamic> map = {
-      'name': name,
-      'projectId': projectId,
-      'organizationName': organizationName,
-      'description': description,
-      'id': id,
-      'created': created,
-      'translatedMessage': translatedMessage,
-      'translatedTitle': translatedTitle,
-      'organizationId': organizationId,
-    };
-    return map;
-  }
-
-  static Project fromJson(Map<String, dynamic> data) {
-
-    var org = Project(data['id'],
-        name: data['name'],
-        projectId: data['projectId'],
-        organizationId: data['organizationId'],
-        description: data['description'],
-        translatedMessage: data['translatedMessage'],
-        translatedTitle: data['translatedTitle'],
-        created: data['created']);
-
-    return org;
-  }
-}
-
 
 @RealmModel()
+//@MapTo('projectPositions')
 class _ProjectPosition {
   late String? projectName;
   @Indexed()
@@ -404,12 +200,12 @@ class _ProjectPosition {
   late String? caption;
   late String? created;
   @PrimaryKey()
-  late String? id;
+  @MapTo('_id')
+  late ObjectId id;
   late String? projectPositionId;
   @Indexed()
   late String? organizationId;
   late _Position? position;
-  late _PlaceMark? placemark;
   late List<_City> nearestCities = [];
   late String? name;
   late String? userId;
@@ -418,152 +214,17 @@ class _ProjectPosition {
   late String? translatedMessage;
   late String? translatedTitle;
 }
-extension ProjectPositionJ on ProjectPosition {
-  Map<String, dynamic> toJson() {
-    var citiesJsonList = [];
-    for (var value in nearestCities) {
-      var json = value.toJson();
-      citiesJsonList.add(json);
-    }
-    Map<String, dynamic> map = {
-      'caption': caption,
-      'projectId': projectId,
-      'projectPositionId': projectPositionId,
-      'name': name,
-      'id': id,
-      'userId': userId,
-      'possibleAddress': possibleAddress,
-      'created': created,
-      'translatedMessage': translatedMessage,
-      'translatedTitle': translatedTitle,
-      'organizationId': organizationId,
-      'nearestCities': citiesJsonList,
-      'position': {
-        'type': position?.type,
-        'coordinates': position?.coordinates.toList()
-      }
-    };
-    return map;
-  }
-
-  static ProjectPosition fromJson(Map<String, dynamic> data) {
-
-    var nearestCities = <City>[];
-    List cities = data['nearestCities'];
-    for (var value in cities) {
-      Position? pos = Position(type: value['cityLocation']['type'],
-        coordinates: value['cityLocation']['coordinates'], );
-
-      var city = City(value['id'],
-        province: value['province'],
-        cityId: value['cityId'],
-        countryId: value['countryId'],
-        created: value('created'),
-        country: value['country'],
-        name: value['name'],
-        cityLocation: pos,
-      );
-
-      nearestCities.add(city);
-    }
-
-    PlaceMark? placeMark;
-    if (data['placeMark'] != null) {
-      placeMark = PlaceMark(
-        name: data['placeMark']['name'],
-        country: data['placeMark']['country'],
-        administrativeArea: data['placeMark']['administrativeArea'],
-        isoCountryCode: data['placeMark']['isoCountryCode'],
-        locality: data['placeMark']['locality'],
-        postalCode: data['placeMark']['postalCode'],
-        street: data['placeMark']['street'],
-        subAdministrativeArea: data['placeMark']['subAdministrativeArea'],
-        subLocality: data['placeMark']['subLocality'],
-        subThoroughfare: data['placeMark']['subThoroughfare'],
-        thoroughfare: data['placeMark']['thoroughfare'],
-      );
-    }
-    var projectPosition = ProjectPosition(data['id'],
-        name: data['name'],
-        projectId: data['projectId'],
-        organizationId: data['organizationId'],
-        caption: data['caption'],
-        projectName: data['projectName'],
-        userId: data['userId'],
-        possibleAddress: data['possibleAddress'],
-        projectPositionId: data['projectPositionId'],
-        translatedMessage: data['translatedMessage'],
-        translatedTitle: data['translatedTitle'],
-        placemark: placeMark,
-        nearestCities: nearestCities,
-        position: Position(type: data['position']['type'],
-          coordinates: data['position']['coordinates'], ),
-        created: data['created']);
-
-    return projectPosition;
-  }
-}
 
 
 @RealmModel()
-class _PlaceMark {
-  late String? administrativeArea;
-  late String? subAdministrativeArea;
-  late String? locality;
-  late String? subLocality;
-  late String? thoroughfare;
-  late String? subThoroughfare;
-  late String? name;
-  late String? street;
-  late String? country;
-  late String? isoCountryCode;
-  late String? postalCode;
-}
-extension PlaceMarkJ on PlaceMark {
-  Map<String, dynamic> toJson() {
-    Map<String, dynamic> map = {
-      'administrativeArea': administrativeArea,
-      'subAdministrativeArea': subAdministrativeArea,
-      'locality': locality,
-      'subLocality': subLocality,
-      'thoroughfare': thoroughfare,
-      'subThoroughfare': subThoroughfare,
-      'name': name,
-      'street': street,
-      'country': country,
-      'isoCountryCode': isoCountryCode,
-      'postalCode': postalCode,
-    };
-    return map;
-  }
-  static PlaceMark fromJson(Map<String, dynamic> data) {
-    var mark = PlaceMark(
-        administrativeArea: data['administrativeArea'],
-        subAdministrativeArea: data['subAdministrativeArea'],
-        locality: data['locality'],
-        subLocality: data['subLocality'],
-        subThoroughfare: data['subThoroughfare'],
-        thoroughfare: data['thoroughfare'],
-        name: data['name'],
-        street: data['street'],
-        country: data['country'],
-        isoCountryCode: data['isoCountryCode'],
-        postalCode: data['postalCode'],
-    );
-
-
-    return mark;
-  }
-}
-
-
-@RealmModel()
+//@MapTo('projectPolygons')
 class _ProjectPolygon {
   late String? projectName;
   late String? projectId;
   late String? created;
   @PrimaryKey()
-  late String? id;
+  @MapTo('_id')
+  late ObjectId id;
   late String? projectPolygonId;
   @Indexed()
   late String? organizationId;
@@ -576,82 +237,13 @@ class _ProjectPolygon {
   late String? translatedTitle;
 }
 
-extension ProjectPolygonJ on ProjectPolygon {
-  Map<String, dynamic> toJson() {
-    var citiesJsonList = [];
-    for (var value in nearestCities) {
-      var json = value.toJson();
-      citiesJsonList.add(json);
-    }
-    var posJsonList = [];
-    for (var value in positions) {
-      var json = value.toJson();
-      posJsonList.add(json);
-    }
-    Map<String, dynamic> map = {
-      'projectId': projectId,
-      'projectPolygonId': projectPolygonId,
-      'projectName': projectName,
-      'id': id,
-      'userId': userId,
-      'organizationId': organizationId,
-      'created': created,
-      'translatedMessage': translatedMessage,
-      'translatedTitle': translatedTitle,
-      'userName': userName,
-      'nearestCities': citiesJsonList,
-      'positions': posJsonList,
-    };
-    return map;
-  }
-
-  static ProjectPolygon fromJson(Map<String, dynamic> data) {
-
-    var nearestCities = <City>[];
-    List cities = data['nearestCities'];
-    for (var value in cities) {
-      Position? pos = Position(type: value['cityLocation']['type'],
-        coordinates: value['cityLocation']['coordinates'], );
-
-      var city = City(value['id'],
-        province: value['province'],
-        cityId: value['cityId'],
-        countryId: value['countryId'],
-        created: value('created'),
-        country: value['country'],
-        name: value['name'],
-        cityLocation: pos,
-      );
-
-      nearestCities.add(city);
-    }
-    var positions = <Position>[];
-    List mJsonList = data['positions'];
-    for (var value in mJsonList) {
-      Position? pos = Position(type: value['type'],
-        coordinates: value['coordinates'], );
-
-      positions.add(pos);
-    }
-
-    var projectPosition = ProjectPolygon(data['id'],
-        userName: data['userName'],
-        projectId: data['projectId'],
-        organizationId: data['organizationId'],
-        projectName: data['projectName'],
-        userId: data['userId'],
-        projectPolygonId: data['projectPolygonId'],
-        translatedMessage: data['translatedMessage'],
-        translatedTitle: data['translatedTitle'],
-        nearestCities: nearestCities,
-        positions: positions);
-
-    return projectPosition;
-  }
-}
-
 @RealmModel()
+//@MapTo('ratings')
 class _Rating {
+  @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
+
   late String? remarks;
   late String? created;
   late String? audioId;
@@ -668,12 +260,13 @@ class _Rating {
   late String? ratingId;
   late _Position? position;
 }
-extension RatingJ on Rating {
-
-}
 
 @RealmModel()
+//@MapTo('settings')
 class _SettingsModel {
+  @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
   late int? distanceFromProject;
   late int? photoSize;
   late int? maxVideoLengthInSeconds;
@@ -689,10 +282,16 @@ class _SettingsModel {
   late String? locale = "en";
   late String? translatedMessage;
   late String? translatedTitle;
+  late int? refreshRateInMinutes;
 }
 
+
 @RealmModel()
+//@MapTo('dataCounts')
 class _DataCounts {
+  @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
   @Indexed()
   late String? projectId;
   late int? projects;
@@ -710,10 +309,14 @@ class _DataCounts {
   late int? activities;
 }
 
+
 @RealmModel()
+//@MapTo('geofenceEvents')
 class _GeofenceEvent {
-  late String? status;
   @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
+  late String? status;
   late String? geofenceEventId;
   late String? date;
   late String? projectPositionId;
@@ -730,9 +333,13 @@ class _GeofenceEvent {
 }
 
 @RealmModel()
+// @MapTo('users')
 class _User {
   late String? name;
   @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
+
   late String? userId;
   late String? email;
   late String? gender;
@@ -755,9 +362,13 @@ class _User {
   late String? translatedTitle;
 }
 
+
 @RealmModel()
+//@MapTo('subscriptions')
 class _GioSubscription {
   @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
   late String? subscriptionId;
   late String? date;
   late _User? user;
@@ -768,15 +379,24 @@ class _GioSubscription {
 }
 
 @RealmModel()
+//@MapTo('pricing')
 class _Pricing {
+  @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
   late String? countryId;
-  late String date;
+  late String? date;
   late String? countryName;
   late double? monthlyPrice, annualPrice;
 }
 
+
 @RealmModel()
+//@MapTo('orgMessages')
 class _OrgMessage {
+  @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
   late String? name;
   late String? userId;
   late String? message;
@@ -793,8 +413,13 @@ class _OrgMessage {
   late String? orgMessageId;
 }
 
+
 @RealmModel()
+//@MapTo('locationRequests')
 class _LocationRequest {
+  @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
   @Indexed()
   late String? organizationId;
   late String? requesterId;
@@ -807,8 +432,14 @@ class _LocationRequest {
   late String? translatedTitle;
 }
 
+
 @RealmModel()
+//@MapTo('locationResponses')
+
 class _LocationResponse {
+  @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
   late String? date;
   late String? userId;
   @Indexed()
@@ -823,9 +454,14 @@ class _LocationResponse {
   late String? translatedTitle;
 }
 
+
 @RealmModel()
+//@MapTo('activities')
 class _ActivityModel {
   @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
+
   late String? activityModelId;
   late String? activityType;
   late String? date;
@@ -852,22 +488,56 @@ class _ActivityModel {
   late String? userType;
   late String? translatedUserType;
   late _SettingsModel? settingsModel;
-  late int intDate = 0;
+  late int? intDate = 0;
 }
 
+
+@RealmModel(ObjectType.embeddedObject)
+class _Timezone {
+  late String? zoneName;
+  late int? gmtOffset;
+  late String? gmtOffsetName;
+  late String? abbreviation;
+  late String? tzName;
+}
+
+
+
 @RealmModel()
+//@MapTo('countries')
+
 class _Country {
+  @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
   @Indexed()
   late String? name;
   late String? countryId;
-  late String? countryCode;
   late int? population = 0;
   late _Position? position;
+  late String? capital;
+  late String? iso2;
+  late String? iso3;
+  late String? currency;
+  late String? currencyName;
+  late String? currencySymbol;
+  late String? region;
+  late String? subregion;
+  late double? latitude;
+  late double? longitude;
+  late String? emoji;
+  // late List<_Timezone> timezones = [];
 }
 
+
 @RealmModel()
+//@MapTo('fieldMonitorSchedules')
+
 class _FieldMonitorSchedule {
   @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
+
   late String? fieldMonitorScheduleId;
   late String? fieldMonitorId;
   late String? adminId;
@@ -885,8 +555,12 @@ class _FieldMonitorSchedule {
 }
 
 @RealmModel()
+//@MapTo('appErrors')
+
 class _AppError {
-  late ObjectId? id;
+  @PrimaryKey()
+  @MapTo('_id')
+  late ObjectId id;
   late String? errorMessage;
   late String? manufacturer;
   late String? model;
@@ -905,59 +579,6 @@ class _AppError {
   late String? uploadedDate;
 }
 
-extension AppErrorJ on AppError {
-  static AppError fromJson(Map<String, dynamic> data) {
-    Position? pos;
-    if (data['errorPosition'] != null) {
-      pos = Position(
-        type: data['errorPosition']['type'],
-        coordinates: data['errorPosition']['coordinates'],
-      );
-    }
-
-    var err = AppError(
-      userUrl: data['userUrl'],
-      errorMessage: data['errorMessage'],
-      manufacturer: data['manufacturer'],
-      model: data['model'],
-      baseOS: data['baseOS'],
-      deviceType: data['deviceType'],
-      created: data['created'],
-      organizationId: data['organizationId'],
-      iosSystemName: data['iosSystemName'],
-      uploadedDate: data['uploadedDate'],
-      userId: data['userId'],
-      brand: data['brand'],
-      userName: data['userName'],
-      iosName: data['iosName'],
-      versionCodeName: data['versionCodeName'],
-      errorPosition: pos,
-    );
-    return err;
-  }
-
-  Map<String, dynamic> toJson() {
-    Map<String, dynamic> map = {
-      'errorMessage': errorMessage,
-      'userUrl': userUrl,
-      'iosSystemName': iosSystemName,
-      'model': model,
-      'created': created,
-      'deviceType': deviceType,
-      'baseOS': baseOS,
-      'userId': userId,
-      'organizationId': organizationId,
-      'brand': brand,
-      'uploadedDate': uploadedDate,
-      'userName': userName,
-      'iosName': iosName,
-      'versionCodeName': versionCodeName,
-      'manufacturer': manufacturer,
-      'errorPosition': errorPosition == null ? null : errorPosition!.toJson()
-    };
-    return map;
-  }
-}
 
 enum ActivityType {
   projectAdded,
@@ -976,56 +597,5 @@ enum ActivityType {
   kill,
 }
 
-ActivityType getActivityType(String type) {
-  switch (type) {
-    case "locationRequest":
-      return ActivityType.locationRequest;
-      break;
-    case "locationResponse":
-      return ActivityType.locationResponse;
-      break;
-    case "geofenceEventAdded":
-      return ActivityType.geofenceEventAdded;
-      break;
-    case "userAddedOrModified":
-      return ActivityType.userAddedOrModified;
-      break;
-    case "polygonAdded":
-      return ActivityType.polygonAdded;
-      break;
-    case "positionAdded":
-      return ActivityType.positionAdded;
-      break;
-    case "audioAdded":
-      return ActivityType.audioAdded;
-      break;
-    case "videoAdded":
-      return ActivityType.videoAdded;
-      break;
-    case "photoAdded":
-      return ActivityType.photoAdded;
-      break;
-    case "projectAdded":
-      return ActivityType.projectAdded;
-      break;
-    case "kill":
-      return ActivityType.kill;
-      break;
-    case "conditionAdded":
-      return ActivityType.conditionAdded;
-      break;
-    case "messageAdded":
-      return ActivityType.messageAdded;
-      break;
-    case "settingsChanged":
-      return ActivityType.settingsChanged;
-      break;
-  }
-  throw Exception('Invalid activity type enum');
-}
 
-extension ParseToString on ActivityType {
-  String toShortString() {
-    return toString().split('.').last;
-  }
-}
+const dice = '🎲🎲🎲 Schemas 🎲🎲🎲🎲 ';

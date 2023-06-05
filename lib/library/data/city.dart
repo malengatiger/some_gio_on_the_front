@@ -1,43 +1,73 @@
 import 'package:geo_monitor/library/data/position.dart';
-import 'package:hive/hive.dart';
-part 'city.g.dart';
 
-@HiveType(typeId: 7)
-class City extends HiveObject {
-  @HiveField(0)
+/*
+private String _id;
+    private String name;
+    private String cityId;
+    private String country;
+    private String countryId;
+    private String stateId;
+    private String stateName;
+    private String countryName;
+    private String province;
+    private Position position;
+    private double latitude;
+    private double longitude;
+ */
+// @HiveType(typeId: 7)
+class City  {
+  //(0)
   String? name;
-  @HiveField(1)
+  //(1)
   String? countryId;
-  @HiveField(2)
+  //(2)
   String? country;
-  @HiveField(3)
+  //(3)
   String? province;
-  @HiveField(4)
+  //(4)
   String? cityId;
-  @HiveField(5)
+  //(5)
   String? created;
-  @HiveField(6)
-  Position? cityLocation;
+  //(6)
+  Position? position;
+  //(7)
+  String? id;
+  //(8)
+  double? latitude;
+  //(9)
+  double? longitude;
+  String? stateId;
+  String? stateName;
+  String? countryName;
 
   City(
       {required this.name,
       required this.countryId,
       required this.province,
       required this.country,
-      required this.cityLocation,
-      required this.created});
+      this.id,
+      this.latitude,
+      this.longitude,
+      required this.position,
+        required this.stateName,
+        required this.countryName,
+      required this.stateId});
 
   City.fromJson(Map data) {
     name = data['name'];
     countryId = data['countryId'];
     country = data['country'];
     province = data['province'];
-    created = data['created'];
+    stateName = data['stateName'];
+    latitude = data['latitude'];
+    longitude = data['longitude'];
+    countryName = data['countryName'];
+    stateId = data['stateId'];
+    id = data['id'];
     cityId = data['cityId'];
-    if (data['cityLocation'] != null) {
-      cityLocation = Position.fromJson( data['cityLocation']);
+    if (data['position'] != null) {
+      position = Position.fromJson(data['position']);
     }
-
   }
   Map<String, dynamic> toJson() {
     Map<String, dynamic> map = {
@@ -46,8 +76,13 @@ class City extends HiveObject {
       'country': country,
       'province': province,
       'cityId': cityId,
-      'created': created,
-      'cityLocation': cityLocation == null? null : cityLocation!.toJson(),
+      'latitude': latitude,
+      'longitude': longitude,
+      'id': id,
+      'stateId': stateId,
+      'countryName': countryName,
+      'stateName': stateName,
+      'position': position == null ? null : position!.toJson(),
     };
     return map;
   }

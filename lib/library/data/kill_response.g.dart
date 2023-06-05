@@ -20,6 +20,7 @@ class KillResponseAdapter extends TypeAdapter<KillResponse> {
       message: fields[1] as String?,
       organizationId: fields[2] as String?,
       date: fields[3] as String?,
+      id: fields[5] as String?,
       user: fields[4] as User?,
       killer: fields[0] as User?,
     );
@@ -28,7 +29,7 @@ class KillResponseAdapter extends TypeAdapter<KillResponse> {
   @override
   void write(BinaryWriter writer, KillResponse obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.killer)
       ..writeByte(1)
@@ -38,7 +39,9 @@ class KillResponseAdapter extends TypeAdapter<KillResponse> {
       ..writeByte(3)
       ..write(obj.date)
       ..writeByte(4)
-      ..write(obj.user);
+      ..write(obj.user)
+      ..writeByte(5)
+      ..write(obj.id);
   }
 
   @override

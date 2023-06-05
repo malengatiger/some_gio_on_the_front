@@ -19,6 +19,7 @@ class ProjectAssignmentAdapter extends TypeAdapter<ProjectAssignment> {
     return ProjectAssignment(
       updated: fields[0] as String?,
       date: fields[2] as String?,
+      id: fields[11] as String?,
       userId: fields[4] as String?,
       userName: fields[6] as String?,
       projectId: fields[7] as String?,
@@ -34,7 +35,7 @@ class ProjectAssignmentAdapter extends TypeAdapter<ProjectAssignment> {
   @override
   void write(BinaryWriter writer, ProjectAssignment obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.updated)
       ..writeByte(1)
@@ -56,7 +57,9 @@ class ProjectAssignmentAdapter extends TypeAdapter<ProjectAssignment> {
       ..writeByte(9)
       ..write(obj.adminId)
       ..writeByte(10)
-      ..write(obj.adminName);
+      ..write(obj.adminName)
+      ..writeByte(11)
+      ..write(obj.id);
   }
 
   @override

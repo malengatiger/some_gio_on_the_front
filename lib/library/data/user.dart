@@ -48,10 +48,14 @@ class User extends HiveObject {
   @HiveField(18)
   String? translatedTitle;
 
+  @HiveField(19)
+  String? id;
+
   User(
       {required this.name,
       required this.email,
       required this.userId,
+        this.id,
       required this.cellphone,
       required this.created,
       required this.userType,
@@ -68,6 +72,7 @@ class User extends HiveObject {
 
   User.fromJson(Map data) {
     name = data['name'];
+    id = data['id'];
     userId = data['userId'];
     password = data['password'];
     imageUrl = data['imageUrl'];
@@ -100,6 +105,7 @@ class User extends HiveObject {
       'password': password,
       'fcmRegistration': fcmRegistration,
       'email': email,
+      'id': id,
       'updated': updated,
       'active': active,
       'cellphone': cellphone,

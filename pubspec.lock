@@ -896,6 +896,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0+0"
+  googleapis_auth:
+    dependency: "direct main"
+    description:
+      name: googleapis_auth
+      sha256: af7c3a3edf9d0de2e1e0a77e994fae0a581c525fa7012af4fa0d4a52ed9484da
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.4.1"
   gql:
     dependency: transitive
     description:
@@ -1112,6 +1120,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.8.1"
+  json_serializable:
+    dependency: "direct dev"
+    description:
+      name: json_serializable
+      sha256: "61a60716544392a82726dd0fa1dd6f5f1fd32aec66422b6e229e7b90d52325c4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.7.0"
   just_audio:
     dependency: "direct main"
     description:
@@ -1484,26 +1500,26 @@ packages:
     dependency: "direct main"
     description:
       name: realm
-      sha256: e9c63a5a982dd4357ba7f13a4dac7cdcf4eb6ec837f2f043a51ba414f4973337
+      sha256: "8af1e4d2728af6ddb43e997c0fec7ec2a514368fd78da4e7eb9a982a7f6e11c1"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.3"
+    version: "1.1.0"
   realm_common:
     dependency: transitive
     description:
       name: realm_common
-      sha256: e31f72feddb77e7dcfb9a8a0d19c25c79d71ecf6d873de8801b9d58cc29b5a5e
+      sha256: f97a8008726a0789e7c3d85b13d17f981b08e4681672781b0b338ff44d4d7fd4
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.3"
+    version: "1.1.0"
   realm_generator:
     dependency: transitive
     description:
       name: realm_generator
-      sha256: "9af5252323e19ba4cd63e984b5aad20a3f809d79a6fee7779ef959456b2bb78e"
+      sha256: "0af9f56816720fb4069f6b6b3b889ec0a1557cf986991fdfc71438c369882701"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.3"
+    version: "1.1.0"
   record:
     dependency: "direct main"
     description:

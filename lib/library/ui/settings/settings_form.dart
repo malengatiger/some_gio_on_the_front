@@ -23,7 +23,10 @@ class SettingsForm extends StatefulWidget {
       {Key? key,
       required this.padding,
       required this.onLocaleChanged,
-      required this.dataApiDog, required this.prefsOGx, required this.organizationBloc, required this.dataHandler})
+      required this.dataApiDog,
+      required this.prefsOGx,
+      required this.organizationBloc,
+      required this.dataHandler})
       : super(key: key);
   final double padding;
   final Function(String locale) onLocaleChanged;
@@ -31,6 +34,7 @@ class SettingsForm extends StatefulWidget {
   final PrefsOGx prefsOGx;
   final OrganizationBloc organizationBloc;
   final IsolateDataHandler dataHandler;
+
   @override
   State<SettingsForm> createState() => SettingsFormState();
 }
@@ -41,14 +45,16 @@ class SettingsFormState extends State<SettingsForm> {
   User? user;
   var orgSettings = <SettingsModel>[];
   Project? selectedProject;
-  SettingsModel? settingsModel;
-  SettingsModel? oldSettingsModel;
+  late SettingsModel settingsModel;
+
+  // SettingsModel? oldSettingsModel;
 
   var distController = TextEditingController(text: '500');
   var videoController = TextEditingController(text: '120');
   var audioController = TextEditingController(text: '20');
   var activityController = TextEditingController(text: '24');
   var daysController = TextEditingController(text: '14');
+  var refreshRateController = TextEditingController(text: '10');
 
   late StreamSubscription<SettingsModel> settingsSubscriptionFCM;
 
@@ -88,55 +94,63 @@ class SettingsFormState extends State<SettingsForm> {
       maxAudioLessThan,
       maxVideoLessThan,
       numberOfDaysForDashboardData,
+      pleaseNumberOfDays,
       selectLanguage,
+      refreshRateInMinutesText,
+      enterRateInMinutes,
       hint;
 
   Future _setTexts() async {
     settingsModel = await prefsOGx.getSettings();
-    oldSettingsModel = await prefsOGx.getSettings();
-    currentLocale = settingsModel!.locale!;
+    currentLocale = settingsModel.locale!;
 
     pp('$mm 🍎🍎 user is here, huh? 🌎 ${user!.name!}');
     _setExistingSettings();
     final m1 =
-        await translator.translate('maxVideoLessThan', settingsModel!.locale!);
+        await translator.translate('maxVideoLessThan', settingsModel.locale!);
     maxVideoLessThan = m1.replaceAll('\$count', '120');
 
     final m2 =
-        await translator.translate('maxAudioLessThan', settingsModel!.locale!);
+        await translator.translate('maxAudioLessThan', settingsModel.locale!);
     maxAudioLessThan = m2.replaceAll('\$count', '30');
     fieldMonitorInstruction = await translator.translate(
-        'fieldMonitorInstruction', settingsModel!.locale!);
+        'fieldMonitorInstruction', settingsModel.locale!);
     maximumMonitoringDistance = await translator.translate(
-        'maximumMonitoringDistance', settingsModel!.locale!);
+        'maximumMonitoringDistance', settingsModel.locale!);
     numberOfDaysForDashboardData = await translator.translate(
-        'numberOfDaysForDashboardData', settingsModel!.locale!);
-    maximumVideoLength = await translator.translate(
-        'maximumVideoLength', settingsModel!.locale!);
-    maximumAudioLength = await translator.translate(
-        'maximumAudioLength', settingsModel!.locale!);
+        'numberOfDaysForDashboardData', settingsModel.locale!);
+    maximumVideoLength =
+        await translator.translate('maximumVideoLength', settingsModel.locale!);
+    maximumAudioLength =
+        await translator.translate('maximumAudioLength', settingsModel.locale!);
     activityStreamHours = await translator.translate(
-        'activityStreamHours', settingsModel!.locale!);
+        'activityStreamHours', settingsModel.locale!);
     selectSizePhotos =
-        await translator.translate('selectSizePhotos', settingsModel!.locale!);
+        await translator.translate('selectSizePhotos', settingsModel.locale!);
     pleaseSelectCountry = await translator.translate(
-        'pleaseSelectCountry', settingsModel!.locale!);
+        'pleaseSelectCountry', settingsModel.locale!);
     tapForColorScheme =
-        await translator.translate('tapForColorScheme', settingsModel!.locale!);
+        await translator.translate('tapForColorScheme', settingsModel.locale!);
     numberOfDays =
-        await translator.translate('numberOfDays', settingsModel!.locale!);
-    settings = await translator.translate('settings', settingsModel!.locale!);
-    small = await translator.translate('small', settingsModel!.locale!);
-    medium = await translator.translate('medium', settingsModel!.locale!);
-    large = await translator.translate('large', settingsModel!.locale!);
+        await translator.translate('numberOfDays', settingsModel.locale!);
+    settings = await translator.translate('settings', settingsModel.locale!);
+    refreshRateInMinutesText = await translator.translate(
+        'refreshRateInMinutes', settingsModel.locale!);
+
+    small = await translator.translate('small', settingsModel.locale!);
+    medium = await translator.translate('medium', settingsModel.locale!);
+    large = await translator.translate('large', settingsModel.locale!);
     selectLanguage =
-        await translator.translate('selectLanguage', settingsModel!.locale!);
-    hint = await translator.translate('selectLanguage', settingsModel!.locale!);
+        await translator.translate('selectLanguage', settingsModel.locale!);
+    hint = await translator.translate('selectLanguage', settingsModel.locale!);
+    pleaseNumberOfDays =
+        await translator.translate('pleaseNumberOfDays', settingsModel.locale!);
+
     settingsChanged =
-        await translator.translate('settingsChanged', settingsModel!.locale!);
+        await translator.translate('settingsChanged', settingsModel.locale!);
 
     translatedLanguage = await translator.translate(
-        settingsModel!.locale!, settingsModel!.locale!);
+        settingsModel.locale!, settingsModel.locale!);
 
     setState(() {});
   }
@@ -160,27 +174,28 @@ class SettingsFormState extends State<SettingsForm> {
 
   void _setExistingSettings() async {
     if (settingsModel != null) {
-      if (settingsModel!.activityStreamHours == null ||
-          settingsModel!.activityStreamHours == 0) {
-        settingsModel!.activityStreamHours = 24;
-        await prefsOGx.saveSettings(settingsModel!);
+      if (settingsModel.activityStreamHours == null ||
+          settingsModel.activityStreamHours == 0) {
+        settingsModel.activityStreamHours = 24;
+        await prefsOGx.saveSettings(settingsModel);
       }
     }
     settingsModel ??= getBaseSettings();
-    settingsModel!.organizationId = user!.organizationId!;
+    settingsModel.organizationId = user!.organizationId!;
 
-    currentThemeIndex = settingsModel!.themeIndex!;
+    currentThemeIndex = settingsModel.themeIndex!;
     distController.text = '${settingsModel?.distanceFromProject}';
     videoController.text = '${settingsModel?.maxVideoLengthInSeconds}';
     audioController.text = '${settingsModel?.maxAudioLengthInMinutes}';
     activityController.text = '${settingsModel?.activityStreamHours}';
     daysController.text = '${settingsModel?.numberOfDays}';
+    refreshRateController.text = '${settingsModel?.refreshRateInMinutes}';
 
     if (settingsModel?.locale != null) {
-      Locale newLocale = Locale(settingsModel!.locale!);
+      Locale newLocale = Locale(settingsModel.locale!);
       selectedLocale = newLocale;
       final m = LocaleAndTheme(
-          themeIndex: settingsModel!.themeIndex!, locale: newLocale);
+          themeIndex: settingsModel.themeIndex!, locale: newLocale);
       themeBloc.changeToLocale(m.locale.toString());
     }
 
@@ -262,17 +277,18 @@ class SettingsFormState extends State<SettingsForm> {
         organizationId: user!.organizationId,
         projectId: selectedProject == null ? null : selectedProject!.projectId,
         activityStreamHours: int.parse(activityController.value.text),
+        refreshRateInMinutes: int.parse(refreshRateController.value.text),
       );
 
-      pp('🌸 🌸 🌸 🌸 🌸 ... about to save settings: ${settingsModel!.toJson()}');
+      pp('🌸 🌸 🌸 🌸 🌸 ... about to save settings: ${settingsModel.toJson()}');
 
-      await prefsOGx.saveSettings(settingsModel!);
-      Locale newLocale = Locale(settingsModel!.locale!);
+      await prefsOGx.saveSettings(settingsModel);
+      Locale newLocale = Locale(settingsModel.locale!);
       final m = LocaleAndTheme(
-          themeIndex: settingsModel!.themeIndex!, locale: newLocale);
+          themeIndex: settingsModel.themeIndex!, locale: newLocale);
       themeBloc.themeStreamController.sink.add(m);
 
-      await cacheManager.addSettings(settings: settingsModel!);
+      await cacheManager.addSettings(settings: settingsModel);
       await _sendSettings();
     }
     if (mounted) {
@@ -286,12 +302,12 @@ class SettingsFormState extends State<SettingsForm> {
   }
 
   Future _sendSettings() async {
-    pp('\n\n$mm sendSettings: 🔵🔵🔵 settings sent to database: ${settingsModel!.toJson()}');
+    pp('\n\n$mm sendSettings: 🔵🔵🔵 settings sent to database: ${settingsModel.toJson()}');
     setState(() {
       busyWritingToDB = true;
     });
     try {
-      var s = await widget.dataApiDog.addSettings(settingsModel!);
+      var s = await widget.dataApiDog.addSettings(settingsModel);
       pp('\n\n🔵🔵🔵 settings sent to database: ${s.toJson()}');
 
       await widget.prefsOGx.saveSettings(s);
@@ -341,7 +357,7 @@ class SettingsFormState extends State<SettingsForm> {
     // final  color = getTextColorForBackground(Theme.of(context).primaryColor);
     var brightness = MediaQuery.of(context).platformBrightness;
     bool isDarkMode = brightness == Brightness.dark;
-    var  color = getTextColorForBackground(Theme.of(context).primaryColor);
+    var color = getTextColorForBackground(Theme.of(context).primaryColor);
 
     if (isDarkMode) {
       color = Colors.white;
@@ -450,7 +466,8 @@ class SettingsFormState extends State<SettingsForm> {
                               onSelected: (locale, language) {
                                 _handleLocaleChange(locale, language);
                               },
-                              hint: hint == null ? 'Select Language' : hint!, color: color,
+                              hint: hint == null ? 'Select Language' : hint!,
+                              color: color,
                             ),
                             const SizedBox(
                               width: 32,
@@ -458,10 +475,10 @@ class SettingsFormState extends State<SettingsForm> {
                             translatedLanguage == null
                                 ? const Text('No language')
                                 : Text(
-                              translatedLanguage!,
-                              style: myTextStyleMediumBoldPrimaryColor(
-                                  context),
-                            ),
+                                    translatedLanguage!,
+                                    style: myTextStyleMediumBoldPrimaryColor(
+                                        context),
+                                  ),
                           ],
                         ),
                       ),
@@ -595,19 +612,48 @@ class SettingsFormState extends State<SettingsForm> {
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value!.isEmpty) {
-                              return numberOfDays == null
+                              return pleaseNumberOfDays == null
                                   ? 'Please enter the number of days your dashboard must show'
-                                  : numberOfDays!;
+                                  : pleaseNumberOfDays!;
                             }
                             return null;
                           },
                           decoration: InputDecoration(
-                            hintText:
-                                'Enter the number of days your dashboard must show',
+                            hintText: pleaseNumberOfDays == null
+                                ? 'Enter the number of days your dashboard must show'
+                                : pleaseNumberOfDays!,
                             label: Text(
                               numberOfDaysForDashboardData == null
                                   ? 'Number of Dashboard Days'
                                   : numberOfDaysForDashboardData!,
+                              style: myTextStyleSmall(context),
+                            ),
+                            hintStyle: myTextStyleSmall(context),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 24,
+                      ),
+                      SizedBox(
+                        width: 400,
+                        child: TextFormField(
+                          controller: refreshRateController,
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value!.isEmpty) {
+                              refreshRateController.text = "5";
+                            }
+                            return null;
+                          },
+                          decoration: InputDecoration(
+                            hintText: enterRateInMinutes == null
+                                ? 'Enter the number of minutes for data refresh'
+                                : enterRateInMinutes!,
+                            label: Text(
+                              refreshRateInMinutesText == null
+                                  ? 'RefreshRate In Minutes'
+                                  : refreshRateInMinutesText!,
                               style: myTextStyleSmall(context),
                             ),
                             hintStyle: myTextStyleSmall(context),
@@ -662,7 +708,6 @@ class SettingsFormState extends State<SettingsForm> {
                       const SizedBox(
                         height: 24,
                       ),
-
                       busyWritingToDB
                           ? const SizedBox(
                               height: 20,
@@ -696,8 +741,8 @@ class SettingsFormState extends State<SettingsForm> {
                         showColorPicker = false;
                       });
                       if (settingsModel != null) {
-                        settingsModel!.themeIndex = currentThemeIndex;
-                        prefsOGx.saveSettings(settingsModel!);
+                        settingsModel.themeIndex = currentThemeIndex;
+                        prefsOGx.saveSettings(settingsModel);
                       }
                     },
                     crossAxisCount: 6,
@@ -715,12 +760,12 @@ class SettingsFormState extends State<SettingsForm> {
 
   void _handleLocaleChange(Locale locale, String translatedLanguage) async {
     pp('$mm onLocaleChange ... going to ${locale.languageCode}');
-    settingsModel!.locale = locale.languageCode;
-    await prefsOGx.saveSettings(settingsModel!);
-    await translator.translate('settings', settingsModel!.locale!);
+    settingsModel.locale = locale.languageCode;
+    await prefsOGx.saveSettings(settingsModel);
+    await translator.translate('settings', settingsModel.locale!);
     await _setTexts();
     themeBloc.changeToLocale(locale.languageCode);
-    fcmBloc.settingsStreamController.sink.add(settingsModel!);
+    fcmBloc.settingsStreamController.sink.add(settingsModel);
 
     setState(() {
       selectedLocale = locale;
@@ -733,7 +778,11 @@ class SettingsFormState extends State<SettingsForm> {
 
 ///select supported locale
 class LocaleChooser extends StatefulWidget {
-  const LocaleChooser({Key? key, required this.onSelected, required this.hint, required this.color})
+  const LocaleChooser(
+      {Key? key,
+      required this.onSelected,
+      required this.hint,
+      required this.color})
       : super(key: key);
 
   final Function(Locale, String) onSelected;
@@ -762,6 +811,7 @@ class LocaleChooserState extends State<LocaleChooser> {
       chinese;
 
   SettingsModel? settingsModel;
+
   @override
   void initState() {
     super.initState();
@@ -770,23 +820,25 @@ class LocaleChooserState extends State<LocaleChooser> {
 
   Future setTexts() async {
     settingsModel = await prefsOGx.getSettings();
-    settingsModel ??= getBaseSettings();
-    english = await translator.translate('en', settingsModel!.locale!);
-    afrikaans = await translator.translate('af', settingsModel!.locale!);
-    french = await translator.translate('fr', settingsModel!.locale!);
-    portuguese = await translator.translate('pt', settingsModel!.locale!);
-    lingala = await translator.translate('ig', settingsModel!.locale!);
-    sotho = await translator.translate('st', settingsModel!.locale!);
-    spanish = await translator.translate('es', settingsModel!.locale!);
-    swahili = await translator.translate('sw', settingsModel!.locale!);
-    tsonga = await translator.translate('ts', settingsModel!.locale!);
-    xhosa = await translator.translate('xh', settingsModel!.locale!);
-    zulu = await translator.translate('zu', settingsModel!.locale!);
-    yoruba = await translator.translate('yo', settingsModel!.locale!);
-    german = await translator.translate('de', settingsModel!.locale!);
-    chinese = await translator.translate('zh', settingsModel!.locale!);
-    shona = await translator.translate('sn', settingsModel!.locale!);
-    setState(() {});
+    if (settingsModel?.locale != null) {
+      english = await translator.translate('en', settingsModel!.locale!);
+      afrikaans = await translator.translate('af', settingsModel!.locale!);
+      french = await translator.translate('fr', settingsModel!.locale!);
+      portuguese = await translator.translate('pt', settingsModel!.locale!);
+      lingala = await translator.translate('ig', settingsModel!.locale!);
+      sotho = await translator.translate('st', settingsModel!.locale!);
+      spanish = await translator.translate('es', settingsModel!.locale!);
+      swahili = await translator.translate('sw', settingsModel!.locale!);
+      tsonga = await translator.translate('ts', settingsModel!.locale!);
+      xhosa = await translator.translate('xh', settingsModel!.locale!);
+      zulu = await translator.translate('zu', settingsModel!.locale!);
+      yoruba = await translator.translate('yo', settingsModel!.locale!);
+      german = await translator.translate('de', settingsModel!.locale!);
+      chinese = await translator.translate('zh', settingsModel!.locale!);
+      shona = await translator.translate('sn', settingsModel!.locale!);
+
+      setState(() {});
+    }
   }
 
   @override
@@ -923,6 +975,7 @@ class LocaleChooserState extends State<LocaleChooser> {
 class GeoPlaceHolder extends StatelessWidget {
   const GeoPlaceHolder({Key? key, required this.width}) : super(key: key);
   final double width;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -972,7 +1025,6 @@ class ColorSchemePicker extends StatelessWidget {
   final Function(int) onColorScheme;
   final int crossAxisCount;
   final double itemWidth, elevation;
-
 
   @override
   Widget build(BuildContext context) {

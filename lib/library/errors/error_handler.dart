@@ -21,11 +21,11 @@ class ErrorHandler {
   );
 
   Future handleError({required GeoException exception}) async {
-    pp('$mm handleError, will save the error in cache until it can be downloaded: ... $exception');
+    // pp('$mm handleError, will save the error in cache until it can be downloaded: ... $exception');
 
     // var deviceData = <String, dynamic>{};
     // final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
-    //
+
     // String? deviceType;
     // Position? errorPosition;
     // try {

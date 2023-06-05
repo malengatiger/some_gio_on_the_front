@@ -28,6 +28,8 @@ class FieldMonitorSchedule extends HiveObject {
   int? perMonth;
   @HiveField(11)
   String? userId;
+  @HiveField(24)
+  String? id;
 
   FieldMonitorSchedule(
       {required this.fieldMonitorId,
@@ -35,6 +37,7 @@ class FieldMonitorSchedule extends HiveObject {
       required this.projectId,
       required this.date,
       required this.fieldMonitorScheduleId,
+        this.id,
       this.perDay,
       this.perWeek,
       this.perMonth,
@@ -46,7 +49,7 @@ class FieldMonitorSchedule extends HiveObject {
   FieldMonitorSchedule.fromJson(Map data) {
     fieldMonitorId = data['fieldMonitorId'];
     userId = data['userId'];
-
+    id = data['id'];
     fieldMonitorScheduleId = data['fieldMonitorScheduleId'];
     adminId = data['adminId'];
     organizationId = data['organizationId'];
@@ -64,6 +67,7 @@ class FieldMonitorSchedule extends HiveObject {
       'userId': userId,
       'fieldMonitorScheduleId': fieldMonitorScheduleId,
       'date': date,
+      'id': id,
       'adminId': adminId,
       'organizationId': organizationId,
       'projectId': projectId,

@@ -3,16 +3,18 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:geo_monitor/device_location/device_location_bloc.dart';
 import 'package:geo_monitor/library/api/data_api_og.dart';
+import 'package:geo_monitor/library/bloc/ios_polling_control.dart';
 import 'package:geo_monitor/library/bloc/isolate_handler.dart';
 import 'package:geo_monitor/library/bloc/location_request_handler.dart';
 import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/errors/error_handler.dart';
+import 'package:geo_monitor/realm_data/data/app_services.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:geo_monitor/stitch/stitch_service.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:http/http.dart' as http;
 
-import 'firebase_options.dart';
 import 'library/api/prefs_og.dart';
 import 'library/auth/app_auth.dart';
 import 'library/bloc/data_refresher.dart';
@@ -23,7 +25,6 @@ import 'library/bloc/user_bloc.dart';
 import 'library/cache_manager.dart';
 import 'library/functions.dart';
 import 'library/geofence/the_great_geofencer.dart';
-import 'main.dart';
 
 int themeIndex = 0;
 late FirebaseApp firebaseApp;
@@ -43,12 +44,7 @@ class Initializer {
 
   Future<void> initializeGioServices() async {
     pp('\n\n$mx initializeGioServices: ... setting up resources and blocs etc .............. ');
-    firebaseApp = await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
-    pp('$mx initializeGioServices: '
-        ' Firebase App has been initialized: ${firebaseApp.name}, checking for authed current user');
-    fbAuthedUser = fb.FirebaseAuth.instance.currentUser;
-    pp('$mx initializeGioServices: setting up GetStorage, Prefs, Location etc...');
+
     await GetStorage.init(cacheName);
     prefsOGx = PrefsOGx();
     locationBloc = DeviceLocationBloc();
@@ -71,17 +67,28 @@ class Initializer {
     theGreatGeofencer = TheGreatGeofencer(dataApiDog, prefsOGx);
     locationRequestHandler = LocationRequestHandler(dataApiDog);
 
-    dataHandler = IsolateDataHandler(prefsOGx, appAuth, cacheManager);
+    realmSyncApi = RealmSyncApi();
+    final sett = await prefsOGx.getSettings();
+    var ok = await realmSyncApi.initialize();
+    if (sett.organizationId != null) {
+      if (ok) {
+        realmSyncApi.setSubscriptions(
+            organizationId: sett.organizationId, countryId: null);
+      }
+    }
+
+    dataHandler =
+        IsolateDataHandler(prefsOGx, appAuth, cacheManager, realmSyncApi);
+    pollingControl = IosPollingControl(dataHandler);
 
     projectBloc = ProjectBloc(dataApiDog, cacheManager, dataHandler);
     userBloc = UserBloc(dataApiDog, cacheManager, dataHandler);
 
-    fcmBloc = FCMBloc(
-        FirebaseMessaging.instance, cacheManager, locationRequestHandler);
+    fcmBloc = FCMBloc(FirebaseMessaging.instance, cacheManager,
+        locationRequestHandler, realmAppServices);
 
     pp('$mx initializeGioServices: ...resources and blocs etc set up ok!  \n\n');
-    testRealmJson();
-
+    //testRealmJson();
   }
 
   Future heavyLifting() async {
@@ -93,17 +100,16 @@ class Initializer {
 
     FirebaseMessaging.instance.requestPermission();
 
-    pp('$mx heavyLifting: cacheManager initialization starting .................');
+    pp('$mx heavyLifting: ✅;cacheManager initialization starting .................');
     await cacheManager.initialize();
-
-    pp('$mx heavyLifting: cacheManager done  ✅; fcm initialization starting .................');
+    pp('$mx heavyLifting: ✅; fcm initialization starting .................');
     await fcmBloc.initialize();
 
     final token = await appAuth.getAuthToken();
-    pp('$mx heavyLifting: Firebase auth token:\n$token\n');
+    pp('$mx heavyLifting: ✅;Firebase auth token:\n$token\n');
 
     if (settings.organizationId != null) {
-      pp('$mx heavyLifting: _buildGeofences starting ..................');
+      pp('$mx heavyLifting ✅; _buildGeofences starting ..................');
       theGreatGeofencer.buildGeofences();
     }
 
@@ -128,6 +134,8 @@ class Initializer {
     final sett = await prefsOGx.getSettings();
     final m = await getStartEndDates(numberOfDays: sett.numberOfDays!);
 
+    pp('$mx initializeGeo, heavyLifting: realmSyncApi to be initialized ...');
+
     Future.delayed(const Duration(seconds: 15)).then((value) {
       pp('$mx initializeGeo, heavyLifting: refreshing org data after delay of 15 seconds');
       organizationBloc.getOrganizationData(
@@ -136,5 +144,11 @@ class Initializer {
           startDate: m['startDate']!,
           endDate: m['endDate']!);
     });
+    //
+    // Future.delayed(const Duration(seconds: 30)).then((value) {
+    //   pp('$mx initializeGeo, heavyLifting: '
+    //       'start polling timer after delay of 15 seconds');
+    //   //pollingControl.startTimer();
+    // });
   }
 }

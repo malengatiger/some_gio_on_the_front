@@ -18,7 +18,6 @@ part 'activity_model.g.dart';
 
 @HiveType(typeId: 60)
 class ActivityModel extends HiveObject {
-
   @HiveField(0)
   String? activityModelId;
 
@@ -73,11 +72,14 @@ class ActivityModel extends HiveObject {
   @HiveField(23)
   SettingsModel? settingsModel;
   int intDate = 0;
+  @HiveField(24)
+  String? id;
 
   ActivityModel({
     required this.activityModelId,
     required this.activityType,
     required this.date,
+    this.id,
     required this.userId,
     required this.userName,
     required this.projectId,
@@ -101,6 +103,9 @@ class ActivityModel extends HiveObject {
     required this.userThumbnailUrl,
   });
 
+  String getActivityTypeString() {
+    return activityType!.toShortString();
+  }
   ActivityModel.fromJson(Map data) {
     var xType = data['activityType'];
 
@@ -108,16 +113,18 @@ class ActivityModel extends HiveObject {
       activityType = getActivityType(xType);
     }
 
+    id = data['id'] ;
     date = data['date'];
     activityModelId = data['activityModelId'];
-
+    organizationId = data['organizationId'];
+    organizationName = data['organizationName'];
     userId = data['userId'];
 
     userName = data['userName'];
     projectId = data['projectId'];
     projectName = data['projectName'];
     userThumbnailUrl = data['userThumbnailUrl'];
-    if (data[''] != null) {}
+
     if (data['settingsModel'] != null) {
       settingsModel = SettingsModel.fromJson(data['settingsModel']);
     }
@@ -159,6 +166,7 @@ class ActivityModel extends HiveObject {
     Map<String, dynamic> map = {
       'activityModelId': activityModelId,
       'date': date,
+      'id': id,
       'userId': userId,
       'userName': userName,
       'projectId': projectId,

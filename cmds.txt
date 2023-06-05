@@ -6,20 +6,19 @@ curl -sL https://firebase.tools | bash
 
 flutter pub cache clean
 
-flutter packages pub run build_runner build --delete-conflicting-outputs
-
-flutter pub run build_runner build --delete-conflicting-outputs  - for mockito
-
+dart run build_runner build --delete-conflicting-outputs
 
  flutter pub run intl_translation:generate_from_arb \
     --output-dir=lib/l10n --no-use-deferred-loading \
     lib/main.dart lib/l10n/intl_*.arb
 
-flutter pub run realm generate
 dart run realm generate
+dart run realm generate --clean
 
 
 flutter build apk --no-tree-shake-icons
+
+realm-cli login --api-key xtffryvl --private-api-key ff87d3e1-6366-4a9c-9ae0-8065540a8483
 
 $ brew update
 $ brew install --HEAD libimobiledevice

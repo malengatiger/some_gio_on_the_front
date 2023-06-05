@@ -20,6 +20,7 @@ class ActivityModelAdapter extends TypeAdapter<ActivityModel> {
       activityModelId: fields[0] as String?,
       activityType: fields[1] as ActivityType?,
       date: fields[2] as String?,
+      id: fields[24] as String?,
       userId: fields[3] as String?,
       userName: fields[4] as String?,
       projectId: fields[5] as String?,
@@ -47,7 +48,7 @@ class ActivityModelAdapter extends TypeAdapter<ActivityModel> {
   @override
   void write(BinaryWriter writer, ActivityModel obj) {
     writer
-      ..writeByte(24)
+      ..writeByte(25)
       ..writeByte(0)
       ..write(obj.activityModelId)
       ..writeByte(1)
@@ -95,7 +96,9 @@ class ActivityModelAdapter extends TypeAdapter<ActivityModel> {
       ..writeByte(22)
       ..write(obj.translatedUserType)
       ..writeByte(23)
-      ..write(obj.settingsModel);
+      ..write(obj.settingsModel)
+      ..writeByte(24)
+      ..write(obj.id);
   }
 
   @override

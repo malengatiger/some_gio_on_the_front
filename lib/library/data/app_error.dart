@@ -43,11 +43,15 @@ class AppError extends HiveObject {
   @HiveField(15)
   String? uploadedDate;
 
+  @HiveField(16)
+  String? id;
+
   AppError(
       {required this.errorMessage,
       required this.model,
       required this.created,
       required this.userId,
+      this.id,
       required this.userName,
       required this.errorPosition,
       required this.iosName,
@@ -66,6 +70,7 @@ class AppError extends HiveObject {
     errorMessage = data['errorMessage'];
     manufacturer = data['manufacturer'];
     model = data['model'];
+    id = data['id'];
     baseOS = data['baseOS'];
     deviceType = data['deviceType'];
     created = data['created'];
@@ -83,6 +88,7 @@ class AppError extends HiveObject {
       errorPosition = Position.fromJson(data['errorPosition']);
     }
   }
+
   Map<String, dynamic> toJson() {
     Map<String, dynamic> map = {
       'errorMessage': errorMessage,
@@ -98,6 +104,7 @@ class AppError extends HiveObject {
       'uploadedDate': uploadedDate,
       'userName': userName,
       'iosName': iosName,
+      'id': id,
       'versionCodeName': versionCodeName,
       'manufacturer': manufacturer,
       'errorPosition': errorPosition == null ? null : errorPosition!.toJson()

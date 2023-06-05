@@ -16,11 +16,13 @@ void printDataBag(DataBag bag) {
   final audios = bag.audios!.length;
   final schedules = bag.fieldMonitorSchedules!.length;
   final activities = bag.activityModels!.length;
+  final geofenceEvents = bag.geofenceEvents!.length;
 
   const xz = '👌👌👌 DataBag print 👌';
   pp('$xz activities: $activities');
   pp('$xz projects: $projects');
   pp('$xz users: $users');
+  pp('$xz geofenceEvents: $geofenceEvents');
   pp('$xz positions: $positions');
   pp('$xz polygons: $polygons');
   pp('$xz photos: $photos');

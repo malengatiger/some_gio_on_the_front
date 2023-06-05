@@ -226,10 +226,10 @@ class CacheManager {
       Hive.registerAdapter(ProjectPositionAdapter());
       // p('$xx Hive ProjectPositionAdapter registered');
     }
-    if (!Hive.isAdapterRegistered(7)) {
-      Hive.registerAdapter(CityAdapter());
-      // p('$xx Hive CityAdapter registered');
-    }
+    // if (!Hive.isAdapterRegistered(7)) {
+    //   Hive.registerAdapter(CityAdapter());
+    //   // p('$xx Hive CityAdapter registered');
+    // }
     if (!Hive.isAdapterRegistered(4)) {
       Hive.registerAdapter(PhotoAdapter());
       // p('$xx Hive PhotoAdapter registered');
@@ -282,10 +282,10 @@ class CacheManager {
       // p('$xx Hive OrganizationRegistrationBagAdapter registered');
     }
 
-    if (!Hive.isAdapterRegistered(1)) {
-      Hive.registerAdapter(CountryAdapter());
-      // p('$xx Hive CountryAdapter registered');
-    }
+    // if (!Hive.isAdapterRegistered(1)) {
+    //   Hive.registerAdapter(CountryAdapter());
+    //   // p('$xx Hive CountryAdapter registered');
+    // }
     if (!Hive.isAdapterRegistered(23)) {
       Hive.registerAdapter(AudioAdapter());
       // p('$xx Hive AudioAdapter registered');
@@ -951,6 +951,18 @@ class CacheManager {
     pp('$mm getGeofenceEventsByProjectPosition found: ${mList.length}');
     return mList;
   }
+  Future<List<GeofenceEvent>> getGeofenceEventsByDates() async {
+    var keys = _geofenceEventBox?.keys;
+    var mList = <GeofenceEvent>[];
+    if (keys != null) {
+      for (var key in keys) {
+        var e = _geofenceEventBox?.get(key);
+        mList.add(e!);
+      }
+    }
+    pp('$mm getGeofenceEventsByDates found: ${mList.length}');
+    return mList;
+  }
 
   Future<DataBag> getOrganizationData({required String organizationId}) async {
     // pp('$mm ............. getOrganizationData starting ...');
@@ -966,6 +978,7 @@ class CacheManager {
     final schedules = await getOrganizationMonitorSchedules();
     final positions = await getOrganizationProjectPositions();
     final polygons = await getOrganizationProjectPolygons();
+    final geos = await getGeofenceEventsByDates();
     //
     // final sett = await prefsOGx.getSettings();
     final acts = await getActivities();
@@ -983,6 +996,7 @@ class CacheManager {
         projectPositions: positions,
         projects: projects,
         audios: audios,
+        geofenceEvents: geos,
         projectPolygons: polygons,
         date: DateTime.now().toUtc().toIso8601String(),
         users: users,
@@ -1022,6 +1036,7 @@ class CacheManager {
         projects: projects,
         audios: audios,
         activityModels: [],
+        geofenceEvents: [],
         projectPolygons: polygons,
         date: DateTime.now().toUtc().toIso8601String(),
         users: users,

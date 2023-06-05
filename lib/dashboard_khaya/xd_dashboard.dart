@@ -8,6 +8,7 @@ import 'package:geo_monitor/dashboard_khaya/project_list.dart';
 import 'package:geo_monitor/dashboard_khaya/recent_event_list.dart';
 import 'package:geo_monitor/dashboard_khaya/xd_header.dart';
 import 'package:geo_monitor/library/api/prefs_og.dart';
+import 'package:geo_monitor/library/bloc/ios_polling_control.dart';
 import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/bloc/refresh_bloc.dart';
 import 'package:geo_monitor/library/data/activity_model.dart';
@@ -75,7 +76,8 @@ class DashboardKhaya extends StatefulWidget {
       required this.geoUploader,
       required this.cloudStorageBloc,
       required this.firebaseAuth,
-      required this.stitchService, required this.refreshBloc})
+      required this.stitchService,
+      required this.refreshBloc})
       : super(key: key);
 
   final DataApiDog dataApiDog;
@@ -91,12 +93,12 @@ class DashboardKhaya extends StatefulWidget {
   final StitchService stitchService;
   final RefreshBloc refreshBloc;
 
-
   @override
   State<DashboardKhaya> createState() => DashboardKhayaState();
 }
 
-class DashboardKhayaState extends State<DashboardKhaya> {
+class DashboardKhayaState extends State<DashboardKhaya>
+    with WidgetsBindingObserver {
   var totalEvents = 0;
   var totalProjects = 0;
   var totalUsers = 0;
@@ -141,12 +143,34 @@ class DashboardKhayaState extends State<DashboardKhaya> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _listenForFCM();
     _getUser();
   }
 
+  AppLifecycleState? _notification;
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    pp('$mm Gio app is Flipping background state to: $state }');
+    bool isBackground = false;
+    switch (state.index) {
+      case 0:
+        break;
+      case 1:
+        isBackground = true;
+        break;
+    }
+    backgroundObserver.backgroundObserverStreamController.sink
+        .add(isBackground);
+    setState(() {
+      _notification = state;
+    });
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+
     settingsSubscription.cancel();
     activitySubscription.cancel();
     dataBagSubscription.cancel();
@@ -168,7 +192,6 @@ class DashboardKhayaState extends State<DashboardKhaya> {
     //events.insert(0, event);
     var settings = await prefsOGx.getSettings();
     var arr = await translator.translate('memberArrived', settings.locale!);
-
 
     if (event.projectName != null) {
       var arrivedAt = arr.replaceAll('\$project', event.projectName!);
@@ -377,8 +400,10 @@ class DashboardKhayaState extends State<DashboardKhaya> {
       //     startDate: m['startDate']!,
       //     endDate: m['endDate']!);
       final counts = await widget.dataApiDog.getOrganizationDataCounts(
-          settingsModel.organizationId!, m['startDate']!,
-          m['endDate']!, settingsModel.activityStreamHours!);
+          settingsModel.organizationId!,
+          m['startDate']!,
+          m['endDate']!,
+          settingsModel.activityStreamHours!);
 
       totalProjects = counts.projects!;
       totalEvents = counts.activities!;
@@ -2010,7 +2035,7 @@ class TopCardListState extends State<TopCardList> {
             onAudioTapped: (p) {
               pp('$mm navigateWithScale ... onAudioTapped');
             },
-            onRefreshRequested: (){
+            onRefreshRequested: () {
               _getData(true);
             },
             onUserTapped: (p) {},

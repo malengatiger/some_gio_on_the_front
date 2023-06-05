@@ -357,11 +357,6 @@ class ProjectMapMobileState extends State<ProjectMapMobile>
         });
         return;
       }
-      pp('Go and find nearest cities to this location : lat: $_latitude lng: $_longitude ...');
-      List<City> cities = await dataApiDog.findCitiesByLocation(
-          latitude: _latitude, longitude: _longitude, radiusInKM: 5.0);
-
-      pp('$mm Cities around this project position: ${cities.length}');
 
       final sett = await cacheManager.getSettings();
       final projectPositionAdded = await translator.translate('projectPositionAdded', sett!.locale!);
@@ -377,7 +372,7 @@ class ProjectMapMobileState extends State<ProjectMapMobile>
           created: DateTime.now().toUtc().toIso8601String(),
           position: local.Position(
               coordinates: [_longitude, _latitude], type: 'Point'),
-          nearestCities: cities,
+          nearestCities: [],
           organizationId: widget.project.organizationId,
           projectId: widget.project.projectId);
 

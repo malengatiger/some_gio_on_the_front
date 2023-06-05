@@ -29,10 +29,13 @@ class LocationResponse extends HiveObject {
 
   @HiveField(10)
   String? translatedTitle;
+  @HiveField(11)
+  String? id;
 
   LocationResponse({
     required this.position,
     required this.date,
+    this.id,
     required this.userId,
     required this.userName,
     required this.locationResponseId,
@@ -47,7 +50,7 @@ class LocationResponse extends HiveObject {
   LocationResponse.fromJson(Map data) {
     requesterId = data['requesterId'];
     requesterName = data['requesterName'];
-
+    id = data['id'];
     date = data['date'];
     organizationId = data['organizationId'];
     userId = data['userId'];
@@ -66,6 +69,7 @@ class LocationResponse extends HiveObject {
       'requesterName': requesterName,
       'requesterId': requesterId,
       'userId': userId,
+      'id': id,
       'organizationId': organizationId,
       'userName': userName,
       'translatedMessage': translatedMessage,

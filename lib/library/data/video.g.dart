@@ -19,6 +19,7 @@ class VideoAdapter extends TypeAdapter<Video> {
     return Video(
       url: fields[0] as String?,
       caption: fields[1] as String?,
+      id: fields[19] as String?,
       projectPositionId: fields[5] as String?,
       projectPolygonId: fields[13] as String?,
       created: fields[2] as String?,
@@ -42,7 +43,7 @@ class VideoAdapter extends TypeAdapter<Video> {
   @override
   void write(BinaryWriter writer, Video obj) {
     writer
-      ..writeByte(19)
+      ..writeByte(20)
       ..writeByte(0)
       ..write(obj.url)
       ..writeByte(1)
@@ -80,7 +81,9 @@ class VideoAdapter extends TypeAdapter<Video> {
       ..writeByte(17)
       ..write(obj.translatedMessage)
       ..writeByte(18)
-      ..write(obj.translatedTitle);
+      ..write(obj.translatedTitle)
+      ..writeByte(19)
+      ..write(obj.id);
   }
 
   @override

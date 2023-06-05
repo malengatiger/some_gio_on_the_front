@@ -39,6 +39,8 @@ class GeofenceEvent extends HiveObject {
 
   @HiveField(11)
   String? translatedTitle;
+  @HiveField(12)
+  String? id;
 
   GeofenceEvent(
       {required this.status,
@@ -48,6 +50,7 @@ class GeofenceEvent extends HiveObject {
         required this.organizationId,
         required this.projectId,
         required this.position,
+        this.id,
         required this.projectName,
         required this.translatedMessage,
         required this.translatedTitle,
@@ -61,7 +64,7 @@ class GeofenceEvent extends HiveObject {
     projectId = data['projectId'];
     translatedMessage = data['translatedMessage'];
     translatedTitle = data['translatedTitle'];
-
+    id = data['id'];
     date = data['date'];
     organizationId = data['organizationId'];
     if (data['user'] != null) {
@@ -74,6 +77,7 @@ class GeofenceEvent extends HiveObject {
   Map<String, dynamic> toJson() {
     Map<String, dynamic> map = {
       'status': status,
+      'id': id,
       'organizationId': organizationId,
       'geofenceEventId': geofenceEventId,
       'projectPositionId': projectPositionId,

@@ -35,10 +35,13 @@ class DataCounts extends HiveObject {
 
   @HiveField(13)
   int? activities;
+  @HiveField(14)
+  String? id;
 
   DataCounts(
       {required this.projectId,
       required this.users,
+        this.id,
       required this.created,
       required this.userId,
       required this.videos,
@@ -55,6 +58,7 @@ class DataCounts extends HiveObject {
     projectId = data['projectId'];
     projects = data['projects'];
     users = data['users'];
+    id = data['id'];
     projectPolygons = data['projectPolygons'];
     fieldMonitorSchedules = data['fieldMonitorSchedules'];
     created = data['created'];
@@ -74,6 +78,7 @@ class DataCounts extends HiveObject {
       'activities': activities,
       'users': users,
       'created': created,
+      'id': id,
       'fieldMonitorSchedules': fieldMonitorSchedules,
       'projectPolygons': projectPolygons,
       'userId': userId,

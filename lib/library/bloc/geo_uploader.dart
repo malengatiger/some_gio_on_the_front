@@ -340,7 +340,7 @@ class GeoUploader {
       String? url = getUrl();
       var token = await appAuth.getAuthToken();
       if (token != null) {
-        pp('$xx 😡😡😡 Firebase Auth Token: 💙️ Token is GOOD! 💙 ');
+        // pp('$xx 😡😡😡 Firebase Auth Token: 💙️ Token is GOOD! 💙 ');
       }
 
       var mFile = File(audioForUploading.filePath!);

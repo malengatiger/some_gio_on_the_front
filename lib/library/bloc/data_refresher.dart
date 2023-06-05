@@ -126,6 +126,7 @@ class DataRefresher {
           projectPositions: [],
           projects: [],
           audios: [],
+          geofenceEvents: [],
           date: DateTime.now().toIso8601String(),
           users: [],
           projectPolygons: [],
@@ -277,6 +278,7 @@ class DataRefresher {
             projects: [],
             audios: [],
             date: 'date',
+            geofenceEvents: [],
             users: [],
             projectPolygons: [],
             settings: [],
@@ -818,7 +820,7 @@ late DateTime start;
 const timeOutInSeconds = 120;
 
 Future<http.Response> _sendRequestToBackend(String mUrl, String token) async {
-  pp('$xz _sendRequestToBackend call:  🔆 🔆 🔆 calling : 💙  $mUrl  💙');
+  // pp('$xz _sendRequestToBackend call:  🔆 🔆 🔆 calling : 💙  $mUrl  💙');
   var start = DateTime.now();
 
   Map<String, String> headers = {

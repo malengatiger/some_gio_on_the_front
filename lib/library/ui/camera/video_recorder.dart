@@ -326,14 +326,17 @@ class VideoRecorderState extends State<VideoRecorder>
     var bytes = await file?.length();
     var size = getFileSizeString(bytes: bytes!, decimals: 2);
     pp('\n\n$mm _processFile ... video file size: $size ');
-    final Directory directory = await getApplicationDocumentsDirectory();
-    const x = '/video';
-    final File mFile =
-        File('${directory.path}$x${DateTime.now().millisecondsSinceEpoch}.mp4');
 
-    const z = '/video_thumbnail';
+    final suffix = '${settingsModel!.organizationId!}_${widget.project.projectId}_${DateTime.now()
+        .millisecondsSinceEpoch}';
+    final Directory directory = await getApplicationDocumentsDirectory();
+    var x = '/video_$suffix.mp4';
+    final File mFile =
+        File('${directory.path}$x');
+
+    var z = '/video_thumbnail_$suffix.jpg';
     final File tFile =
-        File('${directory.path}$z${DateTime.now().millisecondsSinceEpoch}.jpg');
+        File('${directory.path}$z');
 
     File mImageFile = File(file!.path);
     await mImageFile.copy(mFile.path);
@@ -346,10 +349,8 @@ class VideoRecorderState extends State<VideoRecorder>
     pp('$mm.......... _danceWithTheVideo ... Take Me To Church!!');
     final loc = await locationBloc.getLocation();
     Position? position;
-    if (loc != null) {
-      position =
-          Position(type: 'Point', coordinates: [loc.longitude, loc.latitude]);
-    }
+    position =
+        Position(type: 'Point', coordinates: [loc.longitude, loc.latitude]);
 
     final videoForUpload = VideoForUpload(
         userName: user!.name,

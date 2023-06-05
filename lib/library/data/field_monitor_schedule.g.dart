@@ -22,6 +22,7 @@ class FieldMonitorScheduleAdapter extends TypeAdapter<FieldMonitorSchedule> {
       projectId: fields[4] as String?,
       date: fields[6] as String?,
       fieldMonitorScheduleId: fields[0] as String?,
+      id: fields[24] as String?,
       perDay: fields[8] as int?,
       perWeek: fields[9] as int?,
       perMonth: fields[10] as int?,
@@ -35,7 +36,7 @@ class FieldMonitorScheduleAdapter extends TypeAdapter<FieldMonitorSchedule> {
   @override
   void write(BinaryWriter writer, FieldMonitorSchedule obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.fieldMonitorScheduleId)
       ..writeByte(1)
@@ -59,7 +60,9 @@ class FieldMonitorScheduleAdapter extends TypeAdapter<FieldMonitorSchedule> {
       ..writeByte(10)
       ..write(obj.perMonth)
       ..writeByte(11)
-      ..write(obj.userId);
+      ..write(obj.userId)
+      ..writeByte(24)
+      ..write(obj.id);
   }
 
   @override

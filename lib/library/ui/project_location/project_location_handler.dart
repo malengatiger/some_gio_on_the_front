@@ -198,27 +198,27 @@ class ProjectLocationHandlerState extends State<ProjectLocationHandler>
       busy = true;
     });
 
-    pp('$mm getting possible place marks  ..........');
-
-    List<Placemark>? placeMarks;
-    try {
-      placeMarks = await placemarkFromCoordinates(latitude!, longitude!);
-    } catch (e) {
-      pp(e);
-    }
+    // pp('$mm getting possible place marks  ..........');
+    //
+    // List<Placemark>? placeMarks;
+    // try {
+    //   placeMarks = await placemarkFromCoordinates(latitude!, longitude!);
+    // } catch (e) {
+    //   pp(e);
+    // }
 
     try {
       List<City> cities = await dataApiDog.findCitiesByLocation(
           latitude: latitude!, longitude: longitude!, radiusInKM: 10.0);
       pp('$mm Cities found for project position: ${cities.length}');
       pp('$mm submitting current position ..........');
-      Placemark? pm;
-      if (placeMarks != null) {
-        if (placeMarks.isNotEmpty) {
-          pm = placeMarks.first;
-          pp('$mm Placemark for project location: ${pm.toString()}');
-        }
-      }
+      // Placemark? pm;
+      // if (placeMarks != null) {
+      //   if (placeMarks.isNotEmpty) {
+      //     pm = placeMarks.first;
+      //     pp('$mm Placemark for project location: ${pm.toString()}');
+      //   }
+      // // }
       var org = await prefsOGx.getUser();
       final sett = await cacheManager.getSettings();
       final projectLocationAdded =
@@ -229,7 +229,6 @@ class ProjectLocationHandlerState extends State<ProjectLocationHandler>
       var projectPosition = ProjectPosition(
           userId: user!.userId,
           userName: user!.name,
-          placemark: pm == null ? null : PlaceMark.getPlaceMark(placemark: pm),
           projectName: widget.project.name,
           caption: 'tbd',
           translatedMessage: projectLocationAdded,

@@ -191,11 +191,13 @@ class PhotoHandlerState extends State<PhotoHandler>
       pp('_deviceOrientation is null, wtf?? means that user did not change device orientation ..........');
     }
     pp('$mm ... isLandscape: $isLandscape - check if true!  🍎');
+    final suffix = '${sett.organizationId}_${widget.project.projectId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
     final Directory directory = await getApplicationDocumentsDirectory();
-    const x = '/photo_';
+    var x = '/photo_$suffix';
     final File mFile =
-        File('${directory.path}$x${DateTime.now().millisecondsSinceEpoch}.jpg');
-    const z = '/photo_thumbnail';
+        File('${directory.path}$x');
+    var z = '/photo_thumbnail_$suffix';
     final File tFile =
         File('${directory.path}$z${DateTime.now().millisecondsSinceEpoch}.jpg');
     await thumbnailFile.copy(tFile.path);

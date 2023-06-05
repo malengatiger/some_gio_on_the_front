@@ -50,9 +50,13 @@ class Photo extends HiveObject{
   @HiveField(19)
   String? translatedTitle;
 
+  @HiveField(20)
+  String? id;
+
   Photo(
       {required this.url,
       required this.caption,
+        this.id,
       required this.created,
       required this.userId,
       required this.userName,
@@ -79,6 +83,7 @@ class Photo extends HiveObject{
     projectPolygonId = data['projectPolygonId'];
     userUrl = data['userUrl'];
     url = data['url'];
+    id = data['id'];
     thumbnailUrl = data['thumbnailUrl'];
     caption = data['caption'];
     height = data['height'];
@@ -104,6 +109,7 @@ class Photo extends HiveObject{
   Map<String, dynamic> toJson() {
     Map<String, dynamic> map = {
       'url': url,
+      'id': id,
       'userUrl': userUrl,
       'landscape': landscape,
       'translatedMessage': translatedMessage,

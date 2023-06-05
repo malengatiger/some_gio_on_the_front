@@ -270,7 +270,7 @@ class IntroPageViewerPortraitState extends State<IntroPageViewerPortrait>
         child: Scaffold(
       appBar: AppBar(
         title: Text(
-          introStrings == null ? 'Geo Information' : introStrings!.information!,
+          introStrings == null ? 'Information' : introStrings!.information!,
           style: myTextStyleLargeWithColor(context, color),
         ),
         bottom: PreferredSize(
@@ -302,12 +302,12 @@ class IntroPageViewerPortraitState extends State<IntroPageViewerPortrait>
                             onPressed: onSignIn,
                             child: Text(introStrings == null
                                 ? 'Sign In'
-                                : introStrings!.signIn, style: myTextStyleSmallWithColor(context, color),)),
+                                : introStrings!.signIn, style: myTextStyleMediumWithColor(context, color),)),
                         TextButton(
                             onPressed: onRegistration,
                             child: Text(introStrings == null
                                 ? 'Register Organization'
-                                : introStrings!.registerOrganization, style: myTextStyleSmallWithColor(context, color),)),
+                                : introStrings!.registerOrganization, style: myTextStyleMediumWithColor(context, color),)),
                       ],
                     ),
                     Row(

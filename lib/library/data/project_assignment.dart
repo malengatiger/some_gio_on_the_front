@@ -37,11 +37,14 @@ class ProjectAssignment extends HiveObject {
 
   @HiveField(10)
   String? adminName;
+  @HiveField(11)
+  String? id;
 
 
   ProjectAssignment(
       {required this.updated,
       required this.date,
+        this.id,
       required this.userId,
       required this.userName,
       required this.projectId,
@@ -53,7 +56,7 @@ class ProjectAssignment extends HiveObject {
       required this.adminName,});
 
   ProjectAssignment.fromJson(Map data) {
-
+    id = data['id'];
     updated = data['updated'];
     active = data['active'];
     adminId = data['adminId'];
@@ -70,7 +73,7 @@ class ProjectAssignment extends HiveObject {
   Map<String, dynamic> toJson() {
     Map<String, dynamic> map = {
       'updated': updated,
-
+      'id': id,
       'date': date,
       'adminName': adminName,
       'adminId': adminId,

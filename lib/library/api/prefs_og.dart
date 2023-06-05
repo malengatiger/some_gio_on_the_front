@@ -193,4 +193,51 @@ class PrefsOGx {
       return sub;
     }
   }
+
+  Future saveLastRefresh() async {
+    LastRefresh lastRefresh = LastRefresh(DateTime.now().toUtc().microsecondsSinceEpoch,
+        DateTime.now().toUtc().toIso8601String());
+
+    final s = jsonEncode(lastRefresh.toJson());
+    await box.write('LastRefresh', s);
+    pp("\n\n$mm saveLastRefresh SAVED: 🌽 ${lastRefresh.stringDate}\n");
+    return null;
+  }
+
+  Future<LastRefresh> getLastRefresh() async {
+    LastRefresh? sub;
+    var mJson = box.read('LastRefresh');
+    if (mJson == null) {
+      pp('$mm LastRefresh does not exist in Prefs, '
+          ' 🍎🍎🍎');
+      final sett = await getSettings();
+      var dur = Duration(days: sett.numberOfDays! + 1);
+      final lastRefresh = LastRefresh(
+          DateTime.now().subtract(dur).toUtc().millisecondsSinceEpoch,
+          DateTime.now().subtract(dur).toUtc().toIso8601String());
+      return lastRefresh;
+    } else {
+      sub = LastRefresh.fromJson(jsonDecode(mJson));
+      pp("$mm getLastRefresh 🧩🧩🧩🧩🧩 retrieved .. ${sub.toJson()}  🔴🔴");
+      return sub;
+    }
+  }
+}
+
+class LastRefresh {
+  late int intDate;
+  late String stringDate;
+
+  LastRefresh(this.intDate, this.stringDate);
+  LastRefresh.fromJson(Map data) {
+    intDate = data['intDate'];
+    stringDate = data['stringDate'];
+  }
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> map = {
+      'intDate': intDate,
+      'stringDate': stringDate,
+    };
+    return map;
+  }
 }

@@ -20,6 +20,7 @@ class ProjectSummaryAdapter extends TypeAdapter<ProjectSummary> {
       photos: fields[0] as int?,
       audios: fields[2] as int?,
       date: fields[3] as String?,
+      id: fields[17] as String?,
       calculatedHourly: fields[6] as int?,
       projectPositions: fields[8] as int?,
       projectPolygons: fields[9] as int?,
@@ -40,7 +41,7 @@ class ProjectSummaryAdapter extends TypeAdapter<ProjectSummary> {
   @override
   void write(BinaryWriter writer, ProjectSummary obj) {
     writer
-      ..writeByte(17)
+      ..writeByte(18)
       ..writeByte(0)
       ..write(obj.photos)
       ..writeByte(1)
@@ -74,7 +75,9 @@ class ProjectSummaryAdapter extends TypeAdapter<ProjectSummary> {
       ..writeByte(15)
       ..write(obj.endDate)
       ..writeByte(16)
-      ..write(obj.batchId);
+      ..write(obj.batchId)
+      ..writeByte(17)
+      ..write(obj.id);
   }
 
   @override

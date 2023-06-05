@@ -18,12 +18,15 @@ class KillResponse extends HiveObject {
 
   @HiveField(4)
   User? user;
+  @HiveField(5)
+  String? id;
 
 
   KillResponse(
       {required this.message,
         required this.organizationId,
         required this.date,
+        this.id,
         required this.user,
         required this.killer}); // KillResponse({required this.message, this.userId, required this.date});
 
@@ -32,7 +35,7 @@ class KillResponse extends HiveObject {
     message = data['message'];
     date = data['date'];
     organizationId = data['organizationId'];
-
+    id = data['id'];
     if (data['user'] != null) {
       user = User.fromJson(data['user']);
     }
@@ -46,6 +49,7 @@ class KillResponse extends HiveObject {
       'message': message,
       'organizationId': organizationId,
       'date': date,
+      'id': id,
       'user': user == null ? null : user!.toJson(),
       'killer': killer == null ? null : killer!.toJson(),
     };

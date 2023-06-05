@@ -21,6 +21,7 @@ class AppErrorAdapter extends TypeAdapter<AppError> {
       model: fields[2] as String?,
       created: fields[3] as String?,
       userId: fields[5] as String?,
+      id: fields[16] as String?,
       userName: fields[7] as String?,
       errorPosition: fields[8] as Position?,
       iosName: fields[9] as String?,
@@ -39,7 +40,7 @@ class AppErrorAdapter extends TypeAdapter<AppError> {
   @override
   void write(BinaryWriter writer, AppError obj) {
     writer
-      ..writeByte(16)
+      ..writeByte(17)
       ..writeByte(0)
       ..write(obj.errorMessage)
       ..writeByte(1)
@@ -71,7 +72,9 @@ class AppErrorAdapter extends TypeAdapter<AppError> {
       ..writeByte(14)
       ..write(obj.userUrl)
       ..writeByte(15)
-      ..write(obj.uploadedDate);
+      ..write(obj.uploadedDate)
+      ..writeByte(16)
+      ..write(obj.id);
   }
 
   @override

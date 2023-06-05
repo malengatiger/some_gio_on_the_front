@@ -190,6 +190,7 @@ class OrganizationBloc {
         audios: [],
         date: 'date',
         users: [],
+        geofenceEvents: [],
         activityModels: [],
         projectPolygons: [],
         settings: []);
@@ -339,7 +340,7 @@ class OrganizationBloc {
 
       if (videos.isEmpty || forceRefresh) {
         videos = await dataApiDog.getOrganizationVideos(
-            organizationId, startDate, endDate);
+            organizationId);
         await cacheManager.addVideos(videos: videos);
       }
       videoController.sink.add(videos);
@@ -510,6 +511,7 @@ DataBag getEmptyDataBag() {
   DataBag? bag = DataBag(
       photos: [],
       videos: [],
+      geofenceEvents: [],
       fieldMonitorSchedules: [],
       projectPositions: [],
       projects: [],

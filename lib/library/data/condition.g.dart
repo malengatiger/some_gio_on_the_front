@@ -19,6 +19,7 @@ class ConditionAdapter extends TypeAdapter<Condition> {
     return Condition(
       url: fields[0] as String?,
       caption: fields[1] as String?,
+      id: fields[11] as String?,
       created: fields[2] as String?,
       conditionId: fields[3] as String?,
       userId: fields[5] as String?,
@@ -34,7 +35,7 @@ class ConditionAdapter extends TypeAdapter<Condition> {
   @override
   void write(BinaryWriter writer, Condition obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.url)
       ..writeByte(1)
@@ -56,7 +57,9 @@ class ConditionAdapter extends TypeAdapter<Condition> {
       ..writeByte(9)
       ..write(obj.projectId)
       ..writeByte(10)
-      ..write(obj.projectName);
+      ..write(obj.projectName)
+      ..writeByte(11)
+      ..write(obj.id);
   }
 
   @override

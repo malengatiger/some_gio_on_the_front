@@ -22,8 +22,8 @@ class ProjectPosition extends HiveObject {
   String? organizationId;
   @HiveField(6)
   Position? position;
-  @HiveField(7)
-  PlaceMark? placemark;
+  // @HiveField(7)
+  // PlaceMark? placemark;
   @HiveField(8)
   List<City>? nearestCities;
   @HiveField(9)
@@ -41,6 +41,8 @@ class ProjectPosition extends HiveObject {
 
   @HiveField(14)
   String? translatedTitle;
+  @HiveField(15)
+  String? id;
 
   ProjectPosition(
       {required this.projectName,
@@ -48,7 +50,7 @@ class ProjectPosition extends HiveObject {
       required this.projectPositionId,
       required this.created,
       required this.position,
-      this.placemark,
+      this.id,
       required this.nearestCities,
       required this.organizationId,
       this.name,
@@ -68,6 +70,7 @@ class ProjectPosition extends HiveObject {
     possibleAddress = data['possibleAddress'];
     projectPositionId = data['projectPositionId'];
     caption = data['caption'];
+    id = data['id'];
     projectId = data['projectId'];
     organizationId = data['organizationId'];
     created = data['created'];
@@ -77,9 +80,9 @@ class ProjectPosition extends HiveObject {
     if (data['position'] != null) {
       position = Position.fromJson(data['position']);
     }
-    if (data['placemark'] != null) {
-      placemark = PlaceMark.fromJson(data['placemark']);
-    }
+    // if (data['placemark'] != null) {
+    //   placemark = PlaceMark.fromJson(data['placemark']);
+    // }
     //pp(' 💜 ProjectPosition.fromJson: log 5');
     nearestCities = [];
     if (data['nearestCities'] != null) {
@@ -100,6 +103,7 @@ class ProjectPosition extends HiveObject {
       'projectName': projectName,
       'projectId': projectId,
       'userId': userId,
+      'id': id,
       'userName': userName,
       'organizationId': organizationId,
       'projectPositionId': projectPositionId,
@@ -109,7 +113,6 @@ class ProjectPosition extends HiveObject {
       'translatedTitle': translatedTitle,
       'possibleAddress': possibleAddress,
       'position': position == null ? null : position!.toJson(),
-      'placemark': placemark == null ? null : placemark!.toJson(),
       'nearestCities': list,
     };
     return map;
