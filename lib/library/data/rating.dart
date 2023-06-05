@@ -30,11 +30,14 @@ class Rating extends HiveObject {
   String? ratingId;
   @HiveField(13)
   Position? position;
+  @HiveField(14)
+  String? id;
 
   Rating(
       {required this.remarks,
         this.photoId,
         this.videoId,
+        this.id,
         required this.created,
         required this.userId,
         required this.userName,
@@ -53,6 +56,7 @@ class Rating extends HiveObject {
     ratingId = data['ratingId'];
     created = data['created'];
     userId = data['userId'];
+    id = data['id'];
     organizationId = data['organizationId'];
     audioId = data['audioId'];
     userName = data['userName'];
@@ -72,6 +76,7 @@ class Rating extends HiveObject {
       'created': created,
       'ratingId': ratingId,
       'userId': userId,
+      'id': id,
       'audioId': audioId,
       'organizationId': organizationId,
       'userName': userName,
