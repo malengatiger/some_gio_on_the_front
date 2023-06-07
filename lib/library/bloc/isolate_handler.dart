@@ -207,7 +207,7 @@ class IsolateDataHandler {
     //todo REMOVE the data migration code when done!!!!!
 
     final start = DateTime.now();
-    await realmSyncApi.setSubscriptions(organizationId: organizationId, countryId: null);
+    await realmSyncApi.setSubscriptions(organizationId: organizationId, countryId: null, startDate: null);
 
     await migrateUsers(organizationId: organizationId, name: name);
     await migrateProjects(organizationId: organizationId, name: name);
@@ -247,7 +247,7 @@ class IsolateDataHandler {
       var geos = realmSyncApi.getProjectGeofenceEvents(projectId: p.projectId!, numberOfDays: 400);
       pp('$x2 realmSyncApi.getProjectGeofenceEvents: $name has ${geos.length} geofence events');
 
-      var poss = realmSyncApi.getProjectPositions(projectId: p.projectId!, numberOfDays: 400);
+      var poss = realmSyncApi.getProjectPositions(projectId: p.projectId!);
       pp('$x2 realmSyncApi.getProjectPositions: $name has ${poss.length} ProjectPositions');
 
     }
@@ -304,7 +304,7 @@ class IsolateDataHandler {
   Future migrateOrganizations() async {
     pp('$x2 ..................... $nn process organizations ... ');
     var orgs = await dataApiDog.getOrganizations();
-    await realmSyncApi.setSubscriptions(organizationId: null, countryId: null);
+    await realmSyncApi.setSubscriptions(organizationId: null, countryId: null, startDate: null);
     var mOrgs = <Organization>[];
     for (var element in orgs) {
       var f = _getOrganization(element);
@@ -474,7 +474,7 @@ class IsolateDataHandler {
     pp('$x2 ..................... $nn process countries ...');
     var countries = await dataApiDog.getCountries();
     try {
-      await realmSyncApi.setSubscriptions(organizationId: null, countryId: null);
+      await realmSyncApi.setSubscriptions(organizationId: null, countryId: null, startDate: null);
 
       realmSyncApi.deleteCountries();
       var mList = <Country>[];
@@ -513,7 +513,7 @@ class IsolateDataHandler {
           latitude: x.position!.coordinates.last,
           longitude: x.position!.coordinates.first,
         ),
-        user: _getUser(x.user!));
+        userId:x.userId, userName: x.userName, userUrl: x.userUrl);
     return g;
   }
 

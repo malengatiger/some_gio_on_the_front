@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/cache_manager.dart';
 import 'package:geo_monitor/library/data/location_request.dart';
 import 'package:geo_monitor/library/data/location_response.dart';
@@ -24,6 +25,8 @@ import '../../library/data/video.dart';
 import '../../library/functions.dart';
 import '../../library/ui/loading_card.dart';
 import 'activity_list_card.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
+
 
 class ActivityList extends StatefulWidget {
   const ActivityList({
@@ -43,20 +46,20 @@ class ActivityList extends StatefulWidget {
     required this.onLocationRequest, required this.prefsOGx, required this.cacheManager,
   }) : super(key: key);
 
-  final Function(Photo) onPhotoTapped;
-  final Function(Video) onVideoTapped;
-  final Function(Audio) onAudioTapped;
-  final Function(User) onUserTapped;
-  final Function(Project) onProjectTapped;
-  final Function(ProjectPosition) onProjectPositionTapped;
-  final Function(ProjectPolygon) onPolygonTapped;
-  final Function(GeofenceEvent) onGeofenceEventTapped;
-  final Function(OrgMessage) onOrgMessage;
-  final Function(LocationResponse) onLocationResponse;
-  final Function(LocationRequest) onLocationRequest;
+  final Function(mrm.Photo) onPhotoTapped;
+  final Function(mrm.Video) onVideoTapped;
+  final Function(mrm.Audio) onAudioTapped;
+  final Function(mrm.User) onUserTapped;
+  final Function(mrm.Project) onProjectTapped;
+  final Function(mrm.ProjectPosition) onProjectPositionTapped;
+  final Function(mrm.ProjectPolygon) onPolygonTapped;
+  final Function(mrm.GeofenceEvent) onGeofenceEventTapped;
+  final Function(mrm.OrgMessage) onOrgMessage;
+  final Function(mrm.LocationResponse) onLocationResponse;
+  final Function(mrm.LocationRequest) onLocationRequest;
 
-  final User? user;
-  final Project? project;
+  final mrm.User? user;
+  final mrm.Project? project;
   final PrefsOGx prefsOGx;
   final CacheManager cacheManager;
 
@@ -74,7 +77,7 @@ class ActivityListState extends State<ActivityList>
   // var models = <ActivityModel>[];
   static const userActive = 0, projectActive = 1, orgActive = 2;
   late int activeType;
-  User? user;
+  mrm.User? user;
   bool busy = true;
   String? prefix,
       suffix,
@@ -105,7 +108,8 @@ class ActivityListState extends State<ActivityList>
   }
 
   Future _setTexts() async {
-    user = await prefsOGx.getUser();
+    var p = await prefsOGx.getUser();
+    user = OldToRealm.getUser(p!);
     settings = await prefsOGx.getSettings();
     locale = settings!.locale;
     if (widget.project != null) {
@@ -130,7 +134,7 @@ class ActivityListState extends State<ActivityList>
     setState(() {});
   }
 
-  Future<void> _handleTappedActivity(ActivityModel act) async {
+  Future<void> _handleTappedActivity(mrm.ActivityModel act) async {
     if (act.photo != null) {
       widget.onPhotoTapped(act.photo!);
     }

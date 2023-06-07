@@ -13,9 +13,10 @@ import '../../data/project_polygon.dart';
 import '../../data/project_position.dart';
 import '../../data/user.dart';
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class PhotoMap extends StatefulWidget {
-  final Photo photo;
+  final mrm.Photo photo;
 
   const PhotoMap({
     super.key,

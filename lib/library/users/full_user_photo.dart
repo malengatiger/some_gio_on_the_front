@@ -2,10 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/data/user.dart';
 import 'package:geo_monitor/library/functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class FullUserPhoto extends StatefulWidget {
   const FullUserPhoto({Key? key, required this.user}) : super(key: key);
-  final User user;
+  final mrm.User user;
   @override
   FullUserPhotoState createState() => FullUserPhotoState();
 }

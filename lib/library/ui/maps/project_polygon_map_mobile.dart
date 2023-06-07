@@ -5,13 +5,16 @@ import 'dart:math';
 import 'package:badges/badges.dart' as bd;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/data/project_position.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:uuid/uuid.dart';
+import 'package:realm/realm.dart';
 
 import '../../../device_location/device_location_bloc.dart';
 import '../../../l10n/translation_handler.dart';
+import '../../../realm_data/data/realm_sync_api.dart';
 import '../../api/data_api_og.dart';
 import '../../api/prefs_og.dart';
 import '../../bloc/project_bloc.dart';
@@ -25,9 +28,10 @@ import '../../data/user.dart';
 import '../../emojis.dart';
 import '../../functions.dart';
 import '../../generic_functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectPolygonMapMobile extends StatefulWidget {
-  final Project project;
+  final mrm.Project project;
 
   const ProjectPolygonMapMobile({
     super.key,
@@ -44,7 +48,9 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
   late AnimationController _animationController;
   final Completer<GoogleMapController> _mapController = Completer();
   Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
-  var random = Random(DateTime.now().millisecondsSinceEpoch);
+  var random = Random(DateTime
+      .now()
+      .millisecondsSinceEpoch);
   bool busy = false;
 
   static const CameraPosition _kGooglePlex = CameraPosition(
@@ -53,12 +59,13 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
   );
   final Set<Polygon> _polygons = HashSet<Polygon>();
   final Set<Marker> _positionMarkers = HashSet<Marker>();
-  var projectPolygons = <ProjectPolygon>[];
-  var projectPositions = <ProjectPosition>[];
+  var projectPolygons = <mrm.ProjectPolygon>[];
+  var projectPositions = <mrm.ProjectPosition>[];
 
   String? title, area, areas;
 
-  User? user;
+  mrm.User? user;
+
   @override
   void initState() {
     _animationController = AnimationController(
@@ -90,30 +97,37 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
       busy = true;
     });
     try {
-      user = await prefsOGx.getUser();
-      var map = await getStartEndDates();
-      final startDate = map['startDate'];
-      final endDate = map['endDate'];
-      projectPolygons = await projectBloc.getProjectPolygons(
-          projectId: widget.project.projectId!, forceRefresh: forceRefresh);
-      projectPositions = await projectBloc.getProjectPositions(
-          projectId: widget.project.projectId!,
-          forceRefresh: forceRefresh,
-          startDate: startDate!,
-          endDate: endDate!);
-      var loc = await locationBloc.getLocation();
-      if (loc != null) {
-        _latitude = loc.latitude!;
-        _longitude = loc.longitude!;
-        _addMarkers();
-        _buildProjectPolygons(animateToLast: false);
-      }
+      var p = await prefsOGx.getUser();
+      user = OldToRealm.getUser(p!);
+      var sett = await prefsOGx.getSettings();
+      var posQuery =
+      realmSyncApi.getProjectPositionQuery(sett.organizationId!);
+      posQuery.changes.listen((event) {
+        projectPositions.clear();
+        for (var element in event.results) {
+          projectPositions.add(element);
+        }
+        setState(() {});
+      });
+      var polQuery = realmSyncApi.getProjectPolygonQuery(
+        sett.organizationId!,
+      );
+      polQuery.changes.listen((event) {
+        projectPolygons.clear();
+        for (var element in event.results) {
+          projectPolygons.add(element);
+        }
+        setState(() {});
+      });
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
-      }
+      pp(e);
     }
+    var loc = await locationBloc.getLocation();
+    _latitude = loc.latitude!;
+    _longitude = loc.longitude!;
+    _addMarkers();
+    _buildProjectPolygons(animateToLast: false);
+
     setState(() {
       busy = false;
     });
@@ -125,10 +139,11 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
       var marker = Marker(
           position: LatLng(pos.position!.coordinates.elementAt(1),
               pos.position!.coordinates.elementAt(0)),
-          markerId: MarkerId(DateTime.now().toIso8601String()), infoWindow: InfoWindow(
-        title: widget.project.name, snippet: widget.project.description,
-        onTap: _onMarkerTapped,
-      ));
+          markerId: MarkerId(DateTime.now().toIso8601String()),
+          infoWindow: InfoWindow(
+            title: widget.project.name, snippet: widget.project.description,
+            onTap: _onMarkerTapped,
+          ));
       _positionMarkers.add(marker);
     }
     pp('$mm _addMarkers: 🍏project markers added.: '
@@ -138,7 +153,9 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
   }
 
   void _buildProjectPolygons({required bool animateToLast}) {
-    pp('$mm _buildProjectPolygons happening ... projectPolygons: ${projectPolygons.length}');
+    pp(
+        '$mm _buildProjectPolygons happening ... projectPolygons: ${projectPolygons
+            .length}');
     _polygons.clear();
     for (var polygon in projectPolygons) {
       var points = <LatLng>[];
@@ -162,7 +179,8 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
   }
 
   GoogleMapController? googleMapController;
-  double _latitude = 0.0, _longitude = 0.0;
+  double _latitude = 0.0,
+      _longitude = 0.0;
 
   final _myPoints = <LatLng>[];
 
@@ -205,7 +223,9 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
     showToast(
         toastGravity: ToastGravity.CENTER_LEFT,
         textStyle: myTextStyleSmall(context),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Theme
+            .of(context)
+            .primaryColor,
         message: 'Area point no. ${_myPoints.length}',
         context: context);
 
@@ -225,40 +245,47 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
       _latitude = _myPoints.first.latitude;
       _longitude = _myPoints.first.longitude;
 
-      pp('Go and find nearest cities to this location : lat: $_latitude lng: $_longitude ...');
+      pp(
+          'Go and find nearest cities to this location : lat: $_latitude lng: $_longitude ...');
       List<City> cities = await dataApiDog.findCitiesByLocation(
           latitude: _latitude, longitude: _longitude, radiusInKM: 5.0);
+      var mCities = <mrm.City>[];
+      for (var element in cities) {
+        var m = OldToRealm.getCity(element);
+        mCities.add(m);
+      }
 
       pp('$mm Cities around this project polygon: ${cities.length}');
 
-      var positions = <local.Position>[];
+      var positions = <mrm.Position>[];
       for (var point in _myPoints) {
-        positions.add(local.Position(
+        positions.add(mrm.Position(
             type: 'Point', coordinates: [point.longitude, point.latitude]));
       }
-      pp('$mm Positions in this project polygon: ${positions.length}; 🔷 polygon about to be created');
+      pp('$mm Positions in this project polygon: ${positions
+          .length}; 🔷 polygon about to be created');
       final sett = await cacheManager.getSettings();
-      final projectAreaAdded = await translator.translate('projectAreaAdded', sett!.locale!);
+      final projectAreaAdded = await translator.translate(
+          'projectAreaAdded', sett!.locale!);
       final messageFromGeo = await getFCMMessageTitle();
 
-      var pos = ProjectPolygon(
+      var pos = mrm.ProjectPolygon(ObjectId(),
           projectName: widget.project.name,
           userId: user!.userId,
           userName: user!.name,
-          projectPolygonId: const Uuid().v4(),
+          projectPolygonId: Uuid.v4().toString(),
           created: DateTime.now().toUtc().toIso8601String(),
           positions: positions,
-          nearestCities: cities,
+          nearestCities: mCities,
           translatedTitle: messageFromGeo,
           translatedMessage: projectAreaAdded,
           organizationId: widget.project.organizationId,
           projectId: widget.project.projectId);
 
-      var resultPolygon = await dataApiDog.addProjectPolygon(polygon: pos);
-      pp('$mm polygon saved in DB. we are good to go! '
-          '🍏🍏${resultPolygon.toJson()}🍏🍏 ');
-      organizationBloc.addProjectPolygonToStream(resultPolygon);
-      projectPolygons.add(resultPolygon);
+      realmSyncApi.addProjectPolygons([pos]);
+      pp('$mm polygon saved in DB. we are good to go! ');
+      // organizationBloc.addProjectPolygonToStream(resultPolygon);
+      // projectPolygons.add(resultPolygon);
       _buildProjectPolygons(animateToLast: true);
       _myPoints.clear();
     } catch (e) {
@@ -273,8 +300,7 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
     });
   }
 
-  void _animateCamera(
-      {required double zoom, required local.Position position}) {
+  void _animateCamera({required double zoom, required mrm.Position position}) {
     CameraPosition? first = CameraPosition(
       target: LatLng(
           position.coordinates.elementAt(1), position.coordinates.elementAt(0)),
@@ -307,18 +333,18 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
                   children: [
                     Flexible(
                         child: Padding(
-                          padding: const EdgeInsets.only(left:16.0),
+                          padding: const EdgeInsets.only(left: 16.0),
                           child: Text(
-                      '${widget.project.name}',
-                      style: myTextStyleMediumPrimaryColor(context),
-                    ),
+                            '${widget.project.name}',
+                            style: myTextStyleMediumPrimaryColor(context),
+                          ),
                         )),
                     const SizedBox(
                       width: 16,
                     ),
                     ProjectPolygonChooser(
-                      area: area == null? 'Area': area!,
-                        areas: areas == null? 'Areas': areas!,
+                        area: area == null ? 'Area' : area!,
+                        areas: areas == null ? 'Areas' : areas!,
                         projectPolygons: projectPolygons,
                         onSelected: onSelected),
                     const SizedBox(
@@ -340,31 +366,37 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
                 icon: Icon(
                   Icons.refresh,
                   size: 20,
-                  color: Theme.of(context).primaryColor,
+                  color: Theme
+                      .of(context)
+                      .primaryColor,
                 )),
             _myPoints.length > 2
                 ? IconButton(
-                    onPressed: () {
-                      _submitNewPolygon();
-                    },
-                    icon: Icon(
-                      Icons.check,
-                      size: 32,
-                      color: Theme.of(context).primaryColor,
-                    ))
+                onPressed: () {
+                  _submitNewPolygon();
+                },
+                icon: Icon(
+                  Icons.check,
+                  size: 32,
+                  color: Theme
+                      .of(context)
+                      .primaryColor,
+                ))
                 : const SizedBox(),
             _myPoints.isEmpty
                 ? const SizedBox()
                 : IconButton(
-                    tooltip: 'Clear area you are working on',
-                    onPressed: () {
-                      _clearPolygon();
-                    },
-                    icon: Icon(
-                      Icons.layers_clear,
-                      size: 16,
-                      color: Theme.of(context).primaryColor,
-                    )),
+                tooltip: 'Clear area you are working on',
+                onPressed: () {
+                  _clearPolygon();
+                },
+                icon: Icon(
+                  Icons.layers_clear,
+                  size: 16,
+                  color: Theme
+                      .of(context)
+                      .primaryColor,
+                )),
             // IconButton(
             //     onPressed: () {},
             //     icon: Icon(
@@ -385,7 +417,9 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
               },
               child: bd.Badge(
                 badgeStyle: bd.BadgeStyle(
-                  badgeColor: Theme.of(context).primaryColor,
+                  badgeColor: Theme
+                      .of(context)
+                      .primaryColor,
                   elevation: 8,
                   padding: const EdgeInsets.all(8),
                 ),
@@ -400,7 +434,8 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
                   mapToolbarEnabled: true,
                   initialCameraPosition: _kGooglePlex,
                   onMapCreated: (GoogleMapController controller) {
-                    pp('🍎🍎🍎........... GoogleMap onMapCreated ... ready to rumble!');
+                    pp(
+                        '🍎🍎🍎........... GoogleMap onMapCreated ... ready to rumble!');
                     _mapController.complete(controller);
                     googleMapController = controller;
                     setState(() {});
@@ -422,7 +457,7 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
     );
   }
 
-  onSelected(Position p1) {
+  onSelected(mrm.Position p1) {
     _animateCamera(zoom: 14.6, position: p1);
   }
 
@@ -432,20 +467,19 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
 }
 
 class ProjectPolygonChooser extends StatelessWidget {
-  const ProjectPolygonChooser(
-      {Key? key,
-      required this.projectPolygons,
-      required this.onSelected,
-      required this.area,
-      required this.areas})
+  const ProjectPolygonChooser({Key? key,
+    required this.projectPolygons,
+    required this.onSelected,
+    required this.area,
+    required this.areas})
       : super(key: key);
-  final List<ProjectPolygon> projectPolygons;
-  final Function(local.Position) onSelected;
+  final List<mrm.ProjectPolygon> projectPolygons;
+  final Function(mrm.Position) onSelected;
   final String area, areas;
 
   @override
   Widget build(BuildContext context) {
-    var list = <local.Position>[];
+    var list = <mrm.Position>[];
     projectPolygons.sort((a, b) => a.created!.compareTo(b.created!));
 
     for (var value in projectPolygons) {
@@ -456,7 +490,7 @@ class ProjectPolygonChooser extends StatelessWidget {
     for (var pos in list) {
       cnt++;
       menuItems.add(
-        DropdownMenuItem<local.Position>(
+        DropdownMenuItem<mrm.Position>(
           value: pos,
           child: Row(
             children: [

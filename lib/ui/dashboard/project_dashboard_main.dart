@@ -12,6 +12,7 @@ import '../../library/bloc/organization_bloc.dart';
 import '../../library/bloc/project_bloc.dart';
 import '../../library/cache_manager.dart';
 import '../../library/data/project.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectDashboardMain extends StatelessWidget {
   const ProjectDashboardMain(
@@ -23,7 +24,7 @@ class ProjectDashboardMain extends StatelessWidget {
       required this.dataApiDog,
       required this.cacheManager, required this.fcmBloc, required this.geoUploader, required this.cloudStorageBloc})
       : super(key: key);
-  final Project project;
+  final mrm.Project project;
   final ProjectBloc projectBloc;
   final PrefsOGx prefsOGx;
   final OrganizationBloc organizationBloc;

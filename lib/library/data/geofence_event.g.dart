@@ -18,7 +18,9 @@ class GeofenceEventAdapter extends TypeAdapter<GeofenceEvent> {
     };
     return GeofenceEvent(
       status: fields[0] as String?,
-      user: fields[6] as User?,
+      userId: fields[13] as String?,
+      userName: fields[14] as String?,
+      userUrl: fields[15] as String?,
       geofenceEventId: fields[1] as String?,
       projectPositionId: fields[3] as String?,
       organizationId: fields[7] as String?,
@@ -35,7 +37,7 @@ class GeofenceEventAdapter extends TypeAdapter<GeofenceEvent> {
   @override
   void write(BinaryWriter writer, GeofenceEvent obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.status)
       ..writeByte(1)
@@ -46,8 +48,6 @@ class GeofenceEventAdapter extends TypeAdapter<GeofenceEvent> {
       ..write(obj.projectPositionId)
       ..writeByte(4)
       ..write(obj.projectName)
-      ..writeByte(6)
-      ..write(obj.user)
       ..writeByte(7)
       ..write(obj.organizationId)
       ..writeByte(8)
@@ -59,7 +59,13 @@ class GeofenceEventAdapter extends TypeAdapter<GeofenceEvent> {
       ..writeByte(11)
       ..write(obj.translatedTitle)
       ..writeByte(12)
-      ..write(obj.id);
+      ..write(obj.id)
+      ..writeByte(13)
+      ..write(obj.userId)
+      ..writeByte(14)
+      ..write(obj.userName)
+      ..writeByte(15)
+      ..write(obj.userUrl);
   }
 
   @override

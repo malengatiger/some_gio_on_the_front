@@ -5,9 +5,10 @@ import '../../data/project.dart';
 import '../../data/user.dart';
 import '../../functions.dart';
 import 'generic_message.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class MessageMobile extends StatefulWidget {
-  final User? user;
+  final mrm.User? user;
 
   const MessageMobile({Key? key,  this.user}) : super(key: key);
   @override
@@ -18,7 +19,7 @@ class MessageMobileState extends State<MessageMobile>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   final _key = GlobalKey<ScaffoldState>();
-  List<Project> _projects = [];
+  List<mrm.Project> _projects = [];
 
   @override
   void initState() {
@@ -43,8 +44,8 @@ class MessageMobileState extends State<MessageMobile>
     setState(() {
       busy = true;
     });
-    _projects = await organizationBloc.getOrganizationProjects(
-        organizationId: widget.user!.organizationId!, forceRefresh: force);
+    // _projects = await organizationBloc.getOrganizationProjects(
+    //     organizationId: widget.user!.organizationId!, forceRefresh: force);
     setState(() {
       busy = false;
     });
@@ -98,14 +99,15 @@ class MessageMobileState extends State<MessageMobile>
                 const SizedBox(
                   height: 24,
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 12.0, right: 12.0),
-                  child: Card(
-                      elevation: 8,
-                      child: SingleChildScrollView(
-                          child: GenericMessage(
-                              project: _selectedProject == null? null: _selectedProject!, user: widget.user!))),
-                ),
+                // Padding(
+                //   padding: const EdgeInsets.only(left: 12.0, right: 12.0),
+                //   child: Card(
+                //       elevation: 8,
+                //       child: SingleChildScrollView(
+                //           child: GenericMessage(
+                //               project: _selectedProject == null? null: _selectedProject!,
+                //               user: widget.user!))),
+                // ),
                 const SizedBox(
                   height: 24,
                 ),
@@ -118,7 +120,7 @@ class MessageMobileState extends State<MessageMobile>
                         return GestureDetector(
                           onTap: () {
                             setState(() {
-                              _selectedProject = p;
+                              //_selectedProject = p;
                             });
                           },
                           child: Card(

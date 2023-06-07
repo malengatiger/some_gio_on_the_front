@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/users/edit/user_detail_form.dart';
 import 'package:geo_monitor/library/users/edit/user_form.dart';
 import 'package:geo_monitor/library/users/full_user_photo.dart';
@@ -13,9 +14,10 @@ import '../../data/country.dart';
 import '../../data/settings_model.dart';
 import '../../data/user.dart' as ar;
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class UserDetail extends StatefulWidget {
-  final ar.User user;
+  final mrm.User user;
 
   const UserDetail({super.key, required this.user});
 
@@ -26,7 +28,7 @@ class UserDetail extends StatefulWidget {
 class UserDetailState extends State<UserDetail>
     with SingleTickerProviderStateMixin {
 
-  ar.User? admin;
+  mrm.User? admin;
   final _key = GlobalKey<ScaffoldState>();
   var isBusy = false;
   Country? country;
@@ -56,7 +58,8 @@ class UserDetailState extends State<UserDetail>
   }
 
   void _getAdministrator() async {
-    admin = await prefsOGx.getUser();
+    var p  = await prefsOGx.getUser();
+    admin = OldToRealm.getUser(p!);
     setState(() {});
   }
 

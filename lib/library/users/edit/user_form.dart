@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geo_monitor/library/bloc/fcm_bloc.dart';
-import 'package:geo_monitor/library/data/country.dart';
+import 'package:geo_monitor/library/data/country.dart' as old;
 import 'package:geo_monitor/library/data/settings_model.dart';
 import 'package:geo_monitor/library/errors/error_handler.dart';
 import 'package:geo_monitor/library/users/edit/user_edit_mobile.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:uuid/uuid.dart';
+import '../../../realm_data/data/schemas.dart' as mrm;
 
 import '../../../l10n/translation_handler.dart';
 
@@ -33,7 +35,7 @@ class UserForm extends StatefulWidget {
     required this.internalPadding,
   }) : super(key: key);
 
-  final ar.User? user;
+  final mrm.User? user;
   final double width, internalPadding;
 
   @override
@@ -50,7 +52,7 @@ class UserFormState extends State<UserForm>
   ar.User? admin;
   final _formKey = GlobalKey<FormState>();
   var isBusy = false;
-  Country? country;
+  mrm.Country? country;
   int userType = -1;
   int genderType = -1;
   String? type;
@@ -108,7 +110,7 @@ class UserFormState extends State<UserForm>
   Future _setCountry() async {
     if (widget.user != null) {
       if (widget.user!.countryId != null) {
-        var countries = await cacheManager.getCountries();
+        var countries =  realmSyncApi.getCountries();
         var sett = await prefsOGx.getSettings();
         for (var value in countries) {
           if (widget.user!.countryId == value.countryId) {
@@ -223,8 +225,6 @@ class UserFormState extends State<UserForm>
                   duration: const Duration(seconds: 5));
             }
 
-            await organizationBloc.getUsers(
-                organizationId: user.organizationId!, forceRefresh: true);
             if (mounted) {
               Navigator.of(context).pop(mUser);
             }
@@ -252,8 +252,7 @@ class UserFormState extends State<UserForm>
           widget.user!.countryId = country!.countryId!;
           widget.user!.gender = gender;
 
-          pp('\n\n😡😡😡 _submit existing user for update, check countryId 🌸 ......... '
-              '${widget.user!.toJson()} \n');
+          pp('\n\n😡😡😡 _submit existing user for update, check countryId 🌸\n');
 
           try {
             await dataApiDog.updateUser(widget.user!);
@@ -399,18 +398,6 @@ class UserFormState extends State<UserForm>
     }
   }
 
-  void _navigateToFullPhoto() async {
-    Navigator.of(context).pop();
-    await Navigator.push(
-        context,
-        PageTransition(
-            type: PageTransitionType.scale,
-            alignment: Alignment.topLeft,
-            duration: const Duration(seconds: 2),
-            child: FullUserPhoto(
-              user: widget.user!,
-            )));
-  }
   bool refreshCountries = false;
 
   @override

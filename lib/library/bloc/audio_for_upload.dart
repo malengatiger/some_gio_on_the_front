@@ -1,10 +1,11 @@
 import 'dart:typed_data';
 
 import 'package:geo_monitor/library/bloc/photo_for_upload.dart';
+import 'package:geo_monitor/library/data/project.dart';
 import 'package:hive/hive.dart';
 
 import '../data/position.dart';
-import '../data/project.dart';
+import '../data/project.dart' as old;
 
 part 'audio_for_upload.g.dart';
 
@@ -12,33 +13,38 @@ part 'audio_for_upload.g.dart';
 class AudioForUpload extends HiveObject {
   @HiveField(0)
   String? filePath;
-
+  @HiveField(1)
+  String? projectId;
   @HiveField(2)
-  Project? project;
+  String? projectName;
 
-  @HiveField(5)
+  @HiveField(3)
   Position? position;
-  @HiveField(6)
+  @HiveField(4)
   String? date;
-  @HiveField(7)
+  @HiveField(5)
   String? audioId;
-  @HiveField(8)
+  @HiveField(6)
   String? userId;
-  @HiveField(9)
+  @HiveField(7)
   String? userName;
-  @HiveField(10)
+  @HiveField(8)
   String? organizationId;
-  @HiveField(11)
+  @HiveField(9)
   String? userThumbnailUrl;
-  @HiveField(12)
+  @HiveField(10)
   int? durationInSeconds;
-  @HiveField(13)
+  @HiveField(11)
   Uint8List? fileBytes;
+
+
 
   AudioForUpload(
       {required this.filePath,
-      required this.project,
-      required this.position,
+      required this.projectId,
+        required this.projectName,
+
+        required this.position,
       required this.audioId,
       required this.userId,
       required this.userName,
@@ -52,6 +58,8 @@ class AudioForUpload extends HiveObject {
     audioId = data['audioId'];
     filePath = data['filePath'];
     date = data['date'];
+    projectId = data['projectId'];
+    projectName = data['projectName'];
     durationInSeconds = data['durationInSeconds'];
 
     userId = data['userId'];
@@ -63,10 +71,6 @@ class AudioForUpload extends HiveObject {
       fileBytes = getImageBinary(data['fileBytes']);
     }
 
-    if (data['project'] != null) {
-      project = Project.fromJson(data['project']);
-    }
-
     if (data['position'] != null) {
       position = Position.fromJson(data['position']);
     }
@@ -75,7 +79,8 @@ class AudioForUpload extends HiveObject {
     Map<String, dynamic> map = {
       'audioId': audioId,
       'filePath': filePath,
-      'project': project == null ? null : project!.toJson(),
+      'projectId': projectId,
+      'projectName': projectName,
       'date': date,
       'organizationId': organizationId,
       'userName': userName,

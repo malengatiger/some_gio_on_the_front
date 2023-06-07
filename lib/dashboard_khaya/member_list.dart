@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../library/data/user.dart';
 import '../library/functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class MemberList extends StatelessWidget {
-  final Function(User) onUserTapped;
-  final List<User> users;
+  final Function(mrm.User) onUserTapped;
+  final List<mrm.User> users;
 
   const MemberList(
       {super.key,
@@ -15,7 +16,7 @@ class MemberList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 140,
+      height: 160,
       child: ListView.builder(
           itemCount: users.length,
           scrollDirection: Axis.horizontal,
@@ -35,7 +36,7 @@ class UserView extends StatelessWidget {
   const UserView(
       {Key? key, required this.user, required this.height, required this.width})
       : super(key: key);
-  final User user;
+  final mrm.User user;
   final double height, width;
   @override
   Widget build(BuildContext context) {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/api/prefs_og.dart';
 import 'package:geo_monitor/library/bloc/fcm_bloc.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/data/audio.dart';
 import 'package:geo_monitor/library/data/data_bag.dart';
@@ -20,6 +21,7 @@ import 'package:responsive_builder/responsive_builder.dart';
 import '../../../../dashboard_khaya/xd_dashboard.dart';
 import '../../../../l10n/translation_handler.dart';
 
+import '../../../../realm_data/data/realm_sync_api.dart';
 import '../../../../ui/audio/audio_recorder.dart';
 import '../../../../ui/dashboard/photo_frame.dart';
 import '../../../../utilities/transitions.dart';
@@ -32,6 +34,7 @@ import '../../../data/project.dart';
 import '../../../data/video.dart';
 import '../../../functions.dart';
 import '../../loading_card.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectMediaTimeline extends StatefulWidget {
   const ProjectMediaTimeline(
@@ -50,7 +53,7 @@ class ProjectMediaTimeline extends StatefulWidget {
   final ProjectBloc projectBloc;
   final PrefsOGx prefsOGx;
   final OrganizationBloc organizationBloc;
-  final Project? project;
+  final mrm.Project? project;
   final CacheManager cacheManager;
   final DataApiDog dataApiDog;
   final FCMBloc fcmBloc;
@@ -65,9 +68,9 @@ class ProjectMediaTimelineState extends State<ProjectMediaTimeline>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   bool loading = false;
-  var projects = <Project>[];
-  late SettingsModel settings;
-  Project? projectSelected;
+  var projects = <mrm.Project>[];
+  late mrm.SettingsModel settings;
+  mrm.Project? projectSelected;
   late String startDate, endDate, videoTitle;
   String? timeLine,
       loadingData,
@@ -88,13 +91,14 @@ class ProjectMediaTimelineState extends State<ProjectMediaTimeline>
     _controller = AnimationController(vsync: this);
     super.initState();
     pp('$mm ............................................ initState ..........');
-    _listen();
+    //_listen();
     _checkProject();
   }
 
   Future _checkProject() async {
     pp('$mm ..................................... check project available ...');
-    settings = await widget.prefsOGx.getSettings();
+    var s = await widget.prefsOGx.getSettings();
+    settings = OldToRealm.getSettings(s);
     await _setTexts();
     final m = await getStartEndDates(numberOfDays: settings.numberOfDays!);
     startDate = m['startDate']!;
@@ -102,8 +106,6 @@ class ProjectMediaTimelineState extends State<ProjectMediaTimeline>
     if (widget.project != null) {
       projectSelected = widget.project;
       pp('$mm _checkProject: ...  🔆 🔆 🔆 projectSelected: ${projectSelected!.name}');
-      _getProjectData(
-          projectId: projectSelected!.projectId!, forceRefresh: false);
     } else {
       projectSelected = await widget.prefsOGx.getProject();
       if (projectSelected == null) {
@@ -111,15 +113,16 @@ class ProjectMediaTimelineState extends State<ProjectMediaTimeline>
           showProjectChooser = true;
         });
       } else {
-        _getProjectData(
-            projectId: projectSelected!.projectId!, forceRefresh: false);
+        //_getProjectData(
+        //     projectId: projectSelected!.projectId!, forceRefresh: false);
       }
     }
   }
 
   Future _setTexts() async {
     pp('$mm _setTexts .........................');
-    settings = await widget.prefsOGx.getSettings();
+    var p  = await widget.prefsOGx.getSettings();
+    settings = OldToRealm.getSettings(p);
     final locale = settings.locale!;
     timeLine = await translator.translate('timeLine', locale);
     loadingData = await translator.translate('loadingData', locale);
@@ -128,102 +131,143 @@ class ProjectMediaTimelineState extends State<ProjectMediaTimeline>
     durationText = await translator.translate('duration', locale);
     sendMemberMessage = await translator.translate('sendMemberMessage', locale);
     videoTitle = await translator.translate('videos', settings.locale!);
+    _setQueries(widget.project!);
   }
 
-  void _listen() async {
-    settingsSub = widget.fcmBloc.settingsStream.listen((event) {
-      pp('$mm settingsStream delivered : ${event.toJson()}');
-      _getProjectData(
-          projectId: projectSelected!.projectId!, forceRefresh: true);
-    });
-    photoSub = widget.fcmBloc.photoStream.listen((photo) {
-      pp('$mm photoStream delivered  : ${photo.toJson()}');
-      if (photo.projectId == projectSelected!.projectId) {
-        photos.insert(0, photo);
-        _consolidateItems();
-      }
-
-      if (mounted) {
-        setState(() {});
-      }
-    });
-    videoSub = widget.fcmBloc.videoStream.listen((video) {
-      pp('$mm videoStream delivered : ${video.toJson()}');
-      if (video.projectId == projectSelected!.projectId) {
-        videos.insert(0, video);
-        _consolidateItems();
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    });
-    audioSub = widget.fcmBloc.audioStream.listen((audio) {
-      pp('$mm audioStream delivered : ${audio.toJson()}');
-      if (audio.projectId == projectSelected!.projectId) {
-        audios.insert(0, audio);
-        _consolidateItems();
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    });
-
-    bagSub = widget.projectBloc.dataBagStream.listen((bag) {
-      pp('$mm projectBloc.dataBagStream delivered : '
-          'photos: ${bag.photos!.length} videos: ${bag.videos!.length} audios: ${bag.audios!.length}');
-      dataBag = bag;
-      audios = bag.audios!;
-      photos = bag.photos!;
-      videos = bag.videos!;
-      _consolidateItems();
-      if (mounted) {
-        pp('$mm dataBagStream delivered , widget is mounted, setting state: '
-            'photos:${photos.length} videos: ${videos.length} audios: ${audios.length}');
-        setState(() {
-          loading = false;
-        });
-      }
-    });
-  }
+  // void _listen() async {
+  //   settingsSub = widget.fcmBloc.settingsStream.listen((event) {
+  //     pp('$mm settingsStream delivered : ${event.toJson()}');
+  //     _getProjectData(
+  //         projectId: projectSelected!.projectId!, forceRefresh: true);
+  //   });
+  //   photoSub = widget.fcmBloc.photoStream.listen((photo) {
+  //     pp('$mm photoStream delivered  : ${photo.toJson()}');
+  //     if (photo.projectId == projectSelected!.projectId) {
+  //       photos.insert(0, photo);
+  //       _consolidateItems();
+  //     }
+  //
+  //     if (mounted) {
+  //       setState(() {});
+  //     }
+  //   });
+  //   videoSub = widget.fcmBloc.videoStream.listen((video) {
+  //     pp('$mm videoStream delivered : ${video.toJson()}');
+  //     if (video.projectId == projectSelected!.projectId) {
+  //       videos.insert(0, video);
+  //       _consolidateItems();
+  //     }
+  //     if (mounted) {
+  //       setState(() {});
+  //     }
+  //   });
+  //   audioSub = widget.fcmBloc.audioStream.listen((audio) {
+  //     pp('$mm audioStream delivered : ${audio.toJson()}');
+  //     if (audio.projectId == projectSelected!.projectId) {
+  //       audios.insert(0, audio);
+  //       _consolidateItems();
+  //     }
+  //     if (mounted) {
+  //       setState(() {});
+  //     }
+  //   });
+  //
+  //   bagSub = widget.projectBloc.dataBagStream.listen((bag) {
+  //     pp('$mm projectBloc.dataBagStream delivered : '
+  //         'photos: ${bag.photos!.length} videos: ${bag.videos!.length} audios: ${bag.audios!.length}');
+  //     dataBag = bag;
+  //     audios = bag.audios!;
+  //     photos = bag.photos!;
+  //     videos = bag.videos!;
+  //     _consolidateItems();
+  //     if (mounted) {
+  //       pp('$mm dataBagStream delivered , widget is mounted, setting state: '
+  //           'photos:${photos.length} videos: ${videos.length} audios: ${audios.length}');
+  //       setState(() {
+  //         loading = false;
+  //       });
+  //     }
+  //   });
+  // }
 
   DataBag? dataBag;
-  var audios = <Audio>[];
-  var videos = <Video>[];
-  var photos = <Photo>[];
+  var audios = <mrm.Audio>[];
+  var videos = <mrm.Video>[];
+  var photos = <mrm.Photo>[];
 
-  Future _getProjectData(
-      {required String projectId, required bool forceRefresh}) async {
-    pp('$mm widget.projectBloc.getProjectData: .........................  🔆 🔆 🔆forceRefresh: $forceRefresh');
-    setState(() {
-      loading = true;
-    });
-    try {
-      final m = await getStartEndDates(numberOfDays: settings.numberOfDays!);
-      dataBag = await widget.projectBloc.getProjectData(
-          projectId: projectId,
-          forceRefresh: forceRefresh,
-          startDate: m['startDate']!,
-          endDate: m['endDate']!);
+  // Future _getProjectData(
+  //     {required String projectId, required bool forceRefresh}) async {
+  //   pp('$mm widget.projectBloc.getProjectData: .........................  🔆 🔆 🔆forceRefresh: $forceRefresh');
+  //   setState(() {
+  //     loading = true;
+  //   });
+  //   try {
+  //     final m = await getStartEndDates(numberOfDays: settings.numberOfDays!);
+  //     dataBag = await widget.projectBloc.getProjectData(
+  //         projectId: projectId,
+  //         forceRefresh: forceRefresh,
+  //         startDate: m['startDate']!,
+  //         endDate: m['endDate']!);
+  //
+  //     audios = dataBag!.audios!;
+  //     photos = dataBag!.photos!;
+  //     videos = dataBag!.videos!;
+  //     pp('$mm widget.projectBloc.getProjectData: data from cache ........... 🐸'
+  //         'photos: ${photos.length} audios: ${audios.length} videos: ${videos.length}');
+  //     _sort();
+  //     _consolidateItems();
+  //   } catch (e) {
+  //     pp(e);
+  //     if (mounted) {
+  //       showSnackBar(
+  //           message: 'Error, get message',
+  //           backgroundColor: Theme.of(context).primaryColorDark,
+  //           context: context);
+  //     }
+  //   }
+  //   setState(() {
+  //     loading = false;
+  //   });
+  // }
 
-      audios = dataBag!.audios!;
-      photos = dataBag!.photos!;
-      videos = dataBag!.videos!;
-      pp('$mm widget.projectBloc.getProjectData: data from cache ........... 🐸'
-          'photos: ${photos.length} audios: ${audios.length} videos: ${videos.length}');
-      _sort();
-      _consolidateItems();
-    } catch (e) {
-      pp(e);
-      if (mounted) {
-        showSnackBar(
-            message: 'Error, get message',
-            backgroundColor: Theme.of(context).primaryColorDark,
-            context: context);
+  void _setQueries(mrm.Project project) async {
+    var numberOfDays = settings.numberOfDays;
+    var startDate = DateTime.now().subtract(Duration(days: numberOfDays!)).toUtc().toIso8601String();
+    var audioQuery = realmSyncApi.getProjectAudioQuery(project.projectId!, startDate);
+    var photoQuery = realmSyncApi.getProjectPhotoQuery(project.projectId!, startDate);
+    var videoQuery = realmSyncApi.getProjectVideoQuery(project.projectId!, startDate);
+
+    photoQuery.changes.listen((event) {
+      photos.clear();
+      for (var element in event.results) {
+        photos.add(element);
       }
-    }
-    setState(() {
-      loading = false;
+      _consolidateItems();
+      setState(() {
+
+      });
     });
+    videoQuery.changes.listen((event) {
+      videos.clear();
+      for (var element in event.results) {
+        videos.add(element);
+      }
+      _consolidateItems();
+      setState(() {
+
+      });
+    });
+    audioQuery.changes.listen((event) {
+      audios.clear();
+      for (var element in event.results) {
+        audios.add(element);
+      }
+      _consolidateItems();
+      setState(() {
+
+      });
+    });
+
   }
 
   void _sort() {
@@ -243,8 +287,8 @@ class ProjectMediaTimelineState extends State<ProjectMediaTimeline>
   }
 
   bool playVideo = false;
-  Video? tappedVideo;
-  onVideoTapped(Video p1) {
+  mrm.Video? tappedVideo;
+  onVideoTapped(mrm.Video p1) {
     pp('$mm onVideoTapped ... id: ${p1.videoId}');
     tappedVideo = p1;
     final deviceType = getThisDeviceType();
@@ -269,10 +313,10 @@ class ProjectMediaTimelineState extends State<ProjectMediaTimeline>
 
   bool showPhoto = false;
   bool playAudio = false;
-  Audio? tappedAudio;
+  mrm.Audio? tappedAudio;
   bool showProjectChooser = false;
 
-  onAudioTapped(Audio p1) {
+  onAudioTapped(mrm.Audio p1) {
     pp('$mm onAudioTapped .... id: ${p1.audioId}');
     tappedAudio = p1;
     final type = getThisDeviceType();
@@ -299,8 +343,8 @@ class ProjectMediaTimelineState extends State<ProjectMediaTimeline>
     }
   }
 
-  Photo? tappedPhoto;
-  onPhotoTapped(Photo p1) {
+  mrm.Photo? tappedPhoto;
+  onPhotoTapped(mrm.Photo p1) {
     pp('$mm onPhotoTapped .... id: ${p1.photoId}');
     tappedPhoto = p1;
     final ww = PhotoFrame(
@@ -377,7 +421,7 @@ class ProjectMediaTimelineState extends State<ProjectMediaTimeline>
 
   void _onMakeAudio() {
     pp('$mm _onMakeAudio ..............');
-    late Project mProj;
+    late mrm.Project mProj;
     if (widget.project != null) {
       mProj = widget.project!;
     }
@@ -564,9 +608,7 @@ class ProjectMediaTimelineState extends State<ProjectMediaTimeline>
                     switch (index) {
                       case 0:
                         if (projectSelected != null) {
-                          _getProjectData(
-                              projectId: projectSelected!.projectId!,
-                              forceRefresh: true);
+                          _setQueries(projectSelected!);
                         }
                         break;
                       case 1:
@@ -687,9 +729,9 @@ class ProjectMediaTimelineState extends State<ProjectMediaTimeline>
                                       projectSelected = p;
                                       showProjectChooser = false;
                                     });
-                                    _getProjectData(
-                                        projectId: p.projectId!,
-                                        forceRefresh: false);
+                                    // _getProjectData(
+                                    //     projectId: p.projectId!,
+                                    //     forceRefresh: false);
                                   },
                                   onClose: () {
                                     setState(() {

@@ -8,11 +8,12 @@ import '../api/data_api_og.dart';
 import '../api/prefs_og.dart';
 import '../data/user.dart';
 import '../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class KillUserPage extends StatefulWidget {
   const KillUserPage({Key? key, required this.user}) : super(key: key);
 
-  final User user;
+  final mrm.User user;
   @override
   KillUserPageState createState() => KillUserPageState();
 }

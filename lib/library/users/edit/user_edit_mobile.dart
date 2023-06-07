@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/users/edit/user_form.dart';
 import 'package:geo_monitor/library/users/full_user_photo.dart';
 import 'package:page_transition/page_transition.dart';
@@ -12,9 +13,10 @@ import '../../data/country.dart';
 import '../../data/settings_model.dart';
 import '../../data/user.dart' as ar;
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class UserEditMobile extends StatefulWidget {
-  final ar.User? user;
+  final mrm.User? user;
   const UserEditMobile(this.user, {super.key});
 
   @override
@@ -27,10 +29,10 @@ class UserEditMobileState extends State<UserEditMobile>
   // var emailController = TextEditingController();
   // var passwordController = TextEditingController();
   // var cellphoneController = TextEditingController();
-  ar.User? admin;
+  mrm.User? admin;
   final _key = GlobalKey<ScaffoldState>();
   var isBusy = false;
-  Country? country;
+  mrm.Country? country;
   int userType = -1;
   int genderType = -1;
   String? type;
@@ -57,7 +59,8 @@ class UserEditMobileState extends State<UserEditMobile>
   }
 
   void _getAdministrator() async {
-    admin = await prefsOGx.getUser();
+    var p = await prefsOGx.getUser();
+    admin = OldToRealm.getUser(p!);
     setState(() {});
   }
 

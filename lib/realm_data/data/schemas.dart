@@ -188,6 +188,7 @@ class _Project {
   late String? description;
   late String? translatedMessage;
   late String? translatedTitle;
+  late int? monitorMaxDistanceInMetres;
 }
 
 
@@ -321,7 +322,11 @@ class _GeofenceEvent {
   late String? date;
   late String? projectPositionId;
   late String? projectName;
-  late _User? user;
+
+  late String? userId;
+  late String? userName;
+  late String? userUrl;
+
   @Indexed()
   late String? organizationId;
   late _Position? position;

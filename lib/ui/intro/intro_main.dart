@@ -13,6 +13,7 @@ import '../../library/bloc/organization_bloc.dart';
 import '../../library/bloc/project_bloc.dart';
 import '../../library/bloc/refresh_bloc.dart';
 import '../../library/cache_manager.dart';
+import '../../realm_data/data/realm_sync_api.dart';
 import '../../stitch/stitch_service.dart';
 import 'intro_page_viewer_landscape.dart';
 
@@ -29,6 +30,7 @@ class IntroMain extends StatefulWidget {
   final FirebaseAuth firebaseAuth;
   final StitchService stitchService;
   final RefreshBloc refreshBloc;
+  final RealmSyncApi realmSyncApi;
 
 
   const IntroMain({
@@ -42,7 +44,7 @@ class IntroMain extends StatefulWidget {
     required this.projectBloc,
     required this.geoUploader,
     required this.cloudStorageBloc,
-    required this.firebaseAuth, required this.stitchService, required this.refreshBloc,
+    required this.firebaseAuth, required this.stitchService, required this.refreshBloc, required this.realmSyncApi,
   }) : super(key: key);
   @override
   IntroMainState createState() => IntroMainState();
@@ -80,6 +82,7 @@ class IntroMainState extends State<IntroMain>
           isolateHandler: widget.isolateHandler,
           geoUploader: widget.geoUploader,
           refreshBloc: widget.refreshBloc,
+          realmSyncApi: realmSyncApi,
           cloudStorageBloc: widget.cloudStorageBloc,
           firebaseAuth: widget.firebaseAuth,
           stitchService: widget.stitchService,
@@ -96,6 +99,7 @@ class IntroMainState extends State<IntroMain>
               firebaseAuth: widget.firebaseAuth,
               prefsOGx: widget.prefsOGx,
               dataHandler: widget.isolateHandler,
+              realmSyncApi: realmSyncApi,
               dataApiDog: widget.dataApiDog,
               cacheManager: widget.cacheManager,
               isolateHandler: widget.isolateHandler,
@@ -108,6 +112,7 @@ class IntroMainState extends State<IntroMain>
           landscape: (context) {
             return IntroPageViewerLandscape(
               prefsOGx: widget.prefsOGx,
+              realmSyncApi: realmSyncApi,
               projectBloc: widget.projectBloc,
               dataApiDog: widget.dataApiDog,
               cacheManager: widget.cacheManager,

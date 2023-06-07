@@ -7,6 +7,7 @@ import '../../api/prefs_og.dart';
 import '../../cache_manager.dart';
 import '../../data/project.dart';
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectChooser extends StatefulWidget {
   const ProjectChooser(
@@ -17,7 +18,7 @@ class ProjectChooser extends StatefulWidget {
       required this.height,
       required this.width, required this.prefsOGx})
       : super(key: key);
-  final Function(Project) onSelected;
+  final Function(mrm.Project) onSelected;
   final Function onClose;
   final String title;
   final double height;
@@ -30,7 +31,7 @@ class ProjectChooser extends StatefulWidget {
 
 class ProjectChooserState extends State<ProjectChooser>
     with SingleTickerProviderStateMixin {
-  List<Project> projects = <Project>[];
+  var projects = <mrm.Project>[];
   bool loading = false;
   late AnimationController _animationController;
   @override
@@ -55,14 +56,6 @@ class ProjectChooserState extends State<ProjectChooser>
       loading = true;
     });
 
-    projects = await cacheManager.getOrganizationProjects();
-    if (projects.isEmpty) {
-      var user = await prefsOGx.getUser();
-      var startDate = DateTime.now().toUtc().subtract(const Duration(days: 400)).toIso8601String();
-      var endDate = DateTime.now().toUtc().toIso8601String();
-      projects =
-          await dataApiDog.getOrganizationProjects(user!.organizationId!);
-    }
     projects.sort((a, b) => b.created!.compareTo(a.created!));
 
     setState(() {

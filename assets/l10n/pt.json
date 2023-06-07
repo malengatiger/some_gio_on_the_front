@@ -1,6 +1,8 @@
 {
   "upgrade": "Atualizar",
   "upgradeText": "Atualize para os planos de assinatura do $Gio agora e desbloqueie todo o potencial. Obtenha recursos avançados, análises em tempo real e integrações perfeitas. Aumente o nível de gerenciamento de sua força de trabalho remota hoje! Clique para confirmar seu pagamento e revolucionar suas operações.",
+  "refreshRateInMinutes": "Taxa de atualização em minutos",
+  "enterRateInMinutes": "Insira o número de minutos para atualização de dados",
 
   "subscriptionPayment": "Pagamento de Assinatura",
   "contract": "Contrato",

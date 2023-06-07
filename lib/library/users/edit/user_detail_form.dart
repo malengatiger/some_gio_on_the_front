@@ -7,6 +7,7 @@ import 'package:geo_monitor/library/data/country.dart';
 import 'package:geo_monitor/library/data/settings_model.dart';
 import 'package:geo_monitor/library/errors/error_handler.dart';
 import 'package:geo_monitor/library/users/edit/user_edit_mobile.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:uuid/uuid.dart';
 
@@ -24,6 +25,7 @@ import '../../generic_functions.dart';
 import '../avatar_editor.dart';
 import '../full_user_photo.dart';
 import 'country_chooser.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class UserDetailForm extends StatefulWidget {
   const UserDetailForm({
@@ -33,7 +35,7 @@ class UserDetailForm extends StatefulWidget {
     required this.internalPadding,
   }) : super(key: key);
 
-  final ar.User? user;
+  final mrm.User? user;
   final double width, internalPadding;
 
   @override
@@ -50,7 +52,7 @@ class UserDetailFormState extends State<UserDetailForm>
   ar.User? admin;
   final _formKey = GlobalKey<FormState>();
   var isBusy = false;
-  Country? country;
+  mrm.Country? country;
   int userType = -1;
   int genderType = -1;
   String? type;
@@ -140,7 +142,7 @@ class UserDetailFormState extends State<UserDetailForm>
   Future _setCountry() async {
     if (widget.user != null) {
       if (widget.user!.countryId != null) {
-        var countries = await cacheManager.getCountries();
+        var countries = realmSyncApi.getCountries();
         var sett = await prefsOGx.getSettings();
         for (var value in countries) {
           if (widget.user!.countryId == value.countryId) {

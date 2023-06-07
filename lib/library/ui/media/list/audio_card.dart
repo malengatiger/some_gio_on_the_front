@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/audio.dart';
 import '../../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class AudioCard extends StatelessWidget {
   const AudioCard(
@@ -10,7 +11,7 @@ class AudioCard extends StatelessWidget {
       required this.durationText,
       this.borderRadius})
       : super(key: key);
-  final Audio audio;
+  final mrm.Audio audio;
   final String durationText;
   final double? borderRadius;
   @override

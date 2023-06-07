@@ -11,9 +11,10 @@ import 'package:page_transition/page_transition.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class SchedulerMobile extends StatefulWidget {
-  final User user;
+  final mrm.User user;
 
   const SchedulerMobile(this.user, {super.key});
 
@@ -25,8 +26,8 @@ class SchedulerMobileState extends State<SchedulerMobile>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   bool busy = false;
-  User? _adminUser;
-  List<Project> _projects = [];
+  mrm.User? _adminUser;
+  List<mrm.Project> _projects = [];
   final _key = GlobalKey<ScaffoldState>();
   static const mm = 'SchedulerMobile: 🍏 🍏 🍏 🍏 ';
   @override
@@ -48,9 +49,9 @@ class SchedulerMobileState extends State<SchedulerMobile>
       busy = true;
     });
     try {
-      _adminUser = await prefsOGx.getUser();
-      _projects = await organizationBloc.getOrganizationProjects(
-          organizationId: widget.user.organizationId!, forceRefresh: refresh);
+      // _adminUser = await prefsOGx.getUser();
+      // _projects = await organizationBloc.getOrganizationProjects(
+      //     organizationId: widget.user.organizationId!, forceRefresh: refresh);
       pp('$mm ${_projects.length} projects ...');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('List failed: $e')));
@@ -152,26 +153,26 @@ class SchedulerMobileState extends State<SchedulerMobile>
                   )));
   }
 
-  void _navigateToFrequencyEditor(Project project) async {
+  void _navigateToFrequencyEditor(mrm.Project project) async {
     pp('$mm _navigateToFrequencyEditor: project.name: ${project.name}');
-    var result = await Navigator.push(
-        context,
-        PageTransition(
-            type: PageTransitionType.scale,
-            alignment: Alignment.bottomRight,
-            duration: const Duration(seconds: 1),
-            child: FrequencyEditor(
-              project: project,
-              adminUser: _adminUser!,
-              fieldUser: widget.user,
-            )));
-    if (result is bool) {
-      pp('$mm Yebo Yes!!! schedule has been written to database 🍎');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Scheduling for FieldMonitor saved')));
-
-      }
-    }
+    // var result = await Navigator.push(
+    //     context,
+    //     PageTransition(
+    //         type: PageTransitionType.scale,
+    //         alignment: Alignment.bottomRight,
+    //         duration: const Duration(seconds: 1),
+    //         child: FrequencyEditor(
+    //           project: project,
+    //           adminUser: _adminUser!,
+    //           fieldUser: widget.user,
+    //         )));
+    // if (result is bool) {
+    //   pp('$mm Yebo Yes!!! schedule has been written to database 🍎');
+    //   if (mounted) {
+    //     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Scheduling for FieldMonitor saved')));
+    //
+    //   }
+    // }
   }
 }
 

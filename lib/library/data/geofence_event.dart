@@ -1,13 +1,11 @@
 import 'package:hive/hive.dart';
 
-import '../data/user.dart';
 import 'position.dart';
 
 part 'geofence_event.g.dart';
 
 @HiveType(typeId: 3)
 class GeofenceEvent extends HiveObject {
-
   @HiveField(0)
   String? status;
 
@@ -22,9 +20,6 @@ class GeofenceEvent extends HiveObject {
 
   @HiveField(4)
   String? projectName;
-
-  @HiveField(6)
-  User? user;
 
   @HiveField(7)
   String? organizationId;
@@ -41,20 +36,28 @@ class GeofenceEvent extends HiveObject {
   String? translatedTitle;
   @HiveField(12)
   String? id;
+  @HiveField(13)
+  String? userId;
+  @HiveField(14)
+  String? userName;
+  @HiveField(15)
+  String? userUrl;
 
   GeofenceEvent(
       {required this.status,
-        required this.user,
-        required this.geofenceEventId,
-        required this.projectPositionId,
-        required this.organizationId,
-        required this.projectId,
-        required this.position,
-        this.id,
-        required this.projectName,
-        required this.translatedMessage,
-        required this.translatedTitle,
-        required this.date});
+      required this.userId,
+      required this.userName,
+      required this.userUrl,
+      required this.geofenceEventId,
+      required this.projectPositionId,
+      required this.organizationId,
+      required this.projectId,
+      required this.position,
+      this.id,
+      required this.projectName,
+      required this.translatedMessage,
+      required this.translatedTitle,
+      required this.date});
 
   GeofenceEvent.fromJson(Map data) {
     status = data['status'];
@@ -66,14 +69,17 @@ class GeofenceEvent extends HiveObject {
     translatedTitle = data['translatedTitle'];
     id = data['id'];
     date = data['date'];
+    userId = data['userId'];
+    userName = data['userName'];
+    userUrl = data['userUrl'];
+
     organizationId = data['organizationId'];
-    if (data['user'] != null) {
-      user = User.fromJson(data['user']);
-    }
+
     if (data['position'] != null) {
       position = Position.fromJson(data['position']);
     }
   }
+
   Map<String, dynamic> toJson() {
     Map<String, dynamic> map = {
       'status': status,
@@ -86,8 +92,10 @@ class GeofenceEvent extends HiveObject {
       'translatedMessage': translatedMessage,
       'translatedTitle': translatedTitle,
       'date': date,
-      'position': position == null? null: position!.toJson(),
-      'user': user == null? null : user!.toJson(),
+      'userId': userId,
+      'userName': userName,
+      'userUrl': userUrl,
+      'position': position == null ? null : position!.toJson(),
     };
     return map;
   }

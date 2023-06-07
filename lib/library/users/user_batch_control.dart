@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/api/prefs_og.dart';
 import 'package:geo_monitor/library/bloc/geo_uploader.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/data/user.dart';
 import 'package:geo_monitor/library/generic_functions.dart';
 import 'package:geo_monitor/library/users/avatar_editor.dart';
@@ -14,6 +15,7 @@ import 'package:responsive_builder/responsive_builder.dart';
 
 import '../../l10n/translation_handler.dart';
 import '../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class UserBatchControl extends StatefulWidget {
   const UserBatchControl({Key? key}) : super(key: key);
@@ -26,8 +28,8 @@ class UserBatchControlState extends State<UserBatchControl>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   static const mm = '🔵🔵🔵🔵🔵🔵 UserBatchControl: 🍎';
-  User? user;
-  var users = <User>[];
+  mrm.User? user;
+  var users = <mrm.User>[];
   bool busy = false;
   String? uploadMemberBatchFile,
       pickMemberBatchFile,
@@ -58,8 +60,9 @@ class UserBatchControlState extends State<UserBatchControl>
   }
 
   void _getUser() async {
-    user = await prefsOGx.getUser();
-    pp('$mm user: ${user!.toJson()}');
+    var p = await prefsOGx.getUser();
+    user = OldToRealm.getUser(p!);
+    pp('$mm user: ${p.toJson()}');
   }
 
   void _pickFile() async {
@@ -131,7 +134,7 @@ class UserBatchControlState extends State<UserBatchControl>
     _controller.dispose();
     super.dispose();
   }
-  Future<void> _navigateToUserProfilePicture(User user) async {
+  Future<void> _navigateToUserProfilePicture(mrm.User user) async {
     await Navigator.push(
         context,
         PageTransition(

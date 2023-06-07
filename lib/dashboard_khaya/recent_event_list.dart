@@ -8,12 +8,14 @@ import 'package:geo_monitor/library/bloc/refresh_bloc.dart';
 import 'package:geo_monitor/library/data/activity_model.dart';
 import 'package:geo_monitor/library/data/activity_type_enum.dart';
 import 'package:geo_monitor/library/data/settings_model.dart';
+import 'package:realm/realm.dart';
 
 import '../library/data/data_bag.dart';
 import '../library/functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class RecentEventList extends StatefulWidget {
-  final Function(ActivityModel) onEventTapped;
+  final Function(mrm.ActivityModel) onEventTapped;
   final String locale;
   final OrganizationBloc organizationBloc;
   final PrefsOGx prefsOGx;
@@ -32,96 +34,88 @@ class RecentEventList extends StatefulWidget {
 }
 
 class _RecentEventListState extends State<RecentEventList> {
-  late StreamSubscription<ActivityModel> actSub;
-  late StreamSubscription<DataBag> bagSub;
-  late StreamSubscription<bool> refreshSub;
-  late StreamSubscription<SettingsModel> settingsSub;
+  // late StreamSubscription<ActivityModel> actSub;
+  // late StreamSubscription<DataBag> bagSub;
+  // late StreamSubscription<bool> refreshSub;
+  // late StreamSubscription<SettingsModel> settingsSub;
 
-  var activities = <ActivityModel>[];
+  var activities = <mrm.ActivityModel>[];
   bool busy = false;
   final mm = '🔵🔵🔵 RecentEventList 🔵🔵🔵🔵🔵🔵 : ';
+  RealmResults<mrm.ActivityModel>? query;
 
   @override
   void initState() {
     super.initState();
     pp('$mm initState ..............');
-    _listen();
-    _getData(false);
+    // _listen();
+    // _getData(false);
   }
 
-  void _listen() {
-    settingsSub = widget.fcmBloc.settingsStream.listen((event) {
-      pp('$mm settingsStream delivered a setting ');
-      _getData(true);
-    });
-    actSub = widget.fcmBloc.activityStream.listen((event) {
-      pp('$mm activityStream delivered an activity, insert received activity in list: 🔆${activities.length}');
-      activities.insert(0, event);
-      _sort();
-      if (mounted) {
-        pp('$mm activityStream delivered an activity: setting state with: 🔆 ${activities.length} activities');
-        setState(() {
+  // void _listen() {
+  //   settingsSub = widget.fcmBloc.settingsStream.listen((event) {
+  //     pp('$mm settingsStream delivered a setting ');
+  //     _getData(true);
+  //   });
+  //   actSub = widget.fcmBloc.activityStream.listen((event) {
+  //     pp('$mm activityStream delivered an activity, insert received activity in list: 🔆${activities.length}');
+  //     activities.insert(0, event);
+  //     _sort();
+  //     if (mounted) {
+  //       pp('$mm activityStream delivered an activity: setting state with: 🔆 ${activities.length} activities');
+  //       setState(() {
+  //
+  //       });
+  //     }
+  //   });
+  //
+  //   bagSub = widget.organizationBloc.dataBagStream.listen((bag) {
+  //     pp('$mm dataBagStream delivered a bag, set ui .');
+  //     activities = bag.activityModels!;
+  //     _sort();
+  //     if (mounted) {
+  //       setState(() {
+  //
+  //       });
+  //     }
+  //   });
+  //
+  //   refreshSub = refreshBloc.refreshStream.listen((event) {
+  //     pp('$mm refreshStream delivered a refresh command: $event, ');
+  //     _getData(true);
+  //   });
+  // }
 
-        });
-      }
-    });
+  // Future _getData(bool forceRefresh) async {
+  //   setState(() {
+  //     busy = true;
+  //   });
+  //   try {
+  //     pp('$mm ........ getting activity data .....');
+  //     final sett = await widget.prefsOGx.getSettings();
+  //     activities = await widget.organizationBloc.getOrganizationActivity(
+  //         organizationId: sett.organizationId!,
+  //         hours: sett.activityStreamHours!,
+  //         forceRefresh: forceRefresh);
+  //
+  //     _sort();
+  //   } catch (e) {
+  //     showSnackBar(message: '$e', context: context);
+  //   }
+  //   if (mounted) {
+  //     setState(() {
+  //       busy = false;
+  //     });
+  //   }
+  // }
 
-    bagSub = widget.organizationBloc.dataBagStream.listen((bag) {
-      pp('$mm dataBagStream delivered a bag, set ui .');
-      activities = bag.activityModels!;
-      _sort();
-      if (mounted) {
-        setState(() {
-
-        });
-      }
-    });
-    
-    refreshSub = refreshBloc.refreshStream.listen((event) { 
-      pp('$mm refreshStream delivered a refresh command: $event, ');
-      _getData(true);
-    });
-  }
-
-  Future _getData(bool forceRefresh) async {
-    setState(() {
-      busy = true;
-    });
-    try {
-      pp('$mm ........ getting activity data .....');
-      final sett = await widget.prefsOGx.getSettings();
-      activities = await widget.organizationBloc.getOrganizationActivity(
-          organizationId: sett.organizationId!,
-          hours: sett.activityStreamHours!,
-          forceRefresh: forceRefresh);
-
-      _sort();
-    } catch (e) {
-      showSnackBar(message: '$e', context: context);
-    }
-    if (mounted) {
-      setState(() {
-        busy = false;
-      });
-    }
-  }
-
-  void _sort() {
-    pp('$mm ........ sort activities by date  .....');
-    for (var act in activities) {
-      final date = DateTime.parse(act.date!);
-      act.intDate = date.toUtc().millisecondsSinceEpoch;
-    }
-
-    activities.sort((a,b) => b.intDate.compareTo(a.intDate));
-  }
 
   @override
   void dispose() {
-    actSub.cancel();
-    bagSub.cancel();
-    refreshSub.cancel();
-    settingsSub.cancel();
+    // actSub.cancel();
+    // bagSub.cancel();
+    // refreshSub.cancel();
+    // settingsSub.cancel();
     super.dispose();
   }
 
@@ -132,34 +126,31 @@ class _RecentEventListState extends State<RecentEventList> {
     if (deviceType == 'phone') {
       width = 332.0;
     }
-    return busy
-        ? const Center(
-            child: SizedBox(width: 14, height: 14,
-              child: CircularProgressIndicator(
-                strokeWidth: 4,
-                backgroundColor: Colors.pink,
-              ),
-            ),
-          )
-        : SizedBox(
-            height: 64,
-            child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: activities.length,
-                itemBuilder: (_, index) {
-                  final act = activities.elementAt(index);
-                  return GestureDetector(
-                      onTap: () {
-                        widget.onEventTapped(act);
-                      },
-                      child: EventView(
-                        activity: act,
-                        height: 84,
-                        width: width,
-                        locale: widget.locale,
-                      ));
-                }),
-          );
+    return  StreamBuilder(builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+
+      if (snapshot.hasData) {
+
+      }
+      return SizedBox(
+        height: 64,
+        child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: activities.length,
+            itemBuilder: (_, index) {
+              final act = activities.elementAt(index);
+              return GestureDetector(
+                  onTap: () {
+                    widget.onEventTapped(act);
+                  },
+                  child: EventView(
+                    activity: act,
+                    height: 84,
+                    width: width,
+                    locale: widget.locale,
+                  ));
+            }),
+      );
+    },);
   }
 }
 
@@ -171,7 +162,7 @@ class EventView extends StatelessWidget {
       required this.width,
       required this.locale})
       : super(key: key);
-  final ActivityModel activity;
+  final mrm.ActivityModel activity;
   final double height, width;
   final String locale;
 
@@ -203,7 +194,7 @@ class EventView extends StatelessWidget {
         Icons.person,
         color: Colors.blue,
       );
-      userUrl = activity.geofenceEvent!.user!.thumbnailUrl;
+      userUrl = activity.geofenceEvent!.userUrl;
     }
     if (activity.project != null) {
       icon = const Icon(

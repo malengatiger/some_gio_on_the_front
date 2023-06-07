@@ -8,6 +8,7 @@ import '../../data/video.dart';
 import '../../emojis.dart';
 import '../../functions.dart';
 import '../ratings/rating_adder.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class GioVideoPlayer extends StatefulWidget {
   const GioVideoPlayer({
@@ -18,7 +19,7 @@ class GioVideoPlayer extends StatefulWidget {
     required this.dataApiDog,
   }) : super(key: key);
 
-  final Video video;
+  final mrm.Video video;
   final Function() onCloseRequested;
   final double width;
   final DataApiDog dataApiDog;
@@ -46,7 +47,6 @@ class GioVideoPlayerState extends State<GioVideoPlayer>
   void initState() {
     _animationController = AnimationController(vsync: this);
     super.initState();
-    pp('$mm initState: ${widget.video.toJson()}  🔵🔵');
     _videoPlayerController = VideoPlayerController.network(widget.video.url!)
       ..initialize().then((_) {
         // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.

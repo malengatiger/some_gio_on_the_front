@@ -26,6 +26,7 @@ import '../../library/emojis.dart';
 import '../../library/functions.dart';
 import '../../library/generic_functions.dart';
 import '../../library/ui/settings/settings_form.dart';
+import '../../realm_data/data/realm_sync_api.dart';
 import '../../stitch/stitch_service.dart';
 import 'intro_page_one_landscape.dart';
 
@@ -41,7 +42,7 @@ class IntroPageViewerLandscape extends StatefulWidget {
       required this.dataHandler,
       required this.geoUploader,
       required this.cloudStorageBloc,
-      required this.firebaseAuth, required this.stitchService, required this.refreshBloc})
+      required this.firebaseAuth, required this.stitchService, required this.refreshBloc, required this.realmSyncApi})
       : super(key: key);
   final PrefsOGx prefsOGx;
   final DataApiDog dataApiDog;
@@ -55,6 +56,7 @@ class IntroPageViewerLandscape extends StatefulWidget {
   final FirebaseAuth firebaseAuth;
   final StitchService stitchService;
   final RefreshBloc refreshBloc;
+  final RealmSyncApi realmSyncApi;
 
 
 
@@ -162,6 +164,7 @@ class IntroPageViewerLandscapeState extends State<IntroPageViewerLandscape>
                   projectBloc: widget.projectBloc,
                   cloudStorageBloc: cloudStorageBloc,
                   geoUploader: geoUploader,
+                  realmSyncApi: realmSyncApi,
                   refreshBloc: widget.refreshBloc,
                   prefsOGx: widget.prefsOGx,
                   firebaseAuth: widget.firebaseAuth,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/bloc/project_bloc.dart';
 import 'package:geo_monitor/library/ui/maps/project_map_mobile.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,9 +13,10 @@ import '../../cache_manager.dart';
 import '../../data/project.dart';
 import '../../data/user.dart';
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectEditMobile extends StatefulWidget {
-  final Project? project;
+  final mrm.Project? project;
   const ProjectEditMobile(this.project, {super.key});
 
   @override
@@ -29,7 +31,7 @@ class ProjectEditMobileState extends State<ProjectEditMobile>
   var maxController = TextEditingController(text: '500');
   var isBusy = false;
 
-  User? admin;
+  mrm.User? admin;
   final _formKey = GlobalKey<FormState>();
 
   String? projectEditor, projectName, description, maximumMonitoringDistance, submitProject,
@@ -67,18 +69,20 @@ class ProjectEditMobileState extends State<ProjectEditMobile>
   }
 
   void _getUser() async {
-    admin = await prefsOGx.getUser();
+    var p = await prefsOGx.getUser();
+    admin = OldToRealm.getUser(p!);
     if (admin != null) {
       pp('🎽 🎽 🎽 We have an admin user? 🎽 🎽 🎽 ${admin!.name!}');
       setState(() {});
     }
   }
 
-  void _setup() {
+  void _setup() async {
+    var p = await prefsOGx.getSettings();
     if (widget.project != null) {
       nameController.text = widget.project!.name!;
       descController.text = widget.project!.description!;
-      maxController.text = '${widget.project!.monitorMaxDistanceInMetres}';
+      maxController.text = '${p.distanceFromProject}';
     }
   }
 
@@ -124,16 +128,17 @@ class ProjectEditMobileState extends State<ProjectEditMobile>
           pp('😡 😡 😡 _submit existing project for update, soon! 🌸 ......... ');
           widget.project!.name = nameController.text;
           widget.project!.description = descController.text;
-          mProject = widget.project!;
-          var m = await projectBloc.updateProject(widget.project!);
-          pp('🎽 🎽 🎽 _submit: new project updated .........  ${m.toJson()}');
+          // mProject = widget.project!;
+          //todo - update project
+          // var m = await projectBloc.updateProject(widget.project!);
+          // pp('🎽 🎽 🎽 _submit: new project updated .........  ${m.toJson()}');
         }
         setState(() {
           isBusy = false;
         });
-        organizationBloc.getOrganizationProjects(
-            organizationId: mProject.organizationId!, forceRefresh: true);
-        _navigateToProjectLocation(mProject);
+        // organizationBloc.getOrganizationProjects(
+        //     organizationId: mProject.organizationId!, forceRefresh: true);
+        // _navigateToProjectLocation(mProject);
       } catch (e) {
         setState(() {
           isBusy = false;
@@ -144,7 +149,7 @@ class ProjectEditMobileState extends State<ProjectEditMobile>
     }
   }
 
-  void _navigateToProjectLocation(Project mProject) async {
+  void _navigateToProjectLocation(mrm.Project mProject) async {
     pp(' 😡 _navigateToProjectLocation  😡 😡 😡 ${mProject.name}');
     await Navigator.push(
         context,

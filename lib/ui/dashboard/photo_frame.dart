@@ -25,6 +25,8 @@ import '../../library/data/project.dart';
 import '../../library/data/user.dart';
 import '../../library/emojis.dart';
 import '../../library/functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class PhotoCard extends StatelessWidget {
   const PhotoCard(
@@ -37,9 +39,9 @@ class PhotoCard extends StatelessWidget {
       required this.translatedDate})
       : super(key: key);
 
-  final Photo photo;
-  final Function(Photo) onMapRequested;
-  final Function(Photo) onRatingRequested;
+  final mrm.Photo photo;
+  final Function(mrm.Photo) onMapRequested;
+  final Function(mrm.Photo) onRatingRequested;
   final Function onPhotoCardClose;
   final double elevation;
   final String translatedDate;
@@ -239,9 +241,9 @@ class PhotoFrame extends StatefulWidget {
       required this.organizationBloc, required this.geoUploader, required this.cloudStorageBloc})
       : super(key: key);
 
-  final Photo photo;
-  final Function(Photo) onMapRequested;
-  final Function(Photo) onRatingRequested;
+  final mrm.Photo photo;
+  final Function(mrm.Photo) onMapRequested;
+  final Function(mrm.Photo) onRatingRequested;
   final Function onPhotoCardClose;
   final double elevation;
   final String translatedDate;
@@ -305,21 +307,6 @@ class PhotoFrameState extends State<PhotoFrame> {
     setState(() {});
   }
 
-  void _navigateToTimeline() async {
-
-    navigateWithScale(
-        ProjectMediaTimeline(
-            project: project,
-            projectBloc: widget.projectBloc,
-            prefsOGx: widget.prefsOGx,
-            organizationBloc: widget.organizationBloc,
-            cacheManager: widget.cacheManager,
-            dataApiDog: widget.dataApiDog,
-            geoUploader: widget.geoUploader,
-            cloudStorageBloc: widget.cloudStorageBloc,
-            fcmBloc: widget.fcmBloc),
-        context);
-  }
 
   @override
   Widget build(BuildContext context) {

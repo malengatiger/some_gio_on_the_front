@@ -4,15 +4,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geo_monitor/library/bloc/geo_uploader.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/data/settings_model.dart';
 import 'package:geo_monitor/library/ui/media/time_line/project_media_timeline.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:native_device_orientation/native_device_orientation.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:realm/realm.dart';
 import 'package:responsive_builder/responsive_builder.dart';
-import 'package:uuid/uuid.dart';
+import 'package:uuid/uuid.dart' as uu;
 
 import '../../../device_location/device_location_bloc.dart';
 import '../../../l10n/translation_handler.dart';
@@ -34,6 +37,7 @@ import '../../data/video.dart';
 import '../../emojis.dart';
 import '../../functions.dart';
 import '../../generic_functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class PhotoHandler extends StatefulWidget {
   const PhotoHandler(
@@ -46,7 +50,7 @@ class PhotoHandler extends StatefulWidget {
       required this.cacheManager,
       required this.dataApiDog, required this.fcmBloc, required this.geoUploader, required this.cloudStorageBloc})
       : super(key: key);
-  final Project project;
+  final mrm.Project project;
   final ProjectPosition? projectPosition;
   final ProjectBloc projectBloc;
   final PrefsOGx prefsOGx;
@@ -72,13 +76,13 @@ class PhotoHandlerState extends State<PhotoHandler>
   late StreamSubscription<String> killSubscription;
 
   NativeDeviceOrientation? _deviceOrientation;
-  var polygons = <ProjectPolygon>[];
-  var positions = <ProjectPosition>[];
-  User? user;
+  var polygons = <mrm.ProjectPolygon>[];
+  var positions = <mrm.ProjectPosition>[];
+  mrm.User? user;
   String? fileSavedWillUpload;
   String? totalByteCount, bytesTransferred;
   String? fileUrl, thumbnailUrl, takePicture;
-  late SettingsModel sett;
+  late mrm.SettingsModel sett;
 
   @override
   void initState() {
@@ -91,7 +95,8 @@ class PhotoHandlerState extends State<PhotoHandler>
   }
 
   Future _setTexts() async {
-    sett = await widget.prefsOGx.getSettings();
+    var p = await widget.prefsOGx.getSettings();
+    sett = OldToRealm.getSettings(p);
     fileSavedWillUpload =
         await translator.translate('fileSavedWillUpload', sett.locale!);
     takePicture = await translator.translate('takePicture', sett.locale!);
@@ -108,23 +113,32 @@ class PhotoHandlerState extends State<PhotoHandler>
     });
   }
 
+
   void _getData() async {
     setState(() {
       busy = true;
     });
     try {
       pp('$mm .......... getting project positions and polygons');
-      user = await widget.prefsOGx.getUser();
-      polygons = await widget.projectBloc.getProjectPolygons(
-          projectId: widget.project.projectId!, forceRefresh: false);
-      var map = await getStartEndDates();
-      final startDate = map['startDate'];
-      final endDate = map['endDate'];
-      positions = await widget.projectBloc.getProjectPositions(
-          projectId: widget.project.projectId!,
-          forceRefresh: false,
-          startDate: startDate!,
-          endDate: endDate!);
+      var qPos = realmSyncApi.getProjectPolygonQuery(widget.project.projectId!);
+      qPos.changes.listen((event) {
+        for (var value in event.results) {
+          polygons.add(value);
+        }
+        setState(() {
+
+        });
+      });
+      var aPos = realmSyncApi.getProjectPositionQuery(widget.project.projectId!);
+      aPos.changes.listen((event) {
+        for (var value in event.results) {
+          positions.add(value);
+        }
+        setState(() {
+
+        });
+      });
+
       pp('$mm positions: ${positions.length} polygons: ${polygons.length} found');
     } catch (e) {
       if (mounted) {
@@ -217,28 +231,27 @@ class PhotoHandlerState extends State<PhotoHandler>
         '\n💚thumb: ${tFile.path} length: ${await tFile.length()}');
 
     final loc = await locationBloc.getLocation();
-    if (loc != null) {
-      final position =
-          Position(type: 'Point', coordinates: [loc.longitude, loc.latitude]);
-      // var bytes = await mFile.readAsBytes();
-      // var tBytes = await tFile.readAsBytes();
-      final photoForUpload = PhotoForUpload(
-          userThumbnailUrl: user!.thumbnailUrl,
-          userName: user!.name,
-          organizationId: user!.organizationId,
-          filePath: mFile.path,
-          thumbnailPath: tFile.path,
-          fileBytes: null,
-          thumbnailBytes: null,
-          project: widget.project,
-          position: position,
-          photoId: const Uuid().v4(),
-          date: DateTime.now().toUtc().toIso8601String(),
-          userId: user!.userId!);
+    final position =
+        Position(type: 'Point', coordinates: [loc.longitude, loc.latitude]);
+    // var bytes = await mFile.readAsBytes();
+    // var tBytes = await tFile.readAsBytes();
+    final photoForUpload = PhotoForUpload(
+        userThumbnailUrl: user!.thumbnailUrl,
+        userName: user!.name,
+        organizationId: user!.organizationId,
+        filePath: mFile.path,
+        thumbnailPath: tFile.path,
+        fileBytes: null,
+        thumbnailBytes: null,
+        projectId: widget.project.projectId,
+        projectName: widget.project.projectId,
+        position: position,
+        photoId: Uuid.v4().toString(),
+        date: DateTime.now().toUtc().toIso8601String(),
+        userId: user!.userId!);
 
-      await cacheManager.addPhotoForUpload(photo: photoForUpload);
-      widget.cloudStorageBloc.uploadEverything();
-    }
+    await cacheManager.addPhotoForUpload(photo: photoForUpload);
+    widget.cloudStorageBloc.uploadEverything();
 
     var size = await mFile.length();
     var m = (size / 1024 / 1024).toStringAsFixed(2);

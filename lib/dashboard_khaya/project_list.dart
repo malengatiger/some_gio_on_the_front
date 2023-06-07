@@ -5,10 +5,11 @@ import 'package:responsive_builder/responsive_builder.dart';
 
 import '../library/data/project.dart';
 import '../library/functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectListView extends StatelessWidget {
-  final List<Project> projects;
-  final Function(Project) onProjectTapped;
+  final List<mrm.Project> projects;
+  final Function(mrm.Project) onProjectTapped;
   const ProjectListView({
     super.key,
     required this.projects,
@@ -110,7 +111,7 @@ class ProjectView extends StatelessWidget {
       required this.width,
       required this.image,})
       : super(key: key);
-  final Project project;
+  final mrm.Project project;
   final double height, width;
   final Image image;
 

@@ -133,8 +133,7 @@ class SchemeUtil {
   static void _setThemes() {
     _themeBags.clear();
 
-    _themeBags.add(
-        ThemeBag(lightTheme: getMyThemeLight(), darkTheme: getMyThemeDark()));
+
     _themeBags.add(ThemeBag(
         lightTheme: FlexThemeData.light(scheme: FlexScheme.redWine),
         darkTheme: FlexThemeData.dark(scheme: FlexScheme.redWine)));
@@ -237,6 +236,8 @@ class SchemeUtil {
     _themeBags.add(ThemeBag(
         lightTheme: FlexThemeData.light(scheme: FlexScheme.aquaBlue),
         darkTheme: FlexThemeData.dark(scheme: FlexScheme.aquaBlue)));
+    _themeBags.add(
+        ThemeBag(lightTheme: getMyThemeLight(), darkTheme: getMyThemeDark()));
 
 
   }

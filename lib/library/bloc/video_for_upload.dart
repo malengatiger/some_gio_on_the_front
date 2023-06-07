@@ -1,10 +1,13 @@
 import 'dart:typed_data';
 
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/bloc/photo_for_upload.dart';
+import 'package:geo_monitor/library/data/project.dart';
 import 'package:hive/hive.dart';
 
 import '../data/position.dart';
-import '../data/project.dart';
+import '../data/project.dart' as old;
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 part 'video_for_upload.g.dart';
 
@@ -15,7 +18,7 @@ class VideoForUpload extends HiveObject {
   @HiveField(1)
   String? thumbnailPath;
   @HiveField(2)
-  Project? project;
+  String? projectId;
   @HiveField(3)
   String? projectPositionId;
   @HiveField(4)
@@ -47,13 +50,16 @@ class VideoForUpload extends HiveObject {
   @HiveField(16)
   Uint8List? fileBytes;
 
+  @HiveField(17)
+  String? projectName;
+
   VideoForUpload(
       {required this.filePath,
       required this.videoId,
       required this.thumbnailPath,
       this.projectPositionId,
       this.projectPolygonId,
-      required this.project,
+      required this.projectId, required this.projectName,
       required this.position,
       required this.durationInSeconds,
       required this.height,
@@ -74,6 +80,8 @@ class VideoForUpload extends HiveObject {
     date = data['date'];
     height = data['height'];
     width = data['width'];
+    projectId = data['projectId'];
+    projectName = data['projectName'];
 
     if (data['fileBytes'] != null) {
       var fb = getImageBinary(data['fileBytes']);
@@ -92,15 +100,13 @@ class VideoForUpload extends HiveObject {
     projectPolygonId = data['projectPolygonId'];
     projectPositionId = data['projectPositionId'];
 
-    if (data['project'] != null) {
-      project = Project.fromJson(data['project']);
-    }
 
     if (data['position'] != null) {
       position = Position.fromJson(data['position']);
     }
   }
   Map<String, dynamic> toJson() {
+
     Map<String, dynamic> map = {
       'filePath': filePath,
       'videoId': videoId,
@@ -108,7 +114,8 @@ class VideoForUpload extends HiveObject {
       'width': width,
       'durationInSeconds': durationInSeconds,
       'thumbnailPath': thumbnailPath,
-      'project': project == null ? null : project!.toJson(),
+      'projectId': projectId,
+      'projectName': projectName,
       'projectPositionId': projectPositionId,
       'projectPolygonId': projectPolygonId,
       'date': date,

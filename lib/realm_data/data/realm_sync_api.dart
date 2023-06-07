@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:geo_monitor/library/bloc/geo_exception.dart';
 import 'package:geo_monitor/library/emojis.dart';
 import 'package:geo_monitor/library/errors/error_handler.dart';
@@ -41,14 +42,15 @@ final schemas = [
   mrm.GioPaymentRequest.schema,
   mrm.State.schema,
 ];
+late rm.Realm realmRemote;
 
 void initialDataCallback(rm.Realm realm) {
   px('🍎🍎🍎🍎🍎 initialDataCallback ... 🍎do something on initial start up!');
 }
 
-class RealmSyncApi {
+class RealmSyncApi with ChangeNotifier {
   final mm = '🌎🌎🌎🌎🌎🌎 RealmSyncApi 🌎';
-  late rm.Realm realmRemote;
+
   late rm.Realm realmCities;
 
   RealmSyncApi() {
@@ -162,9 +164,14 @@ class RealmSyncApi {
   }
 
   Future setSubscriptions(
-      {required String? organizationId, required String? countryId}) async {
+      {required String? organizationId,
+      required String? countryId,
+      required String? startDate}) async {
     try {
       await initialize();
+
+      final settingsQuery = realmRemote.query<mrm.SettingsModel>(
+          "organizationId == \$0 AND date >= \$1", [organizationId, startDate]);
 
       final orgUsersQuery = realmRemote
           .query<mrm.User>("organizationId == \$0", [organizationId]);
@@ -172,21 +179,23 @@ class RealmSyncApi {
       final countryCitiesQuery =
           realmRemote.query<mrm.City>("countryId == \$0", [countryId]);
 
-      final orgSettingsQuery = realmRemote
-          .query<mrm.SettingsModel>("organizationId == \$0", [organizationId]);
+      final orgSettingsQuery = realmRemote.query<mrm.SettingsModel>(
+          "organizationId == \$0 AND date >= \$1", [organizationId, startDate]);
 
       final allCountriesQuery = realmRemote.all<mrm.Country>();
-      final orgPhotosQuery = realmRemote
-          .query<mrm.Photo>("organizationId == \$0", [organizationId]);
 
-      final orgVideosQuery = realmRemote
-          .query<mrm.Video>("organizationId == \$0", [organizationId]);
+      final orgPhotosQuery = realmRemote.query<mrm.Photo>(
+          "organizationId == \$0 AND date >= \$1", [organizationId, startDate]);
 
-      final orgAudiosQuery = realmRemote
-          .query<mrm.Audio>("organizationId == \$0", [organizationId]);
+      final orgVideosQuery = realmRemote.query<mrm.Video>(
+          "organizationId == \$0 AND date >= \$1", [organizationId, startDate]);
 
-      final orgGeofenceQuery = realmRemote
-          .query<mrm.GeofenceEvent>("organizationId == \$0", [organizationId]);
+      final orgAudiosQuery = realmRemote.query<mrm.Audio>(
+          "organizationId == \$0 AND date >= \$1", [organizationId, startDate]);
+
+      final orgGeofenceQuery = realmRemote.query<mrm.GeofenceEvent>(
+          "organizationId == \$0  AND date >= \$1",
+          [organizationId, startDate]);
 
       final orgsQuery = realmRemote.all<mrm.Organization>();
 
@@ -196,14 +205,16 @@ class RealmSyncApi {
       final orgPolygonsQuery = realmRemote
           .query<mrm.ProjectPolygon>("organizationId == \$0", [organizationId]);
 
-      final orgActivitiesQuery = realmRemote
-          .query<mrm.ActivityModel>("organizationId == \$0", [organizationId]);
+      final orgActivitiesQuery = realmRemote.query<mrm.ActivityModel>(
+          "organizationId == \$0 AND date >= \$1", [organizationId, startDate]);
 
       final orgProjectsQuery = realmRemote
           .query<mrm.Project>("organizationId == \$0", [organizationId]);
 
-      final orgRatingsQuery = realmRemote
-          .query<mrm.Rating>("organizationId == \$0", [organizationId]);
+      final orgRatingsQuery = realmRemote.query<mrm.Rating>(
+          "organizationId == \$0 AND created >= \$1",
+          [organizationId, startDate]);
+
       //
       realmRemote.subscriptions
           .update((MutableSubscriptionSet mutableSubscriptions) {
@@ -234,6 +245,8 @@ class RealmSyncApi {
             name: 'org_projects', update: true);
         mutableSubscriptions.add(orgRatingsQuery,
             name: 'org_ratings', update: true);
+        mutableSubscriptions.add(settingsQuery,
+            name: 'org_settings', update: true);
       });
 
       // Sync all subscriptions
@@ -270,6 +283,78 @@ class RealmSyncApi {
     } catch (e) {
       pp('$mm ${E.redDot}${E.redDot}${E.redDot}${E.redDot} Problem setting up subscriptions to Realm: $e');
     }
+  }
+
+  RealmResults<mrm.SettingsModel> getSettingsQuery(String organizationId) {
+    var query = realmRemote
+        .query<mrm.SettingsModel>("organizationId == \$0", [organizationId!]);
+    return query;
+  }
+
+  RealmResults<mrm.Project> getProjectQuery(String organizationId) {
+    var query = realmRemote
+        .query<mrm.Project>("organizationId == \$0", [organizationId]);
+    return query;
+  }
+
+  RealmResults<mrm.User> getUserQuery(String organizationId) {
+    var query =
+        realmRemote.query<mrm.User>("organizationId == \$0", [organizationId]);
+    return query;
+  }
+
+  RealmResults<mrm.ActivityModel> getOrganizationActivitiesQuery(
+      String organizationId, String startDate) {
+    final orgActivitiesQuery = realmRemote.query<mrm.ActivityModel>(
+        "organizationId == \$0 AND date >= \$1", [organizationId, startDate]);
+    return orgActivitiesQuery;
+  }
+
+  RealmResults<mrm.ActivityModel> getProjectActivitiesQuery(
+      String organizationId, String startDate) {
+    final orgActivitiesQuery = realmRemote.query<mrm.ActivityModel>(
+        "projectId == \$0 AND date >= \$1", [organizationId, startDate]);
+    return orgActivitiesQuery;
+  }
+
+  RealmResults<mrm.Photo> getProjectPhotoQuery(
+      String projectId, String startDate) {
+    final query = realmRemote.query<mrm.Photo>(
+        "projectId == \$0 AND created >= \$1", [projectId, startDate]);
+    return query;
+  }
+
+  RealmResults<mrm.Video> getProjectVideoQuery(
+      String projectId, String startDate) {
+    final query = realmRemote.query<mrm.Video>(
+        "projectId == \$0 AND created >= \$1", [projectId, startDate]);
+    return query;
+  }
+
+  RealmResults<mrm.Audio> getProjectAudioQuery(
+      String projectId, String startDate) {
+    final query = realmRemote.query<mrm.Audio>(
+        "projectId == \$0 AND created >= \$1", [projectId, startDate]);
+    return query;
+  }
+
+  RealmResults<mrm.GeofenceEvent> getOrganizationGeofenceQuery(
+      String organizationId, String startDate) {
+    final query = realmRemote.query<mrm.GeofenceEvent>(
+        "organizationId == \$0 AND date >= \$1", [organizationId, startDate]);
+    return query;
+  }
+  RealmResults<mrm.ProjectPosition> getProjectPositionQuery(
+      String projectId) {
+    final query = realmRemote.query<mrm.ProjectPosition>(
+        "projectId == \$0", [projectId]);
+    return query;
+  }
+  RealmResults<mrm.ProjectPolygon> getProjectPolygonQuery(
+      String projectId) {
+    final query = realmRemote.query<mrm.ProjectPolygon>(
+        "projectId == \$0", [projectId]);
+    return query;
   }
 
   RealmResults<mrm.Country> getCountry(String name) {
@@ -516,14 +601,14 @@ class RealmSyncApi {
   }
 
   List<mrm.Country> getCountries() {
-    px('$mm getCountries ... ');
+    px('$mm ....................  😡 getCountries ... ');
 
     final result = realmRemote.all<mrm.Country>();
     var list = <mrm.Country>[];
     for (var value in result.toList()) {
       list.add(value);
     }
-    px('$mm countries found in Realm: ${list.length}');
+    px('$mm countries found in Realm:  😡 ${list.length} 😡');
 
     return list;
   }
@@ -629,15 +714,10 @@ class RealmSyncApi {
     final map = getStartEndDatesFromDays(numberOfDays: numberOfDays);
 
     final result = realmRemote.query<mrm.GeofenceEvent>(
-      "(date >= \$0 AND date <= \$1) AND projectId == \$3",
-      [map.$1, map.$2, projectId],
+      "(projectId == \$0 AND date >= \$1",
+      [map.$1, projectId],
     );
 
-    result.changes.listen((changes) {
-      pp('$mm Inserted indexes: ${changes.inserted}');
-      pp('$mm Deleted indexes: ${changes.deleted}');
-      pp('$mm Modified indexes: ${changes.modified}');
-    });
     var list = <mrm.GeofenceEvent>[];
     var resList = result.toList();
     for (var value in resList) {
@@ -649,19 +729,12 @@ class RealmSyncApi {
   }
 
   List<mrm.ProjectPosition> getProjectPositions(
-      {required String projectId, required int numberOfDays}) {
-    final map = getStartEndDatesFromDays(numberOfDays: numberOfDays);
-
+      {required String projectId}) {
     final result = realmRemote.query<mrm.ProjectPosition>(
-      "(date >= \$0 AND date <= \$1) AND projectId == \$3",
-      [map.$1, map.$2, projectId],
+      "(projectId == \$0",
+      [ projectId],
     );
 
-    result.changes.listen((changes) {
-      pp('$mm Inserted indexes: ${changes.inserted}');
-      pp('$mm Deleted indexes: ${changes.deleted}');
-      pp('$mm Modified indexes: ${changes.modified}');
-    });
     var list = <mrm.ProjectPosition>[];
     var resList = result.toList();
     for (var value in resList) {
@@ -671,20 +744,14 @@ class RealmSyncApi {
     list.sort((a, b) => b.created!.compareTo(a.created!));
     return list;
   }
+
   List<mrm.ProjectPolygon> getProjectPolygons(
-      {required String projectId, required int numberOfDays}) {
-    final map = getStartEndDatesFromDays(numberOfDays: numberOfDays);
+      {required String projectId}) {
 
     final result = realmRemote.query<mrm.ProjectPolygon>(
-      "(date >= \$0 AND date <= \$1) AND projectId == \$3",
-      [map.$1, map.$2, projectId],
+      "(projectId == \$0",
+      [projectId],
     );
-
-    result.changes.listen((changes) {
-      pp('$mm Inserted indexes: ${changes.inserted}');
-      pp('$mm Deleted indexes: ${changes.deleted}');
-      pp('$mm Modified indexes: ${changes.modified}');
-    });
     var list = <mrm.ProjectPolygon>[];
     var resList = result.toList();
     for (var value in resList) {
@@ -694,6 +761,7 @@ class RealmSyncApi {
     list.sort((a, b) => b.created!.compareTo(a.created!));
     return list;
   }
+
   List<mrm.Photo> getProjectPhotos(
       {required String projectId, required int numberOfDays}) {
     final map = getStartEndDatesFromDays(numberOfDays: numberOfDays);

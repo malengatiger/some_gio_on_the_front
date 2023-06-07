@@ -7,6 +7,7 @@ import 'package:geo_monitor/library/api/prefs_og.dart';
 
 import '../../data/user.dart';
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class UserListCard extends StatefulWidget {
   const UserListCard(
@@ -25,20 +26,20 @@ class UserListCard extends StatefulWidget {
       required this.avatarRadius, required this.subTitle})
       : super(key: key);
 
-  final List<User> users;
-  final User deviceUser;
+  final List<mrm.User> users;
+  final mrm.User deviceUser;
   final bool amInLandscape;
   final double avatarRadius;
   final String subTitle;
 
-  final Function(User) navigateToPhone;
-  final Function(User) navigateToMessaging;
-  final Function(User) navigateToUserDashboard;
+  final Function(mrm.User) navigateToPhone;
+  final Function(mrm.User) navigateToMessaging;
+  final Function(mrm.User) navigateToUserDashboard;
 
-  final Function(User) navigateToUserEdit;
-  final Function(User) navigateToScheduler;
-  final Function(User) navigateToKillPage;
-  final Function(User) navigateToLocationRequest;
+  final Function(mrm.User) navigateToUserEdit;
+  final Function(mrm.User) navigateToScheduler;
+  final Function(mrm.User) navigateToKillPage;
+  final Function(mrm.User) navigateToLocationRequest;
   final Function() badgeTapped;
 
   @override
@@ -68,7 +69,7 @@ class _UserListCardState extends State<UserListCard> {
     });
   }
 
-  List<FocusedMenuItem> _getMenuItems(User someUser, BuildContext context) {
+  List<FocusedMenuItem> _getMenuItems(mrm.User someUser, BuildContext context) {
     List<FocusedMenuItem> list = [];
 
     if (someUser.userId != widget.deviceUser.userId) {

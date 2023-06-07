@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:geo_monitor/ui/activity/geo_activity.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:page_transition/page_transition.dart';
@@ -27,9 +28,10 @@ import '../../functions.dart';
 import '../maps/location_response_map.dart';
 import '../maps/project_map_mobile.dart';
 import '../maps/project_polygon_map_mobile.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectLocationHandler extends StatefulWidget {
-  final Project project;
+  final mrm.Project project;
   final PrefsOGx prefsOGx;
   final CacheManager cacheManager;
   final ProjectBloc projectBloc;
@@ -58,8 +60,8 @@ class ProjectLocationHandlerState extends State<ProjectLocationHandler>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   var busy = false;
-  List<ProjectPosition> _projectPositions = [];
-  List<ProjectPolygon> _projectPolygons = [];
+  List<mrm.ProjectPosition> _projectPositions = [];
+  List<mrm.ProjectPolygon> _projectPolygons = [];
   final _key = GlobalKey<ScaffoldState>();
   static const mm = '💙💙💙ProjectLocationHandler: 💙 ';
   User? user;
@@ -87,7 +89,7 @@ class ProjectLocationHandlerState extends State<ProjectLocationHandler>
     pp('$mm calculating _isLocationWithinProjectMonitorDistance .... '
         '${widget.project.monitorMaxDistanceInMetres!} metres');
 
-    var map = <double, ProjectPosition>{};
+    var map = <double, mrm.ProjectPosition>{};
     for (var i = 0; i < _projectPositions.length; i++) {
       var projPos = _projectPositions.elementAt(i);
       var dist = await locationBloc.getDistanceFromCurrentPosition(
@@ -154,13 +156,8 @@ class ProjectLocationHandlerState extends State<ProjectLocationHandler>
       var map = await getStartEndDates();
       final startDate = map['startDate'];
       final endDate = map['endDate'];
-      _projectPositions = await projectBloc.getProjectPositions(
-          projectId: widget.project.projectId!,
-          forceRefresh: forceRefresh,
-          startDate: startDate!,
-          endDate: endDate!);
-      _projectPolygons = await projectBloc.getProjectPolygons(
-          projectId: widget.project.projectId!, forceRefresh: forceRefresh);
+      _projectPositions = realmSyncApi.getProjectPositions(projectId: widget.project.projectId!);
+      _projectPolygons = realmSyncApi.getProjectPolygons(projectId: widget.project.projectId!);
 
       pp('$mm _projectPositions found: ${_projectPositions.length}; checking location within project monitorDistance...');
     } catch (e) {
@@ -550,7 +547,7 @@ class ProjectLocationHandlerState extends State<ProjectLocationHandler>
     );
   }
 
-  void _navigateToLocationResponseMap(LocationResponse locationResponse) async {
+  void _navigateToLocationResponseMap(mrm.LocationResponse locationResponse) async {
     Navigator.push(
         context,
         PageTransition(

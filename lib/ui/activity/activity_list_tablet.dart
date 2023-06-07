@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/bloc/fcm_bloc.dart';
 import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/data/location_request.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 
 import '../../l10n/translation_handler.dart';
 import '../../library/api/prefs_og.dart';
@@ -27,6 +28,7 @@ import '../../library/generic_functions.dart';
 import 'activity_header.dart';
 import 'activity_list_card.dart';
 import 'activity_stream_card.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ActivityListTablet extends StatefulWidget {
   const ActivityListTablet({
@@ -49,20 +51,20 @@ class ActivityListTablet extends StatefulWidget {
   }) : super(key: key);
   final double width;
   final bool thinMode;
-  final Function(Photo) onPhotoTapped;
-  final Function(Video) onVideoTapped;
-  final Function(Audio) onAudioTapped;
-  final Function(User) onUserTapped;
-  final Function(Project) onProjectTapped;
-  final Function(ProjectPosition) onProjectPositionTapped;
-  final Function(ProjectPolygon) onPolygonTapped;
-  final Function(GeofenceEvent) onGeofenceEventTapped;
-  final Function(OrgMessage) onOrgMessage;
-  final Function(LocationResponse) onLocationResponse;
-  final Function(LocationRequest) onLocationRequest;
+  final Function(mrm.Photo) onPhotoTapped;
+  final Function(mrm.Video) onVideoTapped;
+  final Function(mrm.Audio) onAudioTapped;
+  final Function(mrm.User) onUserTapped;
+  final Function(mrm.Project) onProjectTapped;
+  final Function(mrm.ProjectPosition) onProjectPositionTapped;
+  final Function(mrm.ProjectPolygon) onPolygonTapped;
+  final Function(mrm.GeofenceEvent) onGeofenceEventTapped;
+  final Function(mrm.OrgMessage) onOrgMessage;
+  final Function(mrm.LocationResponse) onLocationResponse;
+  final Function(mrm.LocationRequest) onLocationRequest;
 
-  final User? user;
-  final Project? project;
+  final mrm.User? user;
+  final mrm.Project? project;
   final PrefsOGx prefsOGx;
   final CacheManager cacheManager;
 
@@ -75,7 +77,7 @@ class _ActivityListTabletState extends State<ActivityListTablet>
     with SingleTickerProviderStateMixin {
   final ScrollController listScrollController = ScrollController();
 
-  var models = <ActivityModel>[];
+  var models = <mrm.ActivityModel>[];
 
   late StreamSubscription<ActivityModel> subscription;
   late StreamSubscription<SettingsModel> settingsSubscriptionFCM;
@@ -93,7 +95,7 @@ class _ActivityListTabletState extends State<ActivityListTablet>
     super.initState();
     _setTexts();
     _getData(true);
-    _listenToStreams();
+    //_listenToStreams();
   }
 
   SettingsModel? sett;
@@ -159,60 +161,57 @@ class _ActivityListTabletState extends State<ActivityListTablet>
   }
 
   Future _getOrganizationActivity(bool forceRefresh, int hours) async {
-    models = await organizationBloc.getOrganizationActivity(
-        organizationId: me!.organizationId!,
-        hours: hours,
-        forceRefresh: forceRefresh);
+    // models = realmSyncApi.getOrganizationActivities(organizationId: organizationId, numberOfHours: hours);
     pp('$mm org activity models found: ${models.length}');
   }
 
   Future _getProjectData(bool forceRefresh, int hours) async {
-    models = await projectBloc.getProjectActivity(
-        projectId: widget.project!.projectId!,
-        hours: hours,
-        forceRefresh: forceRefresh);
+    // models = await projectBloc.getProjectActivity(
+    //     projectId: widget.project!.projectId!,
+    //     hours: hours,
+    //     forceRefresh: forceRefresh);
   }
 
   Future _getUserData(bool forceRefresh, int hours) async {
-    models = await userBloc.getUserActivity(
-        userId: widget.user!.userId!, hours: hours, forceRefresh: forceRefresh);
+    // models = await userBloc.getUserActivity(
+    //     userId: widget.user!.userId!, hours: hours, forceRefresh: forceRefresh);
   }
 
-  void _listenToStreams() async {
-    pp('$mm ... _listenToStreams  ...');
-    settingsSubscriptionFCM =
-        fcmBloc.settingsStream.listen((SettingsModel event) async {
-      await _setTexts();
-      _getData(true);
-    });
-    settingsSubscription =
-        organizationBloc.settingsStream.listen((SettingsModel event) async {
-      pp('$mm settingsSubscription: delivered settings, locale: ${event.locale}');
-      await translator.translate('settings', event.locale!);
-      await _setTexts();
-      _getData(false);
-    });
-
-    subscription =
-        fcmBloc.activityStream.listen((ActivityModel activity) async {
-      pp('$mm activityStream delivered activity data ... '
-          'current models: ${models.length}\n\n');
-
-      // if (model.geofenceEvent != null) {
-      //   _getData(false);
-      //   return;
-      // }
-
-      if (isActivityValid(activity)) {
-        models.insert(0, activity);
-        sortActivitiesDescending(models);
-      }
-
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
+  // void _listenToStreams() async {
+  //   pp('$mm ... _listenToStreams  ...');
+  //   settingsSubscriptionFCM =
+  //       fcmBloc.settingsStream.listen((SettingsModel event) async {
+  //     await _setTexts();
+  //     _getData(true);
+  //   });
+  //   settingsSubscription =
+  //       organizationBloc.settingsStream.listen((SettingsModel event) async {
+  //     pp('$mm settingsSubscription: delivered settings, locale: ${event.locale}');
+  //     await translator.translate('settings', event.locale!);
+  //     await _setTexts();
+  //     _getData(false);
+  //   });
+  //
+  //   subscription =
+  //       fcmBloc.activityStream.listen((mrm.ActivityModel activity) async {
+  //     pp('$mm activityStream delivered activity data ... '
+  //         'current models: ${models.length}\n\n');
+  //
+  //     // if (model.geofenceEvent != null) {
+  //     //   _getData(false);
+  //     //   return;
+  //     // }
+  //
+  //     if (isActivityValid(activity)) {
+  //       models.insert(0, activity);
+  //       sortActivitiesDescending(models);
+  //     }
+  //
+  //     if (mounted) {
+  //       setState(() {});
+  //     }
+  //   });
+  // }
 
   bool isActivityValid(ActivityModel activity) {
     pp('$mm check validity of incoming activity');
@@ -389,7 +388,7 @@ class _ActivityListTabletState extends State<ActivityListTablet>
     }
   }
 
-  Future<void> _handleTappedActivity(ActivityModel act) async {
+  Future<void> _handleTappedActivity(mrm.ActivityModel act) async {
     if (act.photo != null) {
       widget.onPhotoTapped(act.photo!);
     }

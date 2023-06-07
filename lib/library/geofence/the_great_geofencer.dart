@@ -174,7 +174,9 @@ class TheGreatGeofencer {
           status: geofenceStatus.toString(),
           organizationId: geofence.data['organizationId'],
           translatedMessage: message,
-          user: _user,
+          userId: _user!.userId!,
+          userUrl: _user!.thumbnailUrl,
+          userName: _user!.name,
           position: Position(
               coordinates: [loc.longitude, loc.latitude], type: 'Point'),
           geofenceEventId: const Uuid().v4(),

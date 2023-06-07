@@ -10,6 +10,7 @@ import 'package:geo_monitor/library/data/organization.dart';
 import 'package:geo_monitor/library/data/organization_registration_bag.dart';
 import 'package:geo_monitor/library/data/settings_model.dart';
 import 'package:geo_monitor/ui/auth/auth_phone_signin.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:uuid/uuid.dart';
 
@@ -21,13 +22,15 @@ import '../../library/data/user.dart' as ur;
 import '../../library/functions.dart';
 import '../../library/generic_functions.dart';
 import '../../library/users/edit/country_chooser.dart';
+import '../../../realm_data/data/schemas.dart' as mrm;
 
 class AuthPhoneRegistrationMobile extends StatefulWidget {
   const AuthPhoneRegistrationMobile(
       {Key? key,
       required this.prefsOGx,
       required this.dataApiDog,
-      required this.cacheManager, required this.firebaseAuth})
+      required this.cacheManager,
+      required this.firebaseAuth})
       : super(key: key);
 
   final PrefsOGx prefsOGx;
@@ -45,10 +48,10 @@ class AuthPhoneRegistrationMobileState
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   bool _codeHasBeenSent = false;
-  final mm = '🥬🥬🥬🥬🥬🥬 OrgRegistrationPage: ';
+  final mm = '🥬🥬🥬🥬🥬🥬 AuthPhoneRegistrationMobile: 🥬🥬';
   String? phoneVerificationId;
   String? code;
-  final phoneController = TextEditingController(text: "+19985550000");
+  final phoneController = TextEditingController(text: "+19095550000");
   final codeController = TextEditingController(text: "123456");
   final orgNameController = TextEditingController();
   final adminController = TextEditingController();
@@ -58,7 +61,7 @@ class AuthPhoneRegistrationMobileState
   bool busy = false;
   final _formKey = GlobalKey<FormState>();
   ur.User? user;
-  Country? country;
+  mrm.Country? country;
 
   final errorController = StreamController<ErrorAnimationType>();
   String? currentText, translatedCountryName;
@@ -78,6 +81,7 @@ class AuthPhoneRegistrationMobileState
   }
 
   Future _setTexts() async {
+    settingsModel = await prefsOGx.getSettings();
     signInStrings = await SignInStrings.getTranslated(settingsModel!);
     settingsModel = await prefsOGx.getSettings();
 
@@ -211,7 +215,8 @@ class AuthPhoneRegistrationMobileState
       }
       PhoneAuthCredential authCredential = PhoneAuthProvider.credential(
           verificationId: phoneVerificationId!, smsCode: code!);
-      var userCred = await widget.firebaseAuth.signInWithCredential(authCredential);
+      var userCred =
+          await widget.firebaseAuth.signInWithCredential(authCredential);
       pp('$mm ... start _doTheRegistration ...');
       await _doTheRegistration(userCred);
     } catch (e) {
@@ -254,7 +259,7 @@ class AuthPhoneRegistrationMobileState
     var org = Organization(
         name: orgNameController.value.text,
         countryId: country!.countryId,
-        email: '',
+        email: emailController.value.text,
         created: DateTime.now().toUtc().toIso8601String(),
         countryName: country!.name,
         organizationId: organizationId);
@@ -311,6 +316,7 @@ class AuthPhoneRegistrationMobileState
       await widget.prefsOGx.saveUser(user!);
       await widget.cacheManager.addUser(user: user!);
       await widget.cacheManager.addProject(project: resultBag.project!);
+      // await widget.cacheManager.addsub
       await widget.cacheManager
           .addProjectPosition(projectPosition: resultBag.projectPosition!);
       pp('\n$mm Organization OG Administrator registered OK:🌍🌍🌍🌍  🍎 '
@@ -326,19 +332,41 @@ class AuthPhoneRegistrationMobileState
     }
   }
 
-  _onCountrySelected(Country p1) async {
+  _onCountrySelected(mrm.Country p1) async {
     country = p1;
     await widget.prefsOGx.saveCountry(p1);
 
     if (settingsModel != null) {
-      translatedCountryName = await translator.translate(
+      var t = await translator.translate(
           '${country!.name}', settingsModel!.locale!);
+      translatedCountryName = t.replaceAll('UNAVAILABLE KEY:', '');
     } else {
       translatedCountryName =
           await translator.translate('${country!.name}', 'en');
     }
     if (mounted) {
       setState(() {});
+    }
+  }
+
+  void _navigateToCountrySearch() async {
+    if (mounted) {
+      var c = await Navigator.push(
+          context,
+          PageTransition(
+              type: PageTransitionType.scale,
+              alignment: Alignment.topLeft,
+              duration: const Duration(milliseconds: 1000),
+              child: CountrySearch(onCountrySelected: (c) {
+                setState(() {
+                  country = c;
+                });
+              })));
+
+      if (c is mrm.Country) {
+        pp('$mm country selected: ${c.name}');
+        _onCountrySelected(c);
+      }
     }
   }
 
@@ -352,13 +380,14 @@ class AuthPhoneRegistrationMobileState
           signInStrings == null
               ? 'Organization Registration'
               : signInStrings!.registerOrganization,
-          style: myTextStyleSmall(context),
+          style: myTextStyleMediumBoldWithColor(
+              context, Theme.of(context).primaryColor),
         ),
       ),
       body: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(8.0),
             child: Card(
               elevation: 4,
               shape: getRoundedBorder(radius: 16),
@@ -389,7 +418,7 @@ class AuthPhoneRegistrationMobileState
                       height: 16,
                     ),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           signInStrings == null
@@ -416,16 +445,17 @@ class AuthPhoneRegistrationMobileState
                     const SizedBox(
                       height: 8,
                     ),
-                    const SizedBox(
-                      height: 4,
-                    ),
+
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(8.0),
                       child: SingleChildScrollView(
                         child: Form(
                             key: _formKey,
                             child: Column(
                               children: [
+                                const SizedBox(
+                                  height: 8,
+                                ),
                                 TextFormField(
                                   controller: orgNameController,
                                   keyboardType: TextInputType.text,
@@ -551,18 +581,15 @@ class AuthPhoneRegistrationMobileState
                                   height: 16,
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: .0),
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 1),
                                   child: Row(
                                     children: [
-                                      CountryChooser(
-                                        refreshCountries: refreshCountries,
-                                        onSelected: _onCountrySelected,
-                                        hint: signInStrings == null
-                                            ? 'Please select country'
-                                            : signInStrings!
-                                                .pleaseSelectCountry,
-                                      ),
+                                      TextButton(
+                                          onPressed: () {
+                                            _navigateToCountrySearch();
+                                          },
+                                          child: const Text('Search Countries'))
                                     ],
                                   ),
                                 ),

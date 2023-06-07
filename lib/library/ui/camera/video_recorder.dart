@@ -7,11 +7,11 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geo_monitor/library/api/prefs_og.dart';
 import 'package:geo_monitor/library/bloc/cloud_storage_bloc.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/data/audio.dart';
 import 'package:geo_monitor/library/data/project.dart';
 import 'package:geo_monitor/library/data/video.dart';
 import 'package:geo_monitor/library/ui/camera/video_controls.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:uuid/uuid.dart';
@@ -27,6 +27,7 @@ import '../../data/project_position.dart';
 import '../../data/settings_model.dart';
 import '../../functions.dart';
 import '../../generic_functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 List<CameraDescription> cameras = [];
 
@@ -42,8 +43,8 @@ class VideoRecorder extends StatefulWidget {
       required this.cloudStorageBloc})
       : super(key: key);
 
-  final Project project;
-  final ProjectPosition? projectPosition;
+  final mrm.Project project;
+  final mrm.ProjectPosition? projectPosition;
   final Function onClose;
   final CacheManager cacheManager;
   final GeoUploader geoUploader;
@@ -86,7 +87,7 @@ class VideoRecorderState extends State<VideoRecorder>
       waitingToRecordVideo;
   SettingsModel? settingsModel;
   int limitInSeconds = 0;
-  late StreamSubscription<SettingsModel> settingsSubscription;
+  // late StreamSubscription<SettingsModel> settingsSubscription;
 
   @override
   void initState() {
@@ -95,7 +96,6 @@ class VideoRecorderState extends State<VideoRecorder>
     super.initState();
     // Hide the status bar
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    _listen();
     _setTexts();
     _getUser();
     _getCameras();
@@ -140,16 +140,17 @@ class VideoRecorderState extends State<VideoRecorder>
   }
 
   void _getUser() async {
-    user = await widget.prefsOGx.getUser();
+    var p = await widget.prefsOGx.getUser();
+    user = OldToRealm.getUser(p!);
   }
 
-  void _listen() async {
-    settingsSubscription = fcmBloc.settingsStream.listen((event) async {
-      if (mounted) {
-        await _setTexts();
-      }
-    });
-  }
+  // void _listen() async {
+  //   settingsSubscription = fcmBloc.settingsStream.listen((event) async {
+  //     if (mounted) {
+  //       await _setTexts();
+  //     }
+  //   });
+  // }
 
   int maxSeconds = 10;
   void _getCameras() async {
@@ -157,7 +158,8 @@ class VideoRecorderState extends State<VideoRecorder>
       busy = true;
     });
     try {
-      user = await prefsOGx.getUser();
+      var p = await prefsOGx.getUser();
+      user = OldToRealm.getUser(p!);
       cameras = await availableCameras();
 
       pp('$mm video recording limit: $maxSeconds seconds');
@@ -359,7 +361,8 @@ class VideoRecorderState extends State<VideoRecorder>
         organizationId: user!.organizationId,
         filePath: mFile.path,
         thumbnailPath: tFile.path,
-        project: widget.project,
+        projectId: widget.project.projectId,
+        projectName: widget.project.name,
         videoId: const Uuid().v4(),
         durationInSeconds: finalDuration.inSeconds,
         position: position,

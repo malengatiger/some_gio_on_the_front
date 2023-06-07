@@ -7,6 +7,7 @@ import '../../library/data/user.dart';
 import '../../library/functions.dart';
 import '../../utilities/constants.dart';
 import 'dashboard_element.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class UserDashboardGrid extends StatelessWidget {
   const UserDashboardGrid(
@@ -23,7 +24,7 @@ class UserDashboardGrid extends StatelessWidget {
 
   final Function(int) onTypeTapped;
   final double? totalHeight;
-  final User user;
+  final mrm.User user;
   final DataBag dataBag;
 
   final double? topPadding, elementPadding;

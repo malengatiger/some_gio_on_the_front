@@ -17,6 +17,7 @@ import '../../data/user.dart';
 import '../../data/video.dart';
 import '../../functions.dart';
 import '../../generic_functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class RatingAdder extends StatefulWidget {
   const RatingAdder({
@@ -30,9 +31,9 @@ class RatingAdder extends StatefulWidget {
     required this.dataApiDog,
   }) : super(key: key);
 
-  final Audio? audio;
-  final Video? video;
-  final Photo? photo;
+  final mrm.Audio? audio;
+  final mrm.Video? video;
+  final mrm.Photo? photo;
   // final double width;
   final double elevation;
   final DataApiDog dataApiDog;

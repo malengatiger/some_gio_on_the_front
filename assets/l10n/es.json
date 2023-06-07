@@ -1,6 +1,8 @@
 {
   "upgrade": "Mejora",
   "upgradeText": "Actualice a los planes de suscripción de $Gio ahora y desbloquee todo el potencial. Obtenga funciones avanzadas, análisis en tiempo real e integraciones perfectas. ¡Mejore su gestión de fuerza laboral remota hoy! Haz clic para confirmar tu pago y revolucionar tus operaciones.",
+  "refreshRateInMinutes": "Frecuencia de actualización en minutos",
+  "enterRateInMinutes": "Ingrese la cantidad de minutos para la actualización de datos",
 
   "subscriptionPayment": "Pago de Suscripción",
   "contract": "Contrato",

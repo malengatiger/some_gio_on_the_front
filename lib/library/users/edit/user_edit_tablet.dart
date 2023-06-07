@@ -1,5 +1,6 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:flutter/material.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/data/audio.dart';
 import 'package:geo_monitor/library/data/photo.dart';
 import 'package:geo_monitor/library/data/video.dart';
@@ -24,13 +25,14 @@ import '../../data/project.dart';
 import '../../data/user.dart' as ar;
 import '../../functions.dart';
 import '../../ui/maps/location_response_map.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class UserEditor extends StatefulWidget {
-  final ar.User? user;
+  final mrm.User? user;
   final PrefsOGx prefsOGx;
   final CacheManager cacheManager;
   final ProjectBloc projectBloc;
-  final Project? project;
+  final mrm.Project? project;
   final OrganizationBloc organizationBloc;
   final DataApiDog dataApiDog;
   final FCMBloc fcmBloc;
@@ -56,10 +58,10 @@ class UserEditor extends StatefulWidget {
 
 class UserEditorState extends State<UserEditor>
     with SingleTickerProviderStateMixin {
-  ar.User? admin;
+  mrm.User? admin;
   final _key = GlobalKey<ScaffoldState>();
   var isBusy = false;
-  Country? country;
+  mrm.Country? country;
   String? title, subTitle;
 
   @override
@@ -69,14 +71,15 @@ class UserEditorState extends State<UserEditor>
   }
 
   void _getAdministrator() async {
-    admin = await prefsOGx.getUser();
+    var p = await prefsOGx.getUser();
+    admin = OldToRealm.getUser(p!);
     var sett = await prefsOGx.getSettings();
     title = await translator.translate('editMember', sett.locale!);
 
     setState(() {});
   }
 
-  void _navigateToLocationResponseMap(LocationResponse locationResponse) async {
+  void _navigateToLocationResponseMap(mrm.LocationResponse locationResponse) async {
     Navigator.push(
         context,
         PageTransition(
@@ -88,11 +91,11 @@ class UserEditorState extends State<UserEditor>
             )));
   }
 
-  showPhoto(Photo p1) {}
+  showPhoto(mrm.Photo p1) {}
 
-  showVideo(Video p1) {}
+  showVideo(mrm.Video p1) {}
 
-  showAudio(Audio p1) {}
+  showAudio(mrm.Audio p1) {}
 
   @override
   Widget build(BuildContext context) {

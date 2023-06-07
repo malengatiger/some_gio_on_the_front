@@ -10,6 +10,7 @@ import '../../library/cache_manager.dart';
 import '../../library/data/activity_type_enum.dart';
 import '../../library/data/user.dart';
 import 'activity_cards.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 /// This widget manages the display of an ActivityModel
 /// and handles the text translation of needed strings
@@ -24,7 +25,7 @@ class ActivityStreamCard extends StatefulWidget {
       required this.translatedUserType, required this.avatarRadius, required this.namePictureHorizontal, required this.users})
       : super(key: key);
 
-  final ActivityModel activityModel;
+  final mrm.ActivityModel activityModel;
   final double frontPadding;
   final bool thinMode;
   final double width;
@@ -33,7 +34,7 @@ class ActivityStreamCard extends StatefulWidget {
   final String translatedUserType;
   final double avatarRadius;
   final bool namePictureHorizontal;
-  final List<User> users;
+  final List<mrm.User> users;
 
   @override
   ActivityStreamCardState createState() => ActivityStreamCardState();
@@ -52,7 +53,7 @@ class ActivityStreamCardState extends State<ActivityStreamCard> {
     _getLocaleAndUser();
   }
 
-  User? activityUser;
+  mrm.User? activityUser;
   String? translatedUserType;
 
   void _getLocaleAndUser() async {

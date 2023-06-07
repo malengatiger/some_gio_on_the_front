@@ -539,24 +539,24 @@ class CacheManager {
   }
 
   Future addAudioForUpload({required AudioForUpload audio}) async {
-    var key = '${audio.project!.projectId!}_${audio.date}';
+    var key = '${audio.projectId!}_${audio.date}';
     _uploadAudioBox?.put(key, audio);
 
-    pp('$mm AudioForUpload added to local cache: ${audio.project!.name}');
+    pp('$mm AudioForUpload added to local cache: ${audio.projectName}');
   }
 
   Future addVideoForUpload({required VideoForUpload video}) async {
-    var key = '${video.project!.projectId!}_${video.date}';
+    var key = '${video.projectId!}_${video.date}';
     _uploadVideoBox?.put(key, video);
 
-    pp('$mm VideoForUpload added to local cache: ${video.project!.name}');
+    pp('$mm VideoForUpload added to local cache: ${video.projectName}');
   }
 
   Future addPhotoForUpload({required PhotoForUpload photo}) async {
-    var key = '${photo.project!.projectId!}_${photo.date}';
+    var key = '${photo.projectId!}_${photo.date}';
     _uploadPhotoBox?.put(key, photo);
 
-    pp('$mm PhotoForUpload added to local cache: ${photo.project!.name}');
+    pp('$mm PhotoForUpload added to local cache: ${photo.projectName}');
   }
 
   // Future addOrganizationSettingsList(List<SettingsModel> settings) async {
@@ -1328,21 +1328,21 @@ class CacheManager {
   
 
   Future removeUploadedPhoto({required PhotoForUpload photo}) async {
-    var key = '${photo.project!.projectId}_${photo.date}';
+    var key = '${photo.projectId}_${photo.date}';
     _uploadPhotoBox?.delete(key);
-    pp('$mm PhotoForUpload deleted from local cache:  🔵 🔵 ${photo.project!.name}');
+    pp('$mm PhotoForUpload deleted from local cache:  🔵 🔵 ${photo.projectName}');
   }
 
   Future removeUploadedAudio({required AudioForUpload audio}) async {
-    var key = '${audio.project!.projectId}_${audio.date}';
+    var key = '${audio.projectId}_${audio.date}';
     _uploadAudioBox?.delete(key);
-    pp('$mm AudioForUpload deleted from local cache: 🔵 🔵 ${audio.project!.name}');
+    pp('$mm AudioForUpload deleted from local cache: 🔵 🔵 ${audio.projectName}');
   }
 
   Future removeUploadedVideo({required VideoForUpload video}) async {
-    var key = '${video.project!.projectId}_${video.date}';
+    var key = '${video.projectId}_${video.date}';
     _uploadVideoBox?.delete(key);
-    pp('$mm VideoForUpload deleted from local cache:  🔵 🔵 ${video.project!.name}');
+    pp('$mm VideoForUpload deleted from local cache:  🔵 🔵 ${video.projectName}');
   }
   
 
@@ -1455,7 +1455,7 @@ class CacheManager {
 
   Future addGeofenceEvent({required GeofenceEvent geofenceEvent}) async {
     var key =
-        '${geofenceEvent.user!.userId!}_${geofenceEvent.projectPositionId}';
+        '${geofenceEvent.userId!}_${geofenceEvent.projectPositionId}';
     _geofenceEventBox?.put(key, geofenceEvent);
     // pp('$mm GeofenceEvent added to local cache: ............................ ${geofenceEvent.projectName}');
   }

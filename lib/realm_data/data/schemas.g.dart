@@ -1198,6 +1198,7 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
     String? description,
     String? translatedMessage,
     String? translatedTitle,
+    int? monitorMaxDistanceInMetres,
     Iterable<City> nearestCities = const [],
   }) {
     RealmObjectBase.set(this, '_id', id);
@@ -1209,6 +1210,8 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
     RealmObjectBase.set(this, 'description', description);
     RealmObjectBase.set(this, 'translatedMessage', translatedMessage);
     RealmObjectBase.set(this, 'translatedTitle', translatedTitle);
+    RealmObjectBase.set(
+        this, 'monitorMaxDistanceInMetres', monitorMaxDistanceInMetres);
     RealmObjectBase.set<RealmList<City>>(
         this, 'nearestCities', RealmList<City>(nearestCities));
   }
@@ -1280,6 +1283,13 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
       RealmObjectBase.set(this, 'translatedTitle', value);
 
   @override
+  int? get monitorMaxDistanceInMetres =>
+      RealmObjectBase.get<int>(this, 'monitorMaxDistanceInMetres') as int?;
+  @override
+  set monitorMaxDistanceInMetres(int? value) =>
+      RealmObjectBase.set(this, 'monitorMaxDistanceInMetres', value);
+
+  @override
   Stream<RealmObjectChanges<Project>> get changes =>
       RealmObjectBase.getChanges<Project>(this);
 
@@ -1306,6 +1316,8 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
       SchemaProperty('translatedMessage', RealmPropertyType.string,
           optional: true),
       SchemaProperty('translatedTitle', RealmPropertyType.string,
+          optional: true),
+      SchemaProperty('monitorMaxDistanceInMetres', RealmPropertyType.int,
           optional: true),
     ]);
   }
@@ -2164,7 +2176,9 @@ class GeofenceEvent extends _GeofenceEvent
     String? date,
     String? projectPositionId,
     String? projectName,
-    User? user,
+    String? userId,
+    String? userName,
+    String? userUrl,
     String? organizationId,
     Position? position,
     String? projectId,
@@ -2183,7 +2197,9 @@ class GeofenceEvent extends _GeofenceEvent
     RealmObjectBase.set(this, 'date', date);
     RealmObjectBase.set(this, 'projectPositionId', projectPositionId);
     RealmObjectBase.set(this, 'projectName', projectName);
-    RealmObjectBase.set(this, 'user', user);
+    RealmObjectBase.set(this, 'userId', userId);
+    RealmObjectBase.set(this, 'userName', userName);
+    RealmObjectBase.set(this, 'userUrl', userUrl);
     RealmObjectBase.set(this, 'organizationId', organizationId);
     RealmObjectBase.set(this, 'position', position);
     RealmObjectBase.set(this, 'projectId', projectId);
@@ -2231,9 +2247,21 @@ class GeofenceEvent extends _GeofenceEvent
       RealmObjectBase.set(this, 'projectName', value);
 
   @override
-  User? get user => RealmObjectBase.get<User>(this, 'user') as User?;
+  String? get userId => RealmObjectBase.get<String>(this, 'userId') as String?;
   @override
-  set user(covariant User? value) => RealmObjectBase.set(this, 'user', value);
+  set userId(String? value) => RealmObjectBase.set(this, 'userId', value);
+
+  @override
+  String? get userName =>
+      RealmObjectBase.get<String>(this, 'userName') as String?;
+  @override
+  set userName(String? value) => RealmObjectBase.set(this, 'userName', value);
+
+  @override
+  String? get userUrl =>
+      RealmObjectBase.get<String>(this, 'userUrl') as String?;
+  @override
+  set userUrl(String? value) => RealmObjectBase.set(this, 'userUrl', value);
 
   @override
   String? get organizationId =>
@@ -2296,8 +2324,9 @@ class GeofenceEvent extends _GeofenceEvent
       SchemaProperty('projectPositionId', RealmPropertyType.string,
           optional: true),
       SchemaProperty('projectName', RealmPropertyType.string, optional: true),
-      SchemaProperty('user', RealmPropertyType.object,
-          optional: true, linkTarget: 'User'),
+      SchemaProperty('userId', RealmPropertyType.string, optional: true),
+      SchemaProperty('userName', RealmPropertyType.string, optional: true),
+      SchemaProperty('userUrl', RealmPropertyType.string, optional: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
           optional: true, indexed: true),
       SchemaProperty('position', RealmPropertyType.object,

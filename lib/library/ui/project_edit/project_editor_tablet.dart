@@ -19,9 +19,10 @@ import '../../data/project.dart';
 import '../../data/user.dart';
 import '../../functions.dart';
 import '../maps/location_response_map.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectEditorTablet extends StatefulWidget {
-  final Project? project;
+  final mrm.Project? project;
   final PrefsOGx prefsOGx;
   final CacheManager cacheManager;
   final ProjectBloc projectBloc;
@@ -86,11 +87,12 @@ class ProjectEditorTabletState extends State<ProjectEditorTablet>
     }
   }
 
-  void _setup() {
+  void _setup() async {
+    var sett = await prefsOGx.getSettings();
     if (widget.project != null) {
       nameController.text = widget.project!.name!;
       descController.text = widget.project!.description!;
-      maxController.text = '${widget.project!.monitorMaxDistanceInMetres}';
+      maxController.text = '${sett.distanceFromProject}';
     }
   }
 
@@ -100,7 +102,7 @@ class ProjectEditorTabletState extends State<ProjectEditorTablet>
     super.dispose();
   }
 
-  void _navigateToProjectLocation(Project mProject) async {
+  void _navigateToProjectLocation(mrm.Project mProject) async {
     pp(' 😡 _navigateToProjectLocation  😡 😡 😡 ${mProject.name}');
     await Navigator.push(
         context,
@@ -285,7 +287,7 @@ class ProjectEditorTabletState extends State<ProjectEditorTablet>
     );
   }
 
-  void _navigateToLocationResponseMap(LocationResponse locationResponse) async {
+  void _navigateToLocationResponseMap(mrm.LocationResponse locationResponse) async {
     Navigator.push(
         context,
         PageTransition(

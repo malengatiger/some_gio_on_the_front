@@ -19,6 +19,7 @@ import '../../library/cache_manager.dart';
 import '../../library/data/user.dart';
 import '../../library/generic_functions.dart';
 import '../../library/geofence/the_great_geofencer.dart';
+import '../../realm_data/data/realm_sync_api.dart';
 import '../../stitch/stitch_service.dart';
 
 class DashboardMain extends StatefulWidget {
@@ -33,7 +34,7 @@ class DashboardMain extends StatefulWidget {
     required this.dataHandler,
     required this.geoUploader,
     required this.cloudStorageBloc,
-    required this.firebaseAuth, required this.stitchService, required this.refreshBloc,
+    required this.firebaseAuth, required this.stitchService, required this.refreshBloc, required this.realmSyncApi,
   }) : super(key: key);
   final DataApiDog dataApiDog;
   final FCMBloc fcmBloc;
@@ -47,6 +48,7 @@ class DashboardMain extends StatefulWidget {
   final auth.FirebaseAuth firebaseAuth;
   final StitchService stitchService;
   final RefreshBloc refreshBloc;
+  final RealmSyncApi realmSyncApi;
 
 
 
@@ -201,6 +203,7 @@ class DashboardMainState extends State<DashboardMain>
                   cloudStorageBloc: widget.cloudStorageBloc,
                   refreshBloc: widget.refreshBloc,
                   prefsOGx: widget.prefsOGx,
+                  realmSyncApi: realmSyncApi,
                   cacheManager: widget.cacheManager,
                 ),
                 tablet: OrientationLayoutBuilder(
@@ -211,6 +214,7 @@ class DashboardMainState extends State<DashboardMain>
                       fcmBloc: widget.fcmBloc,
                       projectBloc: widget.projectBloc,
                       prefsOGx: widget.prefsOGx,
+                      realmSyncApi: realmSyncApi,
                       geoUploader: widget.geoUploader,
                       cloudStorageBloc: widget.cloudStorageBloc,
                       firebaseAuth: widget.firebaseAuth,
@@ -225,6 +229,7 @@ class DashboardMainState extends State<DashboardMain>
                       dataApiDog: widget.dataApiDog,
                       dataHandler: widget.dataHandler,
                       fcmBloc: widget.fcmBloc,
+                      realmSyncApi: realmSyncApi,
                       organizationBloc: widget.organizationBloc,
                       projectBloc: widget.projectBloc,
                       firebaseAuth: widget.firebaseAuth,

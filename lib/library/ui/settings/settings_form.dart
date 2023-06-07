@@ -4,8 +4,10 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/api/data_api_og.dart';
 import 'package:geo_monitor/library/bloc/isolate_handler.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/data/settings_model.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../l10n/translation_handler.dart';
@@ -26,7 +28,7 @@ class SettingsForm extends StatefulWidget {
       required this.dataApiDog,
       required this.prefsOGx,
       required this.organizationBloc,
-      required this.dataHandler})
+      required this.dataHandler, required this.realmSyncApi})
       : super(key: key);
   final double padding;
   final Function(String locale) onLocaleChanged;
@@ -34,6 +36,7 @@ class SettingsForm extends StatefulWidget {
   final PrefsOGx prefsOGx;
   final OrganizationBloc organizationBloc;
   final IsolateDataHandler dataHandler;
+  final RealmSyncApi realmSyncApi;
 
   @override
   State<SettingsForm> createState() => SettingsFormState();
@@ -307,12 +310,13 @@ class SettingsFormState extends State<SettingsForm> {
       busyWritingToDB = true;
     });
     try {
-      var s = await widget.dataApiDog.addSettings(settingsModel);
-      pp('\n\n🔵🔵🔵 settings sent to database: ${s.toJson()}');
+      var sett = OldToRealm.getSettings(settingsModel);
+      var s =  widget.realmSyncApi.addSettings([sett]);
+      pp('\n\n🔵🔵🔵 settings sent to database: result: $s');
 
-      await widget.prefsOGx.saveSettings(s);
-      widget.organizationBloc.settingsController.sink.add(s);
-      themeBloc.changeToTheme(s.themeIndex!);
+      await widget.prefsOGx.saveSettings(settingsModel);
+      widget.organizationBloc.settingsController.sink.add(settingsModel);
+      themeBloc.changeToTheme(sett.themeIndex!);
       await widget.dataHandler.getOrganizationData();
     } catch (e) {
       pp(e);
@@ -368,7 +372,7 @@ class SettingsFormState extends State<SettingsForm> {
           elevation: 4,
           shape: getRoundedBorder(radius: 8),
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(4.0),
             child: SingleChildScrollView(
               child: Form(
                 key: _formKey,
@@ -388,25 +392,21 @@ class SettingsFormState extends State<SettingsForm> {
                             },
                             child: Card(
                               elevation: 8,
-                              shape: getRoundedBorder(radius: 8),
+                              color: Theme.of(context).primaryColor,
+                              shape: getRoundedBorder(radius: 16),
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: SizedBox(
-                                  height: 48,
-                                  width: 220,
-                                  child: Container(
-                                    color: Theme.of(context).primaryColor,
-                                    child: Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                          tapForColorScheme == null
-                                              ? 'Tap Me for Colour Scheme'
-                                              : tapForColorScheme!,
-                                          style: TextStyle(
-                                            color: color,
-                                          ),
-                                        ),
+                                  height: 60,
+                                  width: 240,
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        tapForColorScheme == null
+                                            ? 'Tap Me for Colour Scheme'
+                                            : tapForColorScheme!,
+                                        style: myTextStyleSmallWithColor(context, color),
                                       ),
                                     ),
                                   ),
@@ -433,7 +433,7 @@ class SettingsFormState extends State<SettingsForm> {
                               },
                               icon: Icon(
                                 Icons.check,
-                                size: 28,
+                                size: 36,
                                 color: Theme.of(context).primaryColor,
                               )),
                         ],
@@ -1029,117 +1029,117 @@ class ColorSchemePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var colors = <ColorBag>[
+      // ColorBag(
+      //   color: const Color(0xFF424343),
+      //   index: 0,
+      // ),
       ColorBag(
-        color: const Color(0xFF424343),
+        color: FlexColor.redWineDarkPrimary,
         index: 0,
       ),
       ColorBag(
-        color: FlexColor.redWineDarkPrimary,
+        color: FlexColor.barossaDarkPrimary,
         index: 1,
       ),
       ColorBag(
-        color: FlexColor.barossaDarkPrimary,
+        color: FlexColor.greenDarkPrimary,
         index: 2,
       ),
       ColorBag(
-        color: FlexColor.greenDarkPrimary,
+        color: FlexColor.mallardGreenDarkPrimary,
         index: 3,
       ),
       ColorBag(
-        color: FlexColor.mallardGreenDarkPrimary,
+        color: FlexColor.mandyRedDarkPrimary,
         index: 4,
       ),
       ColorBag(
-        color: FlexColor.mandyRedDarkPrimary,
+        color: FlexColor.redDarkPrimary,
         index: 5,
       ),
       ColorBag(
-        color: FlexColor.redDarkPrimary,
+        color: FlexColor.blueDarkPrimary,
         index: 6,
       ),
       ColorBag(
-        color: FlexColor.blueDarkPrimary,
+        color: FlexColor.mangoDarkPrimary,
         index: 7,
       ),
       ColorBag(
-        color: FlexColor.mangoDarkPrimary,
+        color: FlexColor.indigoDarkPrimary,
         index: 8,
       ),
       ColorBag(
-        color: FlexColor.indigoDarkPrimary,
+        color: FlexColor.deepBlueDarkPrimary,
         index: 9,
       ),
       ColorBag(
-        color: FlexColor.deepBlueDarkPrimary,
+        color: FlexColor.hippieBlueDarkPrimary,
         index: 10,
       ),
       ColorBag(
-        color: FlexColor.hippieBlueDarkPrimary,
+        color: FlexColor.deepPurpleDarkPrimary,
         index: 11,
       ),
       ColorBag(
-        color: FlexColor.deepPurpleDarkPrimary,
+        color: FlexColor.espressoDarkPrimary,
         index: 12,
       ),
       ColorBag(
-        color: FlexColor.espressoDarkPrimary,
+        color: FlexColor.barossaDarkPrimary,
         index: 13,
       ),
       ColorBag(
-        color: FlexColor.barossaDarkPrimary,
+        color: FlexColor.bigStoneDarkPrimary,
         index: 14,
       ),
       ColorBag(
-        color: FlexColor.bigStoneDarkPrimary,
+        color: FlexColor.damaskDarkPrimary,
         index: 15,
       ),
       ColorBag(
-        color: FlexColor.damaskDarkPrimary,
+        color: FlexColor.purpleBrownDarkPrimary,
         index: 16,
       ),
       ColorBag(
-        color: FlexColor.purpleBrownDarkPrimary,
+        color: FlexColor.wasabiDarkPrimary,
         index: 17,
       ),
       ColorBag(
-        color: FlexColor.wasabiDarkPrimary,
+        color: FlexColor.rosewoodDarkPrimary,
         index: 18,
       ),
       ColorBag(
-        color: FlexColor.rosewoodDarkPrimary,
+        color: FlexColor.sanJuanBlueDarkPrimary,
         index: 19,
       ),
       ColorBag(
-        color: FlexColor.sanJuanBlueDarkPrimary,
+        color: FlexColor.amberDarkPrimary,
         index: 20,
       ),
       ColorBag(
-        color: FlexColor.amberDarkPrimary,
+        color: FlexColor.dellGenoaGreenDarkPrimary,
         index: 21,
       ),
       ColorBag(
-        color: FlexColor.dellGenoaGreenDarkPrimary,
+        color: FlexColor.goldDarkPrimary,
         index: 22,
       ),
       ColorBag(
-        color: FlexColor.goldDarkPrimary,
+        color: FlexColor.blueWhaleDarkPrimary,
         index: 23,
       ),
       ColorBag(
-        color: FlexColor.blueWhaleDarkPrimary,
+        color: FlexColor.ebonyClayDarkPrimary,
         index: 24,
       ),
       ColorBag(
-        color: FlexColor.ebonyClayDarkPrimary,
+        color: FlexColor.moneyDarkPrimary,
         index: 25,
       ),
       ColorBag(
-        color: FlexColor.moneyDarkPrimary,
-        index: 26,
-      ),
-      ColorBag(
         color: FlexColor.aquaBlueDarkPrimary,
-        index: 27,
+        index: 26,
       ),
     ];
 

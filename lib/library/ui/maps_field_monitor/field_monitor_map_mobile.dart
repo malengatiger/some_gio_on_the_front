@@ -9,9 +9,10 @@ import '../../api/data_api_og.dart';
 import '../../data/position.dart';
 import '../../data/user.dart';
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class FieldMonitorMapMobile extends StatefulWidget {
-  final User user;
+  final mrm.User user;
 
   const FieldMonitorMapMobile(this.user, {super.key});
 
@@ -41,7 +42,6 @@ class FieldMonitorMapMobileState extends State<FieldMonitorMapMobile>
   }
 
   void _getLocation() async {
-    pp('💜 💜 💜 💜 💜 💜 FieldMonitorMapMobile: ..... current user, check position: ${widget.user.toJson()}');
     var pos = await locationBloc.getLocation();
     if (pos != null) {
       setState(() {
@@ -107,15 +107,15 @@ class FieldMonitorMapMobileState extends State<FieldMonitorMapMobile>
     setState(() {
       busy = true;
     });
-    try {
-      widget.user.position = Position(coordinates: [lng, lat], type: 'Point');
-      var result = await dataApiDog.updateUser(widget.user);
-      pp('💜 💜 💜 💜 💜 💜 Response : ${result.toJson()}');
-    } catch (e) {
-      pp(e);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('User Update failed: $e')));
-    }
+    // try {
+    //   widget.user.position = Position(coordinates: [lng, lat], type: 'Point');
+    //   var result = await dataApiDog.updateUser(widget.user);
+    //   pp('💜 💜 💜 💜 💜 💜 Response : ${result.toJson()}');
+    // } catch (e) {
+    //   pp(e);
+    //   ScaffoldMessenger.of(context)
+    //       .showSnackBar(SnackBar(content: Text('User Update failed: $e')));
+    // }
 
     setState(() {
       busy = false;

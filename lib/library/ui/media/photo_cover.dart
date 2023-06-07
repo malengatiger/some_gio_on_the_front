@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/functions.dart';
 
 import '../../data/photo.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class PhotoCover extends StatelessWidget {
   const PhotoCover({Key? key, required this.photo}) : super(key: key);
-  final Photo photo;
+  final mrm.Photo photo;
   @override
   Widget build(BuildContext context) {
     if (photo.landscape == 0) {

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/api/data_api_og.dart';
 import 'package:geo_monitor/library/api/prefs_og.dart';
 import 'package:geo_monitor/library/bloc/fcm_bloc.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/bloc/project_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -25,12 +26,13 @@ import '../../data/project_position.dart';
 import '../../data/user.dart';
 import '../../emojis.dart';
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectMapMobile extends StatefulWidget {
-  final Project project;
+  final mrm.Project project;
   // final List<ProjectPosition> projectPositions;
   // final List<ProjectPolygon> projectPolygons;
-  final Photo? photo;
+  final mrm.Photo? photo;
 
   const ProjectMapMobile({
     super.key,
@@ -54,7 +56,7 @@ class ProjectMapMobileState extends State<ProjectMapMobile>
   final _key = GlobalKey<ScaffoldState>();
   bool _showNewPositionUI = false;
   bool busy = false;
-  User? user;
+  mrm.User? user;
   CameraPosition? _kGooglePlex;
 
   final Set<Polygon> _polygons = HashSet<Polygon>();
@@ -66,7 +68,7 @@ class ProjectMapMobileState extends State<ProjectMapMobile>
   double _latitude = 0.0, _longitude = 0.0;
   double? currentLat, currentLng;
   String? title, locations, location;
-
+  late mrm.SettingsModel settings;
   @override
   void initState() {
     _animationController = AnimationController(
@@ -82,7 +84,8 @@ class ProjectMapMobileState extends State<ProjectMapMobile>
   }
 
   void _setTexts() async {
-    var settings = await prefsOGx.getSettings();
+    var p = await prefsOGx.getSettings();
+    settings = OldToRealm.getSettings(p);
     title = await translator.translate('projectLocationsMap', settings.locale!);
     locations = await translator.translate('locations', settings.locale!);
     var m = await translator.translate('location', settings.locale!);
@@ -128,9 +131,10 @@ class ProjectMapMobileState extends State<ProjectMapMobile>
   }
 
   void _buildCircles() {
-    pp('$mm drawing circles for project positions: ${projectPositions.length}, project: ${widget.project.toJson()}');
-    double? dist = widget.project.monitorMaxDistanceInMetres;
-    pp('$mm drawing circles for project positions: ${projectPositions.length}, monitorMaxDistanceInMetres: $dist == null? 100 : $dist');
+    pp('$mm drawing circles for project positions: ${projectPositions.length}, project: ${widget.project.name}');
+    double dist = settings.distanceFromProject!.toDouble();
+    pp('$mm drawing circles for project positions: ${projectPositions.length}, monitorMaxDistanceInMetres: '
+        '$dist == null? 100 : $dist');
     for (var pos in projectPositions) {
       circles.add(Circle(
           center: LatLng(
@@ -158,7 +162,8 @@ class ProjectMapMobileState extends State<ProjectMapMobile>
   }
 
   void _getUser() async {
-    user = await prefsOGx.getUser();
+    var p  = await prefsOGx.getUser();
+    user = OldToRealm.getUser(p!);
     var loc = await locationBloc.getLocation();
     currentLat = loc?.latitude;
     currentLng = loc?.longitude;
@@ -296,8 +301,6 @@ class ProjectMapMobileState extends State<ProjectMapMobile>
 
   Future<bool> _isLocationWithinProjectMonitorDistance(
       {required double latitude, required double longitude}) async {
-    pp('$mm calculating _isLocationWithinProjectMonitorDistance .... '
-        '${widget.project.monitorMaxDistanceInMetres!} metres');
 
     var map = <double, ProjectPosition>{};
     for (var i = 0; i < projectPositions.length; i++) {
@@ -317,9 +320,10 @@ class ProjectMapMobileState extends State<ProjectMapMobile>
 
     var list = map.keys.toList();
     list.sort();
+    int dist = settings.distanceFromProject!.toInt();
     pp('$mm Distances in list, length: : ${list.length} $list');
     if (list.elementAt(0) <=
-        widget.project.monitorMaxDistanceInMetres!.toInt()) {
+        dist) {
       return true;
     } else {
       return false;

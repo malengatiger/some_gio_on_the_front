@@ -51,6 +51,7 @@ import '../data/weather/hourly_forecast.dart';
 import '../emojis.dart';
 import '../functions.dart';
 import '../utilities/environment.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 late DataApiDog dataApiDog;
 
@@ -456,8 +457,21 @@ class DataApiDog {
     return u;
   }
 
-  Future<ur.User> updateUser(ur.User user) async {
-    Map bag = user.toJson();
+  Future updateUser(mrm.User user) async {
+    // Map bag = user.toJson();
+    var bag = {
+      'userId': user.userId,
+      'name': user.name,
+      'imageUrl': user.imageUrl,
+      'organizationId': user.organizationId,
+      'organizationName': user.organizationName,
+      'thumbnailUrl': user.thumbnailUrl,
+      'locale': user.locale,
+      'fcmRegistration': user.fcmRegistration,
+      'email': user.email,
+      'cellphone': user.cellphone,
+      'userType': user.userType,
+    };
 
     var result = await _callWebAPIPost('${url!}updateUser', bag);
     return ur.User.fromJson(result);
@@ -1573,7 +1587,7 @@ class DataApiDog {
           translationKey: 'networkProblem',
           errorType: GeoException.timeoutException);
       errorHandler.handleError(exception: gex);
-      throw gex;
+      //throw gex;
     }
     headers['Authorization'] = 'Bearer $token';
     try {

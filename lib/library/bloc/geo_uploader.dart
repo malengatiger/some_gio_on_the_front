@@ -8,6 +8,7 @@ import 'dart:ui';
 import 'package:geo_monitor/library/api/data_api_og.dart';
 import 'package:geo_monitor/library/api/prefs_og.dart';
 import 'package:geo_monitor/library/bloc/geo_exception.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/bloc/photo_for_upload.dart';
 import 'package:geo_monitor/library/bloc/video_for_upload.dart';
@@ -24,6 +25,8 @@ import '../data/video.dart';
 import '../functions.dart';
 import 'audio_for_upload.dart';
 import 'isolate_functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 late GeoUploader geoUploader;
 
@@ -31,7 +34,7 @@ Random rand = Random(DateTime.now().millisecondsSinceEpoch);
 const photoStorageName = 'geoPhotos3';
 const videoStorageName = 'geoVideos3';
 const audioStorageName = 'geoAudios3';
-User? user;
+mrm.User? user;
 
 /// Manages the uploading of media files to Cloud Storage using isolates
 class GeoUploader {
@@ -159,9 +162,10 @@ class GeoUploader {
     pp('$xx ... ${mAudios.length} audiosForUpload found after uploads.  🔴 If greater than zero, something not cool!');
   }
 
-  Future<Photo?> _startPhotoUpload(PhotoForUpload photoForUploading) async {
+  Future<mrm.Photo?> _startPhotoUpload(PhotoForUpload photoForUploading) async {
     pp('$xx ... _startPhotoUpload ..... run isolate');
-    user = await prefsOGx.getUser();
+    var p = await prefsOGx.getUser();
+    user = OldToRealm.getUser(p!);
     try {
       String? url = getUrl();
       var token = await appAuth.getAuthToken();
@@ -213,7 +217,7 @@ class GeoUploader {
 
       var photo = await Isolate.run(() async => await uploadPhotoFile(
           objectName: 'photo_${DateTime.now().millisecondsSinceEpoch}.jpg',
-          url: url!,
+          url: url,
           token: token!,
           height: height,
           width: width,
@@ -223,7 +227,6 @@ class GeoUploader {
           distance: distance));
 
       if (photo != null) {
-        await cacheManager.addPhoto(photo: photo);
         await cacheManager.removeUploadedPhoto(photo: photoForUploading);
       }
 
@@ -236,12 +239,14 @@ class GeoUploader {
     return null;
   }
 
-  Future<Video?> _startVideoUpload({
+  Future<mrm.Video?> _startVideoUpload({
     required VideoForUpload videoForUploading,
     required String videoArrived,
     required String messageFromGeo,
   }) async {
-    user = await prefsOGx.getUser();
+
+    var p = await prefsOGx.getUser();
+    user = OldToRealm.getUser(p!);
     try {
       String? url = getUrl();
       var token = await appAuth.getAuthToken();
@@ -266,7 +271,6 @@ class GeoUploader {
       final bytes = await mFile.readAsBytes();
       final size = getFileSizeInMB(bytes: bytes.length, decimals: 2);
 
-      var height = 0, width = 0;
       var distance = await locationBloc.getDistanceFromCurrentPosition(
           latitude: videoForUploading.position!.coordinates[1],
           longitude: videoForUploading.position!.coordinates[0]);
@@ -294,7 +298,6 @@ class GeoUploader {
           distance: distance));
 
       if (vid != null) {
-        await cacheManager.addVideo(video: vid);
         await cacheManager.removeUploadedVideo(video: videoForUploading);
       }
 
@@ -307,35 +310,31 @@ class GeoUploader {
     return null;
   }
 
-  Future<List<User>> startUserBatchUpload(
+  Future<List<mrm.User>> startUserBatchUpload(
       {required String organizationId, required File file}) async {
-    String? url = getUrl();
+    String url = getUrl();
     var token = await appAuth.getAuthToken();
     final sett = await prefsOGx.getSettings();
     final tt = await translator.translate('messageFromGeo', sett.locale!);
     final tm = await translator.translate('memberAddedChanged', sett.locale!);
     var users = await Isolate.run(() async => await uploadUserFile(
         organizationId: organizationId,
-        url: url!,
+        url: url,
         token: token!,
         translatedTitle: tt,
         translatedMessage: tm,
         file: file));
 
-    if (users.isNotEmpty) {
-      await cacheManager.addUsers(users: users);
-      organizationBloc.userController.sink.add(users);
-    }
-
     return users;
   }
 
-  Future<Audio?> _startAudioUpload({
+  Future<mrm.Audio?> _startAudioUpload({
     required AudioForUpload audioForUploading,
     required String audioArrived,
     required String messageFromGeo,
   }) async {
-    user = await prefsOGx.getUser();
+    var p = await prefsOGx.getUser();
+    user = OldToRealm.getUser(p!);
     try {
       String? url = getUrl();
       var token = await appAuth.getAuthToken();
@@ -381,7 +380,6 @@ class GeoUploader {
           distance: distance));
 
       if (audio != null) {
-        await cacheManager.addAudio(audio: audio);
         await cacheManager.removeUploadedAudio(audio: audioForUploading);
       }
 

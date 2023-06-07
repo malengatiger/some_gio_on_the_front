@@ -27,17 +27,23 @@ import '../../library/bloc/geo_uploader.dart';
 import '../../library/cache_manager.dart';
 import '../../library/data/audio.dart';
 import '../../library/data/position.dart';
+import '../../library/data/project.dart' as old;
+
 import '../../library/data/user.dart';
 import '../../library/data/video.dart';
 import '../../library/generic_functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class AudioRecorder extends StatefulWidget {
   final void Function() onCloseRequested;
 
   const AudioRecorder(
-      {Key? key, required this.onCloseRequested, required this.project, required this.cloudStorageBloc})
+      {Key? key,
+      required this.onCloseRequested,
+      required this.project,
+      required this.cloudStorageBloc})
       : super(key: key);
-  final Project project;
+  final mrm.Project project;
   final CloudStorageBloc cloudStorageBloc;
   @override
   State<AudioRecorder> createState() => AudioRecorderState();
@@ -93,23 +99,26 @@ class AudioRecorderState extends State<AudioRecorder> {
   Future _setTexts() async {
     user = await prefsOGx.getUser();
     settingsModel = await prefsOGx.getSettings();
-      var m = settingsModel?.maxAudioLengthInMinutes;
-      limitInSeconds = m! * 60;
-      title = await translator.translate('recordAudioClip', settingsModel!.locale!);
-      elapsedTime = await translator.translate('elapsedTime', settingsModel!.locale!);
+    var m = settingsModel?.maxAudioLengthInMinutes;
+    limitInSeconds = m! * 60;
+    title =
+        await translator.translate('recordAudioClip', settingsModel!.locale!);
+    elapsedTime =
+        await translator.translate('elapsedTime', settingsModel!.locale!);
 
-      fileUploadSize = await translator.translate('fileSize', settingsModel!.locale!);
-      uploadAudioClipText =
-          await translator.translate('uploadAudioClip', settingsModel!.locale!);
-      locationNotAvailable =
-          await translator.translate('locationNotAvailable', settingsModel!.locale!);
+    fileUploadSize =
+        await translator.translate('fileSize', settingsModel!.locale!);
+    uploadAudioClipText =
+        await translator.translate('uploadAudioClip', settingsModel!.locale!);
+    locationNotAvailable = await translator.translate(
+        'locationNotAvailable', settingsModel!.locale!);
 
-      waitingToRecordAudio =
-          await translator.translate('waitingToRecordAudio', settingsModel!.locale!);
-      audioToBeUploaded =
-          await translator.translate('audioToBeUploaded', settingsModel!.locale!);
-      durationText = await translator.translate('duration', settingsModel!.locale!);
-
+    waitingToRecordAudio = await translator.translate(
+        'waitingToRecordAudio', settingsModel!.locale!);
+    audioToBeUploaded =
+        await translator.translate('audioToBeUploaded', settingsModel!.locale!);
+    durationText =
+        await translator.translate('duration', settingsModel!.locale!);
 
     setState(() {});
   }
@@ -140,10 +149,9 @@ class AudioRecorderState extends State<AudioRecorder> {
         var directory = await getApplicationDocumentsDirectory();
         pp('$mm _start: 🔆🔆🔆 directory: ${directory.path}');
 
-        final suffix = '${settingsModel!.organizationId!}_${widget.project.projectId}_${DateTime.now()
-            .millisecondsSinceEpoch}.m4a';
-        File audioFile = File(
-            '${directory.path}/audio_$suffix');
+        final suffix =
+            '${settingsModel!.organizationId!}_${widget.project.projectId}_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        File audioFile = File('${directory.path}/audio_$suffix');
 
         await _audioRecorder.start(path: audioFile.path);
         pp('$mm _audioRecorder has started ...');
@@ -226,15 +234,9 @@ class AudioRecorderState extends State<AudioRecorder> {
     try {
       Position? position;
       final loc = await locationBloc.getLocation();
-      if (loc != null) {
-        position =
-            Position(coordinates: [loc.longitude, loc.latitude], type: 'Point');
-      } else {
-        if (mounted) {
-          showToast(message: 'Device Location unavailable', context: context);
-          return;
-        }
-      }
+      position =
+          Position(coordinates: [loc.longitude, loc.latitude], type: 'Point');
+
       pp('$mm about to create audioForUpload ....${fileToUpload!.path} ');
       if (user == null) {
         pp('$mm user is null, WTF!!');
@@ -248,7 +250,8 @@ class AudioRecorderState extends State<AudioRecorder> {
           userId: user!.userId,
           organizationId: user!.organizationId,
           filePath: fileToUpload!.path,
-          project: widget.project,
+          projectName: widget.project.name,
+          projectId: widget.project.projectId,
           position: position,
           durationInSeconds: _recordDuration,
           audioId: const Uuid().v4(),
@@ -256,7 +259,6 @@ class AudioRecorderState extends State<AudioRecorder> {
 
       await cacheManager.addAudioForUpload(audio: audioForUpload);
       widget.cloudStorageBloc.uploadEverything();
-
     } catch (e) {
       pp("something amiss here: ${e.toString()}");
       if (mounted) {
@@ -278,7 +280,7 @@ class AudioRecorderState extends State<AudioRecorder> {
     }
     var brightness = MediaQuery.of(context).platformBrightness;
     bool isDarkMode = brightness == Brightness.dark;
-    var  color = getTextColorForBackground(Theme.of(context).primaryColor);
+    var color = getTextColorForBackground(Theme.of(context).primaryColor);
 
     if (isDarkMode) {
       color = Theme.of(context).primaryColor;
@@ -288,22 +290,27 @@ class AudioRecorderState extends State<AudioRecorder> {
         child: Scaffold(
           appBar: AppBar(
             title: Text(title == null ? 'Audio Recording' : title!),
-            bottom: PreferredSize(preferredSize: const Size.fromHeight(48), child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 16.0),
-                  child: Align(
-                    child: Text(
-                      widget.project.name!,
-                      style: myTextStyleMediumWithColor(context, color),
+            bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(48),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16.0),
+                      child: Align(
+                        child: Text(
+                          widget.project.name!,
+                          style: myTextStyleMediumWithColor(context, color),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 12,)
-              ],
-            )),
+                    const SizedBox(
+                      height: 12,
+                    )
+                  ],
+                )),
           ),
-          backgroundColor: isDarkMode?Theme.of(context).canvasColor: Colors.brown[50],
+          backgroundColor:
+              isDarkMode ? Theme.of(context).canvasColor : Colors.brown[50],
           body: durationText == null
               ? const SizedBox()
               : AudioRecorderCard(
@@ -356,7 +363,6 @@ class AudioRecorderState extends State<AudioRecorder> {
 
   Audio? audio;
   Video? video;
-
 }
 
 class AudioRecorderCard extends StatelessWidget {
@@ -449,18 +455,21 @@ class AudioRecorderCard extends StatelessWidget {
     }
     var brightness = MediaQuery.of(context).platformBrightness;
     bool isDarkMode = brightness == Brightness.dark;
-    var  color2 = getTextColorForBackground(Theme.of(context).primaryColor);
+    var color2 = getTextColorForBackground(Theme.of(context).primaryColor);
 
     if (isDarkMode) {
       color2 = Colors.white;
     }
-    return SizedBox(height: 600,
+    return SizedBox(
+      height: 600,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 48,),
+            const SizedBox(
+              height: 48,
+            ),
             Expanded(
               child: Card(
                 shape: getRoundedBorder(radius: 16),
@@ -483,10 +492,12 @@ class AudioRecorderCard extends StatelessWidget {
                                       onPressed: () {
                                         close();
                                       },
-                                      icon:  Icon(Icons.close, size: iconSize!,)),
+                                      icon: Icon(
+                                        Icons.close,
+                                        size: iconSize!,
+                                      )),
                                 ],
                               ),
-
                         SizedBox(
                           height: padding,
                         ),
@@ -502,7 +513,8 @@ class AudioRecorderCard extends StatelessWidget {
                           height: padding,
                         ),
                         SizedBox(
-                          height: timerCardHeight == null ? 120 : timerCardHeight!,
+                          height:
+                              timerCardHeight == null ? 120 : timerCardHeight!,
                           child: showWaveForm
                               ? TimerCard(
                                   fontSize: 24,
@@ -521,7 +533,7 @@ class AudioRecorderCard extends StatelessWidget {
                               )
                             : const SizedBox(),
                         Padding(
-                          padding: const EdgeInsets.only(left:48.0),
+                          padding: const EdgeInsets.only(left: 48.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -531,11 +543,15 @@ class AudioRecorderCard extends StatelessWidget {
                                   color: color,
                                   child: InkWell(
                                     child: SizedBox(
-                                        width: iconSize == null ? 56 : iconSize!,
-                                        height: iconSize == null ? 56 : iconSize!,
+                                        width:
+                                            iconSize == null ? 56 : iconSize!,
+                                        height:
+                                            iconSize == null ? 56 : iconSize!,
                                         child: icon),
                                     onTap: () {
-                                      (recordState != RecordState.stop) ? stop() : start();
+                                      (recordState != RecordState.stop)
+                                          ? stop()
+                                          : start();
                                     },
                                   ),
                                 ),
@@ -550,60 +566,62 @@ class AudioRecorderCard extends StatelessWidget {
                         ),
                         readyForUpload
                             ? Column(
-                              children: [
-                                const SizedBox(
-                                  height: 20,
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      fileUploadSizeText,
-                                      style: myTextStyleSmall(context),
-                                    ),
-                                    const SizedBox(
-                                      width: 8,
-                                    ),
-                                    Text(
-                                      ((fileSize / 1024 / 1024)
-                                          .toStringAsFixed(2)),
-                                      style: myTextStyleMediumBoldPrimaryColor(
-                                          context),
-                                    ),
-                                    const SizedBox(
-                                      width: 8,
-                                    ),
-                                    Text(
-                                      'MB',
-                                      style: myTextStyleSmall(context),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 20,
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    uploadFile();
-                                  },
-                                  child: SizedBox(
-                                    width: 280.0,
-                                    child: Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Text(
-                                          uploadAudioClipText,
-                                          style: myTextStyleSmallWithColor(context, color2),
+                                children: [
+                                  const SizedBox(
+                                    height: 20,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        fileUploadSizeText,
+                                        style: myTextStyleSmall(context),
+                                      ),
+                                      const SizedBox(
+                                        width: 8,
+                                      ),
+                                      Text(
+                                        ((fileSize / 1024 / 1024)
+                                            .toStringAsFixed(2)),
+                                        style:
+                                            myTextStyleMediumBoldPrimaryColor(
+                                                context),
+                                      ),
+                                      const SizedBox(
+                                        width: 8,
+                                      ),
+                                      Text(
+                                        'MB',
+                                        style: myTextStyleSmall(context),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                    height: 20,
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      uploadFile();
+                                    },
+                                    child: SizedBox(
+                                      width: 280.0,
+                                      child: Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Text(
+                                            uploadAudioClipText,
+                                            style: myTextStyleSmallWithColor(
+                                                context, color2),
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(
-                                  height: 16,
-                                ),
-                              ],
-                            )
+                                  const SizedBox(
+                                    height: 16,
+                                  ),
+                                ],
+                              )
                             : const SizedBox(),
                         const SizedBox(height: 20),
                       ],

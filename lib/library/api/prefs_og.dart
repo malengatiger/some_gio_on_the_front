@@ -3,14 +3,16 @@ import 'dart:convert';
 import 'package:geo_monitor/library/data/questionnaire.dart';
 import 'package:geo_monitor/library/data/subscription.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:realm/realm.dart';
 
 import '../data/country.dart';
 import '../data/project.dart';
 import '../data/settings_model.dart';
-import '../data/user.dart';
+import '../data/user.dart' as old;
 import '../functions.dart';
+import '../../../realm_data/data/schemas.dart' as mrm;
 
-late  PrefsOGx prefsOGx;
+late PrefsOGx prefsOGx;
 const String cacheName = 'GeoPreferences3';
 
 class PrefsOGx {
@@ -18,7 +20,6 @@ class PrefsOGx {
       bb = '🦠🦠🦠🦠🦠🦠🦠 PrefsOGx  🦠: ';
 
   final GetStorage box = GetStorage(cacheName);
-
 
   Future setDateRefreshed(String date) async {
     await box.write('dateRefreshed', date);
@@ -30,9 +31,7 @@ class PrefsOGx {
     var refreshDate = await _getDateRefreshed();
     final rDate = DateTime.parse(refreshDate);
     final now = DateTime.now();
-    final delta = now
-        .difference(rDate)
-        .inHours;
+    final delta = now.difference(rDate).inHours;
     if (delta >= 12) {
       return true;
     } else {
@@ -80,22 +79,22 @@ class PrefsOGx {
     }
   }
 
-  Future saveUser(User user) async {
+  Future saveUser(old.User user) async {
     final s = jsonEncode(user.toJson());
     await box.write('user', s);
     pp("\n\n$mm saveUser SAVED: 🌽 ${user.name}\n");
     return null;
   }
 
-  Future<User?> getUser() async {
-    User? user;
+  Future<old.User?> getUser() async {
+    old.User? user;
     var mJson = box.read('user');
     if (mJson == null) {
       pp('$mm User does not exist in Prefs, '
           ' 🍎🍎🍎');
       return null;
     } else {
-      user = User.fromJson(jsonDecode(mJson));
+      user = old.User.fromJson(jsonDecode(mJson));
       // pp("$mm getUser 🧩🧩🧩🧩🧩 retrieved .. ${user.name}  🔴🔴");
       return user;
     }
@@ -127,31 +126,69 @@ class PrefsOGx {
     await box.remove('user');
   }
 
-  Future saveCountry(Country country) async {
-    final s = jsonEncode(country.toJson());
+  Future saveCountry(mrm.Country c) async {
+    var b = {
+      'name': c.name,
+      'countryId': c.countryId,
+      'emoji': c.emoji,
+      'currencySymbol': c.currencySymbol,
+      'currency': c.currency,
+      'currencyName': c.currencyName,
+      'region': c.region,
+      'subregion': c.subregion,
+      'latitude': c.latitude,
+      'longitude': c.longitude,
+      'iso2': c.iso2,
+      'iso3': c.iso3,
+      'capital': c.capital,
+      'population': c.population,
+    };
+    final s = jsonEncode(b);
     pp("$mm saveCountry to save: 🌽 $s\n");
 
     await box.write('country', s);
-    pp("\n\n$mm saveCountry SAVED: 🌽 ${country.name}\n");
+    pp("\n\n$mm saveCountry SAVED: 🌽 ${c.name}\n");
     return null;
   }
 
-  Future<Country?> getCountry() async {
-    Country? country;
+  Future<mrm.Country?> getCountry() async {
+    mrm.Country? country;
     var mJson = box.read('country');
     if (mJson == null) {
       pp('$mm User does not exist in Prefs, '
           ' 🍎🍎🍎');
       return null;
     } else {
-      country = Country.fromJson(jsonDecode(mJson));
-      pp("$mm getCountry 🧩🧩🧩🧩🧩 retrieved .. ${country.name}  🔴🔴");
-      return country;
+      var c = mrm.Country(
+        ObjectId(),
+        name: mJson['name'],
+        countryId: mJson['countryId'],
+        emoji: mJson['emoji'],
+        currencySymbol: mJson['currencySymbol'],
+        currency: mJson['currency'],
+        currencyName: mJson['currencyName'],
+        region: mJson['region'],
+        subregion: mJson['subregion'],
+        latitude: mJson['latitude'],
+        longitude: mJson['longitude'],
+        iso2: mJson['iso2'],
+        iso3: mJson['iso3'],
+        capital: mJson['capital'],
+        population: mJson['population'],
+      );
+      pp("$mm getCountry 🧩🧩🧩🧩🧩 retrieved .. ${c.name}  🔴🔴");
+      return c;
     }
   }
 
-  Future saveProject(Project project) async {
-    final s = jsonEncode(project.toJson());
+  Future saveProject(mrm.Project project) async {
+    final s = {
+      "name": project.name,
+      'projectId': project.projectId,
+      'organizationId': project.organizationId,
+      'created': project.created,
+      '': project.description,
+    };
     pp("$mm saveProject to save: 🌽 $s\n");
 
     await box.write('project', s);
@@ -159,15 +196,20 @@ class PrefsOGx {
     return null;
   }
 
-  Future<Project?> getProject() async {
-    Project? project;
+  Future<mrm.Project?> getProject() async {
+    mrm.Project? project;
     var mJson = box.read('project');
     if (mJson == null) {
       pp('$mm project does not exist in Prefs, '
           ' 🍎🍎🍎');
       return null;
     } else {
-      project = Project.fromJson(jsonDecode(mJson));
+      project = mrm.Project(ObjectId(),
+          name: mJson['name'],
+          projectId: mJson['projectId'],
+          organizationId: mJson['organizationId'],
+          created: mJson['created']);
+
       pp("$mm getProject 🧩🧩🧩🧩🧩 retrieved .. ${project.name}  🔴🔴");
       return project;
     }
@@ -195,7 +237,8 @@ class PrefsOGx {
   }
 
   Future saveLastRefresh() async {
-    LastRefresh lastRefresh = LastRefresh(DateTime.now().toUtc().microsecondsSinceEpoch,
+    LastRefresh lastRefresh = LastRefresh(
+        DateTime.now().toUtc().microsecondsSinceEpoch,
         DateTime.now().toUtc().toIso8601String());
 
     final s = jsonEncode(lastRefresh.toJson());

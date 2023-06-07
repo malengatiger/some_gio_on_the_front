@@ -42,6 +42,8 @@ import '../../library/ui/maps/location_response_map.dart';
 import '../../library/ui/project_list/gio_projects.dart';
 import '../../utilities/constants.dart';
 import 'user_dashboard_grid.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
+
 
 class UserDashboard extends StatefulWidget {
   const UserDashboard({
@@ -50,7 +52,7 @@ class UserDashboard extends StatefulWidget {
     required this.prefsOGx, required this.cacheManager,
     required this.projectBloc,  required this.organizationBloc, required this.fcmBloc, required this.geoUploader, required this.cloudStorageBloc,
   }) : super(key: key);
-  final User user;
+  final mrm.User user;
   final DataApiDog dataApiDog;
   final PrefsOGx prefsOGx;
   final CacheManager cacheManager;
@@ -88,9 +90,9 @@ class UserDashboardState extends State<UserDashboard>
   bool networkAvailable = false;
   final dur = 3000;
   DataBag? dataBag;
-  Photo? photo;
-  Video? video;
-  Audio? audio;
+  mrm.Photo? photo;
+  mrm.Video? video;
+  mrm.Audio? audio;
   bool _showPhoto = false;
   bool _showVideo = false;
   bool _showAudio = false;
@@ -287,11 +289,11 @@ class UserDashboardState extends State<UserDashboard>
     });
   }
 
-  void _displayPhoto(Photo photo) async {
+  void _displayPhoto(mrm.Photo photo) async {
     pp('$mm _displayPhoto ...');
     this.photo = photo;
     final settings = await prefsOGx.getSettings();
-    translatedDate = getFmtDate(photo.created!, settings!.locale!);
+    translatedDate = getFmtDate(photo.created!, settings.locale!);
     setState(() {
       _showPhoto = true;
       _showVideo = false;
@@ -299,7 +301,7 @@ class UserDashboardState extends State<UserDashboard>
     });
   }
 
-  void _displayVideo(Video video) async {
+  void _displayVideo(mrm.Video video) async {
     pp('$mm _displayVideo ...');
     this.video = video;
     setState(() {
@@ -309,7 +311,7 @@ class UserDashboardState extends State<UserDashboard>
     });
   }
 
-  void _displayAudio(Audio audio) async {
+  void _displayAudio(mrm.Audio audio) async {
     pp('$mm _displayAudio ...');
     this.audio = audio;
     setState(() {
@@ -371,7 +373,7 @@ class UserDashboardState extends State<UserDashboard>
     }
   }
 
-  void _navigateToLocationResponseMap(LocationResponse locationResponse) async {
+  void _navigateToLocationResponseMap(mrm.LocationResponse locationResponse) async {
     Navigator.push(
         context,
         PageTransition(

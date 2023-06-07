@@ -3,24 +3,28 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/bloc/photo_for_upload.dart';
 import 'package:geo_monitor/library/bloc/video_for_upload.dart';
 import 'package:http/http.dart' as http;
+import 'package:realm/realm.dart';
 
+import '../../realm_data/data/realm_sync_api.dart';
 import '../data/audio.dart';
 import '../data/photo.dart';
-import '../data/user.dart';
+import '../data/user.dart' as old;
 import '../data/video.dart';
 import '../functions.dart';
 import 'audio_for_upload.dart';
 import 'geo_exception.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 ///
 ///TOP LEVEL functions to upload media while running inside isolates
 ///
 http.Client client = http.Client();
 
-Future<Photo?> uploadPhotoFile(
+Future<mrm.Photo?> uploadPhotoFile(
     {required String objectName,
     required String url,
     required String token,
@@ -47,7 +51,7 @@ Future<Photo?> uploadPhotoFile(
     return null;
   }
 
-  var photo = Photo(
+  var photo = mrm.Photo(ObjectId(),
       url: responseUrl,
       userUrl: photoForUpload.userThumbnailUrl,
       caption: 'tbd',
@@ -56,24 +60,23 @@ Future<Photo?> uploadPhotoFile(
       userName: photoForUpload.userName,
       translatedMessage: photoArrived,
       translatedTitle: messageFromGeo,
-      projectPosition: photoForUpload.position!,
+      projectPosition: mrm.Position(type: 'Point', coordinates: photoForUpload.position!.coordinates,
+          latitude: photoForUpload.position!.coordinates[1], longitude: photoForUpload.position!.coordinates[0]),
       distanceFromProjectPosition: distance,
-      projectId: photoForUpload.project!.projectId,
+      projectId: photoForUpload.projectId,
       thumbnailUrl: thumbUrl,
-      projectName: photoForUpload.project!.name,
+      projectName: photoForUpload.projectName,
       organizationId: photoForUpload.organizationId,
-      height: height,
-      width: width,
       projectPositionId: photoForUpload.projectPositionId,
       projectPolygonId: photoForUpload.projectPolygonId,
       photoId: photoForUpload.photoId,
       landscape: width > height ? 0 : 1);
 
-  var mPhoto = await _addPhotoToDatabase(photo, url, token);
-  return mPhoto;
+  realmSyncApi.addPhotos([photo]);
+  return photo;
 }
 
-Future<Audio?> uploadAudioFile(
+Future<mrm.Audio?> uploadAudioFile(
     {required String objectName,
     required String url,
     required String token,
@@ -102,7 +105,7 @@ Future<Audio?> uploadAudioFile(
     return null;
   }
 
-  var audio = Audio(
+  var audio = mrm.Audio(ObjectId(),
       url: responseUrl,
       userUrl: audioForUpload.userThumbnailUrl,
       caption: 'tbd',
@@ -111,18 +114,20 @@ Future<Audio?> uploadAudioFile(
       userName: audioForUpload.userName,
       translatedTitle: messageFromGeo,
       translatedMessage: audioArrived,
-      projectPosition: audioForUpload.position!,
+      projectPosition: mrm.Position(type: 'Point', coordinates: audioForUpload.position!.coordinates,
+          latitude: audioForUpload.position!.coordinates[1], longitude: audioForUpload.position!.coordinates[0]),
       distanceFromProjectPosition: distance,
-      projectId: audioForUpload.project!.projectId,
-      projectName: audioForUpload.project!.name,
+      projectId: audioForUpload.projectId,
+      projectName: audioForUpload.projectName,
       organizationId: audioForUpload.organizationId,
       durationInSeconds: audioForUpload.durationInSeconds,
       audioId: audioForUpload.audioId);
-  var mAudio = await _addAudioToDatabase(audio, url, token);
-  return mAudio;
+
+  realmSyncApi.addAudios([audio]);
+  return audio;
 }
 
-Future<Video?> uploadVideoFile(
+Future<mrm.Video?> uploadVideoFile(
     {required String objectName,
     required String url,
     required String token,
@@ -151,32 +156,33 @@ Future<Video?> uploadVideoFile(
   }
   pp('$xx 🍐🍐🍐🍐🍐🍐 attempting to add video to DB ... size: $size MB');
 
-  var video = Video(
+  var video = mrm.Video(ObjectId(),
       url: responseUrl,
       userUrl: videoForUpload.userThumbnailUrl,
       caption: 'tbd',
       created: videoForUpload.date,
       userId: videoForUpload.userId,
       userName: videoForUpload.userName,
-      projectPosition: videoForUpload.position!,
+      projectPosition: mrm.Position(type: 'Point', coordinates: videoForUpload.position!.coordinates,
+      latitude: videoForUpload.position!.coordinates[1], longitude: videoForUpload.position!.coordinates[0]),
       distanceFromProjectPosition: distance,
       translatedMessage: videoArrived,
       translatedTitle: messageFromGeo,
-      projectId: videoForUpload.project!.projectId,
+      projectId: videoForUpload.projectId,
       thumbnailUrl: thumbUrl,
-      projectName: videoForUpload.project!.name,
+      projectName: videoForUpload.projectName,
       organizationId: videoForUpload.organizationId,
-      size: size,
+      landscape: 1,
       durationInSeconds: videoForUpload.durationInSeconds,
       projectPositionId: videoForUpload.projectPositionId,
       projectPolygonId: videoForUpload.projectPolygonId,
       videoId: videoForUpload.videoId);
 
-  var mVideo = await _addVideoToDatabase(video, url, token);
-  return mVideo;
+  realmSyncApi.addVideos([video]);
+  return video;
 }
 
-Future<List<User>> uploadUserFile({
+Future<List<mrm.User>> uploadUserFile({
   required File file,
   required String url,
   required String token,
@@ -348,7 +354,7 @@ Future<String?> _sendUploadRequest(
   return responseString;
 }
 
-Future<List<User>> _sendUserUploadRequest(
+Future<List<mrm.User>> _sendUserUploadRequest(
     {required String token,
     required String url,
     required String translatedTitle,
@@ -369,7 +375,7 @@ Future<List<User>> _sendUserUploadRequest(
   var multiPartFile = await http.MultipartFile.fromPath("document", file.path);
   request.files.add(multiPartFile);
   request.headers.addAll(headers);
-  var users = <User>[];
+  var users = <mrm.User>[];
   String? responseData;
   try {
     var response = await request.send();
@@ -379,10 +385,12 @@ Future<List<User>> _sendUserUploadRequest(
 
       List result = jsonDecode(responseData);
       for (var element in result) {
-        users.add(User.fromJson(element));
+        var p = old.User.fromJson(element);
+        var real = OldToRealm.getUser(p);
+        users.add(real);
       }
       for (var value in users) {
-        pp('$xx user created from file: 🔵🔵 ${value.toJson()} 🔵🔵\n');
+        pp('$xx user created from file: 🔵🔵 ${value.name} 🔵🔵\n');
       }
     } else {
       pp('\n\n$xx We have a problem, Boss! 🔴🔴🔴 statusCode: ${response.statusCode} '

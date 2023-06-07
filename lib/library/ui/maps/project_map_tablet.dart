@@ -7,10 +7,12 @@ import 'package:badges/badges.dart' as bd;
 import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/api/prefs_og.dart';
 import 'package:geo_monitor/library/bloc/fcm_bloc.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/bloc/project_bloc.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:uuid/uuid.dart';
+import 'package:realm/realm.dart';
 
 import '../../../device_location/device_location_bloc.dart';
 import '../../../l10n/translation_handler.dart';
@@ -25,12 +27,12 @@ import '../../data/project_position.dart';
 import '../../data/user.dart';
 import '../../emojis.dart';
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectMapTablet extends StatefulWidget {
-  final Project project;
-  // final List<ProjectPosition> projectPositions;
-  // final List<ProjectPolygon> projectPolygons;
-  final Photo? photo;
+  final mrm.Project project;
+  final mrm.Photo? photo;
 
   const ProjectMapTablet({
     super.key,
@@ -54,18 +56,19 @@ class ProjectMapTabletState extends State<ProjectMapTablet>
   final _key = GlobalKey<ScaffoldState>();
   bool _showNewPositionUI = false;
   bool busy = false;
-  User? user;
+  mrm.User? user;
   CameraPosition? _kGooglePlex;
   final Set<Polygon> _polygons = HashSet<Polygon>();
   final Set<Circle> circles = HashSet<Circle>();
-  var projectPolygons = <ProjectPolygon>[];
-  var projectPositions = <ProjectPosition>[];
+  var projectPolygons = <mrm.ProjectPolygon>[];
+  var projectPositions = <mrm.ProjectPosition>[];
   late StreamSubscription<ProjectPosition> _positionStreamSubscription;
   late StreamSubscription<ProjectPolygon> _polygonStreamSubscription;
   GoogleMapController? googleMapController;
   double _longPressLat = 0.0, _longPressLng = 0.0;
   String? address, projectLocationsAreas, locations, location;
 
+  late mrm.SettingsModel sett;
   @override
   void initState() {
     _animationController = AnimationController(
@@ -120,8 +123,7 @@ class ProjectMapTabletState extends State<ProjectMapTablet>
   }
 
   void _buildCircles() {
-    pp('$mm drawing circles for project positions: ${projectPositions.length}, project: ${widget.project.toJson()}');
-    double? dist = widget.project.monitorMaxDistanceInMetres;
+    double dist = sett.distanceFromProject!.toDouble();
     pp('$mm drawing circles for project positions: ${projectPositions.length}, monitorMaxDistanceInMetres: $dist == null? 100 : $dist');
     for (var pos in projectPositions) {
       circles.add(Circle(
@@ -152,17 +154,19 @@ class ProjectMapTabletState extends State<ProjectMapTablet>
   double? currentLat, currentLng;
 
   void _getUser() async {
-    user = await prefsOGx.getUser();
+    var p = await prefsOGx.getUser();
+    user = OldToRealm.getUser(p!);
     var loc = await locationBloc.getLocation();
-    currentLat = loc?.latitude;
-    currentLng = loc?.longitude;
+    currentLat = loc.latitude;
+    currentLng = loc.longitude;
     _kGooglePlex =
         CameraPosition(target: LatLng(currentLat!, currentLng!), zoom: 12.6);
 
     setState(() {});
   }
   void _setTexts() async {
-    var sett = await prefsOGx.getSettings();
+    var p = await prefsOGx.getSettings();
+    sett = OldToRealm.getSettings(p);
     projectLocationsAreas = await translator.translate('projectLocationsAreas', sett!.locale!);
     var loc = await translator.translate('location', sett!.locale!);
     location = loc.replaceAll('\$count', '');
@@ -178,10 +182,8 @@ class ProjectMapTabletState extends State<ProjectMapTablet>
       var map = await getStartEndDates();
       final startDate = map['startDate'];
       final endDate = map['endDate'];
-      projectPolygons = await projectBloc.getProjectPolygons(
-          projectId: widget.project.projectId!, forceRefresh: forceRefresh);
-      projectPositions = await projectBloc.getProjectPositions(
-          projectId: widget.project.projectId!, forceRefresh: forceRefresh, startDate: startDate!, endDate: endDate!);
+      projectPolygons = realmSyncApi.getProjectPolygons(projectId: widget.project.projectId!);
+      projectPositions = realmSyncApi.getProjectPositions(projectId: widget.project.projectId!);
     } catch (e) {
       pp(e);
       if (mounted) {
@@ -273,7 +275,7 @@ class ProjectMapTabletState extends State<ProjectMapTablet>
     setState(() {});
   }
 
-  void _onMarkerTapped(ProjectPosition projectPosition) {
+  void _onMarkerTapped(mrm.ProjectPosition projectPosition) {
     pp('💜 💜 💜 💜 💜 💜 ProjectMapTablet: _onMarkerTapped ....... ${projectPosition.projectName}');
   }
 
@@ -296,10 +298,7 @@ class ProjectMapTabletState extends State<ProjectMapTablet>
 
   Future<bool> _isLocationWithinProjectMonitorDistance(
       {required double latitude, required double longitude}) async {
-    pp('$mm calculating _isLocationWithinProjectMonitorDistance .... '
-        '${widget.project.monitorMaxDistanceInMetres!} metres');
-
-    var map = <double, ProjectPosition>{};
+    var map = <double, mrm.ProjectPosition>{};
     for (var i = 0; i < projectPositions.length; i++) {
       var projPos = projectPositions.elementAt(i);
       var dist = locationBloc.getDistance(
@@ -317,9 +316,11 @@ class ProjectMapTabletState extends State<ProjectMapTablet>
 
     var list = map.keys.toList();
     list.sort();
+
     pp('$mm Distances in list, length: : ${list.length} $list');
+    var sett = await prefsOGx.getSettings();
     if (list.elementAt(0) <=
-        widget.project.monitorMaxDistanceInMetres!.toInt()) {
+        sett.distanceFromProject!) {
       return true;
     } else {
       return false;
@@ -358,34 +359,29 @@ class ProjectMapTabletState extends State<ProjectMapTablet>
         });
         return;
       }
-      pp('Go and find nearest cities to this location : lat: $_longPressLat lng: $_longPressLng ...');
-      List<City> cities = await dataApiDog.findCitiesByLocation(
-          latitude: _longPressLat, longitude: _longPressLng, radiusInKM: 5.0);
 
-      pp('$mm Cities around this project position: ${cities.length}');
       final sett = await cacheManager.getSettings();
-      final projectPositionAdded = await translator.translate('projectPositionAdded', sett!.locale!);
-      final messageFromGeo = await translator.translate('messageFromGeo', sett!.locale!);
+      final projectPositionAdded = await translator.translate('projectPositionAdded', sett.locale!);
+      final messageFromGeo = await translator.translate('messageFromGeo', sett.locale!);
 
 
-      var pos = ProjectPosition(
+      var pos = mrm.ProjectPosition(ObjectId(),
           projectName: widget.project.name,
           userId: user!.userId,
           userName: user!.name,
           caption: 'tbd',
           translatedMessage: projectPositionAdded,
           translatedTitle: messageFromGeo,
-          projectPositionId: const Uuid().v4(),
+          projectPositionId: Uuid.v4().toString(),
           created: DateTime.now().toUtc().toIso8601String(),
-          position: local.Position(
-              coordinates: [_longPressLng, _longPressLat], type: 'Point'),
-          nearestCities: cities,
+          position: mrm.Position(
+              coordinates: [_longPressLng, _longPressLat], type: 'Point', longitude: _longPressLng, latitude: _longPressLat),
+          nearestCities: [],
           organizationId: widget.project.organizationId,
           projectId: widget.project.projectId);
 
-      var resultPosition = await dataApiDog.addProjectPosition(position: pos);
-      organizationBloc.addProjectPositionToStream(resultPosition);
-      projectPositions.add(resultPosition);
+      realmSyncApi.addProjectPositions([pos]);
+
       _addMarkers();
       _buildCircles();
       setState(() {});
@@ -730,7 +726,7 @@ class ProjectMapTabletState extends State<ProjectMapTablet>
         .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
   }
 
-  _onSelected(local.Position p1) {
+  _onSelected(mrm.Position p1) {
     _animateCamera(
         latitude: p1.coordinates[1], longitude: p1.coordinates[0], zoom: 14.6);
   }
@@ -743,13 +739,13 @@ class ProjectPositionChooser extends StatelessWidget {
       required this.projectPolygons,
       required this.onSelected, required this.location, required this.locations})
       : super(key: key);
-  final List<ProjectPosition> projectPositions;
-  final List<ProjectPolygon> projectPolygons;
-  final Function(local.Position) onSelected;
+  final List<mrm.ProjectPosition> projectPositions;
+  final List<mrm.ProjectPolygon> projectPolygons;
+  final Function(mrm.Position) onSelected;
   final String location, locations;
   @override
   Widget build(BuildContext context) {
-    var list = <local.Position>[];
+    var list = <mrm.Position>[];
     // projectPositions.sort((a,b) => a.created!.compareTo(b.created!));
     for (var value in projectPositions) {
       list.add(value.position!);
@@ -765,7 +761,7 @@ class ProjectPositionChooser extends StatelessWidget {
     for (var pos in list) {
       cnt++;
       menuItems.add(
-        DropdownMenuItem<local.Position>(
+        DropdownMenuItem<mrm.Position>(
           value: pos,
           child: Row(
             children: [

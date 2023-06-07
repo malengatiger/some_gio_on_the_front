@@ -12,9 +12,10 @@ import '../../bloc/project_bloc.dart';
 import '../../cache_manager.dart';
 import '../../data/project.dart';
 import 'project_edit_mobile.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectEditMain extends StatelessWidget {
-  final Project? project;
+  final mrm.Project? project;
   final PrefsOGx prefsOGx;
   final CacheManager cacheManager;
   final ProjectBloc projectBloc;

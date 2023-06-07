@@ -167,7 +167,7 @@ Services:Apple Push Notifications service (APNs)
       firebaseMessaging.onTokenRefresh.listen((newToken) {
         pp("$mm onTokenRefresh: 🍎 🍎 🍎 update user: token: $newToken ... 🍎 🍎 ");
         user!.fcmRegistration = newToken;
-        dataApiDog.updateUser(user!);
+        // dataApiDog.updateUser(user!);
       });
 
       // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project

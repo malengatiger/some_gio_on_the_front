@@ -15,9 +15,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/user.dart';
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class LocationResponseMap extends StatefulWidget {
-  final LocationResponse locationResponse;
+  final mrm.LocationResponse locationResponse;
 
   const LocationResponseMap({
     super.key,

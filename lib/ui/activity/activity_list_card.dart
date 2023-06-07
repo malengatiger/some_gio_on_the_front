@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/cache_manager.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:geo_monitor/ui/activity/activity_header.dart';
+import 'package:realm/realm.dart';
 
 import '../../dashboard_khaya/recent_event_list.dart';
 import '../../l10n/translation_handler.dart';
@@ -19,6 +22,7 @@ import '../../library/functions.dart';
 import '../../library/generic_functions.dart';
 import '../../library/ui/loading_card.dart';
 import 'activity_stream_card.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ActivityListCard extends StatefulWidget {
   const ActivityListCard(
@@ -31,10 +35,10 @@ class ActivityListCard extends StatefulWidget {
       required this.cacheManager})
       : super(key: key);
 
-  final Function(ActivityModel) onTapped;
+  final Function(mrm.ActivityModel) onTapped;
   final double? topPadding;
-  final User? user;
-  final Project? project;
+  final mrm.User? user;
+  final mrm.Project? project;
   final PrefsOGx prefsOGx;
   final CacheManager cacheManager;
 
@@ -48,177 +52,181 @@ class ActivityListCard extends StatefulWidget {
 class _ActivityListCardState extends State<ActivityListCard> {
   late StreamSubscription<ActivityModel> subscription;
   late StreamSubscription<SettingsModel> settingsSubscriptionFCM;
-  SettingsModel? settings;
+  mrm.SettingsModel? settings;
   ActivityStrings? activityStrings;
   String? locale, prefix, suffix, loadingActivities;
 
-  var models = <ActivityModel>[];
+  var models = <mrm.ActivityModel>[];
   static const userActive = 0, projectActive = 1, orgActive = 2;
   late int activeType;
   bool loading = false;
-  var users = <User>[];
+  var users = <mrm.User>[];
   bool busy = false, loadingSettings = false;
+  late RealmResults<mrm.ActivityModel> query;
 
   @override
   void initState() {
     super.initState();
     _setTexts();
-    _listenToFCM();
-    _getData(false);
+    // _listenToFCM();
   }
 
   Future _setTexts() async {
     setState(() {
       loadingSettings = true;
     });
-    settings = await prefsOGx.getSettings();
+    var d = await prefsOGx.getSettings();
+    settings = OldToRealm.getSettings(d);
     activityStrings = await ActivityStrings.getTranslated(settings!.locale!);
     var sub = await translator.translate('activityTitle', settings!.locale!);
-
     int index = sub.indexOf('\$');
     prefix = sub.substring(0, index);
     suffix = sub.substring(index + 6);
+
+    var rec = getStartEndDatesFromDays(numberOfDays: settings!.numberOfDays!);
+    query = realmSyncApi.getOrganizationActivitiesQuery(settings!.organizationId!, rec.$1);
+
     setState(() {
       loadingSettings = false;
     });
   }
 
-  Future _getData(bool forceRefresh) async {
-    if (mounted) {
-      setState(() {
-        loading = true;
-      });
-    }
-    pp('$mm ... getting activity data ... 🔵forceRefresh: $forceRefresh');
-    try {
-      users = await widget.cacheManager.getUsers();
-      settings = await widget.prefsOGx.getSettings();
-      var hours = settings!.activityStreamHours!;
-      pp('$mm ... get Activity (n hours) ... : $hours');
-      if (widget.project != null) {
-        activeType = projectActive;
-        await _getProjectData(forceRefresh, hours);
-      } else if (widget.user != null) {
-        activeType = userActive;
-        await _getUserData(forceRefresh, hours);
-      } else {
-        activeType = orgActive;
-        await _getOrganizationData(forceRefresh, hours);
-      }
-      sortActivitiesDescending(models);
-    } catch (e) {
-      pp(e);
-      if (mounted) {
-        setState(() {
-          loading = false;
-        });
-        showToast(
-            backgroundColor: Theme.of(context).primaryColor,
-            textStyle: myTextStyleMedium(context),
-            padding: 16,
-            duration: const Duration(seconds: 10),
-            message: '$e',
-            context: context);
-      }
-    }
-    if (mounted) {
-      setState(() {
-        loading = false;
-      });
-    }
-  }
+  // Future _getData(bool forceRefresh) async {
+  //   if (mounted) {
+  //     setState(() {
+  //       loading = true;
+  //     });
+  //   }
+  //   pp('$mm ... getting activity data ... 🔵forceRefresh: $forceRefresh');
+  //   try {
+  //     users = await widget.cacheManager.getUsers();
+  //     var s = await widget.prefsOGx.getSettings();
+  //     settings = OldToRealm.getSettings(s);
+  //     var hours = settings!.activityStreamHours!;
+  //     pp('$mm ... get Activity (n hours) ... : $hours');
+  //     if (widget.project != null) {
+  //       activeType = projectActive;
+  //       await _getProjectData(forceRefresh, hours);
+  //     } else if (widget.user != null) {
+  //       activeType = userActive;
+  //       await _getUserData(forceRefresh, hours);
+  //     } else {
+  //       activeType = orgActive;
+  //       await _getOrganizationData(forceRefresh, hours);
+  //     }
+  //   } catch (e) {
+  //     pp(e);
+  //     if (mounted) {
+  //       setState(() {
+  //         loading = false;
+  //       });
+  //       showToast(
+  //           backgroundColor: Theme.of(context).primaryColor,
+  //           textStyle: myTextStyleMedium(context),
+  //           padding: 16,
+  //           duration: const Duration(seconds: 10),
+  //           message: '$e',
+  //           context: context);
+  //     }
+  //   }
+  //   if (mounted) {
+  //     setState(() {
+  //       loading = false;
+  //     });
+  //   }
+  // }
 
-  Future<void> _translateUserTypes() async {
-    for (var activity in models) {
-      if (activity.userId != null) {
-        final activityUser = await cacheManager.getUserById(activity.userId!);
-        if (activityUser != null) {
-          final translatedUserType =
-              await getTranslatedUserType(activityUser.userType!);
-          activity.translatedUserType = translatedUserType;
-          // pp('🍎 translated userType:, translatedUserType: $translatedUserType');
-        } else {
-          pp('🍎 activityUser not found in cache; activity: ${activity.toJson()}');
-          activity.translatedUserType = '';
-        }
-      } else if (activity.user != null) {
-        final translatedUserType =
-            await getTranslatedUserType(activity.user!.userType!);
-        activity.translatedUserType = translatedUserType;
-      } else {
-        activity.translatedUserType = 'User type unknown';
-      }
-    }
-  }
+  // Future<void> _translateUserTypes() async {
+  //   for (var activity in models) {
+  //     if (activity.userId != null) {
+  //       final activityUser = await cacheManager.getUserById(activity.userId!);
+  //       if (activityUser != null) {
+  //         final translatedUserType =
+  //             await getTranslatedUserType(activityUser.userType!);
+  //         activity.translatedUserType = translatedUserType;
+  //         // pp('🍎 translated userType:, translatedUserType: $translatedUserType');
+  //       } else {
+  //         pp('🍎 activityUser not found in cache; activity: ${activity.toJson()}');
+  //         activity.translatedUserType = '';
+  //       }
+  //     } else if (activity.user != null) {
+  //       final translatedUserType =
+  //           await getTranslatedUserType(activity.user!.userType!);
+  //       activity.translatedUserType = translatedUserType;
+  //     } else {
+  //       activity.translatedUserType = 'User type unknown';
+  //     }
+  //   }
+  // }
 
-  Future _getOrganizationData(bool forceRefresh, int hours) async {
-    models = await organizationBloc.getCachedOrganizationActivity(
-        organizationId: settings!.organizationId!, hours: hours);
+  // Future _getOrganizationData(bool forceRefresh, int hours) async {
+  //   models = await organizationBloc.getCachedOrganizationActivity(
+  //       organizationId: settings!.organizationId!, hours: hours);
+  //
+  //   if (models.isNotEmpty) {
+  //     await _translateUserTypes();
+  //     setState(() {
+  //       loading = false;
+  //     });
+  //   }
+  //   pp('$mm _getOrganizationData 1: ............ activities: ${models.length}');
+  //   await Future.delayed(const Duration(seconds: 10));
+  //   models = await organizationBloc.getOrganizationActivity(
+  //       organizationId: settings!.organizationId!,
+  //       hours: hours,
+  //       forceRefresh: forceRefresh);
+  //
+  //   pp('$mm _getOrganizationData 2 :............ activities: ${models.length}');
+  //   if (models.isNotEmpty) {
+  //     await _translateUserTypes();
+  //     setState(() {
+  //       loading = false;
+  //     });
+  //   }
+  // }
+  //
+  // Future _getProjectData(bool forceRefresh, int hours) async {
+  //   models = await projectBloc.getProjectActivity(
+  //       projectId: widget.project!.projectId!,
+  //       hours: hours,
+  //       forceRefresh: forceRefresh);
+  //   if (models.isNotEmpty) {
+  //     await _translateUserTypes();
+  //     setState(() {});
+  //   }
+  // }
+  //
+  // Future _getUserData(bool forceRefresh, int hours) async {
+  //   models = await userBloc.getUserActivity(
+  //       userId: widget.user!.userId!, hours: hours, forceRefresh: forceRefresh);
+  //   if (models.isNotEmpty) {
+  //     await _translateUserTypes();
+  //     setState(() {});
+  //   }
+  // }
 
-    if (models.isNotEmpty) {
-      await _translateUserTypes();
-      setState(() {
-        loading = false;
-      });
-    }
-    pp('$mm _getOrganizationData 1: ............ activities: ${models.length}');
-    await Future.delayed(const Duration(seconds: 10));
-    models = await organizationBloc.getOrganizationActivity(
-        organizationId: settings!.organizationId!,
-        hours: hours,
-        forceRefresh: forceRefresh);
-
-    pp('$mm _getOrganizationData 2 :............ activities: ${models.length}');
-    if (models.isNotEmpty) {
-      await _translateUserTypes();
-      setState(() {
-        loading = false;
-      });
-    }
-  }
-
-  Future _getProjectData(bool forceRefresh, int hours) async {
-    models = await projectBloc.getProjectActivity(
-        projectId: widget.project!.projectId!,
-        hours: hours,
-        forceRefresh: forceRefresh);
-    if (models.isNotEmpty) {
-      await _translateUserTypes();
-      setState(() {});
-    }
-  }
-
-  Future _getUserData(bool forceRefresh, int hours) async {
-    models = await userBloc.getUserActivity(
-        userId: widget.user!.userId!, hours: hours, forceRefresh: forceRefresh);
-    if (models.isNotEmpty) {
-      await _translateUserTypes();
-      setState(() {});
-    }
-  }
-
-  void _listenToFCM() async {
-    pp('$mm ... _listenToFCM activityStream ...');
-
-    settingsSubscriptionFCM =
-        fcmBloc.settingsStream.listen((SettingsModel event) async {
-      if (mounted) {
-        _getData(true);
-      }
-    });
-
-    subscription = fcmBloc.activityStream.listen((ActivityModel model) async {
-      pp('$mm activityStream delivered activity data ... ${model.date!}, current models: ${models.length}');
-      if (models.length < 2) {
-        await _getData(true);
-      } else {
-        await _getData(false);
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
+  // void _listenToFCM() async {
+  //   pp('$mm ... _listenToFCM activityStream ...');
+  //
+  //   settingsSubscriptionFCM =
+  //       fcmBloc.settingsStream.listen((SettingsModel event) async {
+  //     if (mounted) {
+  //       _getData(true);
+  //     }
+  //   });
+  //
+  //   subscription = fcmBloc.activityStream.listen((ActivityModel model) async {
+  //     pp('$mm activityStream delivered activity data ... ${model.date!}, current models: ${models.length}');
+  //     if (models.length < 2) {
+  //       await _getData(true);
+  //     } else {
+  //       await _getData(false);
+  //     }
+  //     if (mounted) {
+  //       setState(() {});
+  //     }
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -274,7 +282,7 @@ class _ActivityListCardState extends State<ActivityListCard> {
                           prefix: prefix!,
                           suffix: suffix!,
                           onRefreshRequested: () {
-                            _getData(true);
+                            //_getData(true);
                           },
                           onSortRequested: () {},
                         ),

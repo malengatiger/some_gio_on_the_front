@@ -18,44 +18,47 @@ class AudioForUploadAdapter extends TypeAdapter<AudioForUpload> {
     };
     return AudioForUpload(
       filePath: fields[0] as String?,
-      project: fields[2] as Project?,
-      position: fields[5] as Position?,
-      audioId: fields[7] as String?,
-      userId: fields[8] as String?,
-      userName: fields[9] as String?,
-      userThumbnailUrl: fields[11] as String?,
-      organizationId: fields[10] as String?,
-      durationInSeconds: fields[12] as int?,
-      fileBytes: fields[13] as Uint8List?,
-      date: fields[6] as String?,
+      projectId: fields[1] as String?,
+      projectName: fields[2] as String?,
+      position: fields[3] as Position?,
+      audioId: fields[5] as String?,
+      userId: fields[6] as String?,
+      userName: fields[7] as String?,
+      userThumbnailUrl: fields[9] as String?,
+      organizationId: fields[8] as String?,
+      durationInSeconds: fields[10] as int?,
+      fileBytes: fields[11] as Uint8List?,
+      date: fields[4] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, AudioForUpload obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.filePath)
+      ..writeByte(1)
+      ..write(obj.projectId)
       ..writeByte(2)
-      ..write(obj.project)
-      ..writeByte(5)
+      ..write(obj.projectName)
+      ..writeByte(3)
       ..write(obj.position)
-      ..writeByte(6)
+      ..writeByte(4)
       ..write(obj.date)
-      ..writeByte(7)
+      ..writeByte(5)
       ..write(obj.audioId)
-      ..writeByte(8)
+      ..writeByte(6)
       ..write(obj.userId)
-      ..writeByte(9)
+      ..writeByte(7)
       ..write(obj.userName)
-      ..writeByte(10)
+      ..writeByte(8)
       ..write(obj.organizationId)
-      ..writeByte(11)
+      ..writeByte(9)
       ..write(obj.userThumbnailUrl)
-      ..writeByte(12)
+      ..writeByte(10)
       ..write(obj.durationInSeconds)
-      ..writeByte(13)
+      ..writeByte(11)
       ..write(obj.fileBytes);
   }
 

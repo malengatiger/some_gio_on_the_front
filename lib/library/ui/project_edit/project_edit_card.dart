@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/api/prefs_og.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/functions.dart';
-import 'package:uuid/uuid.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
+import 'package:realm/realm.dart';
 
 import '../../../l10n/translation_handler.dart';
 import '../../bloc/project_bloc.dart';
 import '../../cache_manager.dart';
 import '../../data/project.dart';
-import '../../data/user.dart';
+import '../../data/user.dart' as old;
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectEditCard extends StatefulWidget {
   const ProjectEditCard(
@@ -17,9 +20,9 @@ class ProjectEditCard extends StatefulWidget {
       required this.navigateToLocation})
       : super(key: key);
 
-  final Project? project;
+  final mrm.Project? project;
   final double? width;
-  final Function(Project) navigateToLocation;
+  final Function(mrm.Project) navigateToLocation;
 
   @override
   ProjectEditCardState createState() => ProjectEditCardState();
@@ -33,7 +36,7 @@ class ProjectEditCardState extends State<ProjectEditCard>
   var descController = TextEditingController();
   var maxController = TextEditingController();
   bool busy = false;
-  User? admin;
+  mrm.User? admin;
   String? projectEditor, projectName, description, maximumMonitoringDistance, submitProject,
       newProject, editProject, enterProjectName, addProjectLocations,
       enterDescription, enterDistance, descriptionOfProject;
@@ -46,11 +49,12 @@ class ProjectEditCardState extends State<ProjectEditCard>
     _setControllers();
     _getUser();
   }
-  void _setControllers() {
+  void _setControllers() async {
+    var sett = await prefsOGx.getSettings();
     if (widget.project != null) {
       nameController = TextEditingController(text: widget.project!.name!);
       descController = TextEditingController(text: widget.project!.description!);
-      maxController = TextEditingController(text: '${widget.project!.monitorMaxDistanceInMetres!}');
+      maxController = TextEditingController(text: '${sett.distanceFromProject}');
     }
   }
   Future _setTexts() async {
@@ -76,7 +80,8 @@ class ProjectEditCardState extends State<ProjectEditCard>
 
 
   void _getUser() async {
-    admin = await prefsOGx.getUser();
+    var p = await prefsOGx.getUser();
+    admin = OldToRealm.getUser(p!);
 
     setState(() {
 
@@ -89,7 +94,7 @@ class ProjectEditCardState extends State<ProjectEditCard>
     super.dispose();
   }
 
-  Project? project;
+  mrm.Project? project;
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -99,40 +104,33 @@ class ProjectEditCardState extends State<ProjectEditCard>
         var dist = double.parse(maxController.text);
         if (widget.project == null) {
           pp('😡 😡 😡 _submit new project ......... ${nameController.text}');
-          var uuid = const Uuid();
           final sett = await cacheManager.getSettings();
           final projectAddedToOrganization = await translator.translate('projectAddedToOrganization', sett.locale!);
           final messageFromGeo = await getFCMMessageTitle();
-          project = Project(
+          project = mrm.Project(ObjectId(),
               name: nameController.text,
               description: descController.text,
-              organizationId: admin!.organizationId!,
+              organizationId: admin!.organizationId,
               organizationName: admin!.organizationName!,
               created: DateTime.now().toUtc().toIso8601String(),
-              monitorMaxDistanceInMetres: dist,
+              // monitorMaxDistanceInMetres: dist,
               translatedMessage: projectAddedToOrganization,
               translatedTitle: messageFromGeo,
-              photos: [],
-              videos: [],
-              communities: [],
-              monitorReports: [],
-              nearestCities: [],
-              projectPositions: [],
-              ratings: [],
-              projectId: uuid.v4());
-          project = await projectBloc.addProject(project!);
-          pp('🎽 🎽 🎽 _submit: new project added .........  ${project!.toJson()}');
+              projectId: Uuid.v4().toString());
+
+          realmSyncApi.addProjects([project!]);
         } else {
           pp('😡 😡 😡 _submit existing project for update, soon! 🌸 ......... ');
 
           widget.project!.name = nameController.text;
           widget.project!.description = descController.text;
 
-          widget.project!.monitorMaxDistanceInMetres = dist;
-          project = widget.project;
-
-          var m = await projectBloc.updateProject(widget.project!);
-          pp('🎽 🎽 🎽 _submit: new project updated .........  ${m.toJson()}');
+          //Todo - sort project update
+          // widget.project!.monitorMaxDistanceInMetres = dist;
+          // project = widget.project;
+          //
+          // var m = await projectBloc.updateProject(widget.project!);
+          // pp('🎽 🎽 🎽 _submit: new project updated .........  ${m.toJson()}');
         }
 
         /// refresh data from backend ...

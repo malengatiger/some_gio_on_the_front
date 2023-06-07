@@ -1,6 +1,8 @@
 {
   "upgrade": "Uphuculo",
   "upgradeText": "Nyukela kwiiplani zomrhumo ze-$Gio ngoku kwaye uvule amandla apheleleyo. Fumana iimpawu eziphambili, uhlalutyo lwexesha lokwenyani, kunye nokudityaniswa komthungo. Phakamisa inqanaba lakho lolawulo lwabasebenzi abakude namhlanje! Cofa ukuze uqinisekise intlawulo yakho kwaye uguqule imisebenzi yakho.",
+  "refreshRateInMinutes": "Ireyithi yokuhlaziya kwiMizuzu",
+  "enterRateInMinutes": "Faka inani lemizuzu yohlaziyo lwedatha",
 
   "subscriptionPayment": "Intlawulo yomrhumo",
   "contract": "Ikhontrakthi",

@@ -12,6 +12,7 @@ import 'package:geo_monitor/ui/dashboard/project_dashboard_grid.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:universal_platform/universal_platform.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 import '../../l10n/translation_handler.dart';
 import '../../library/api/prefs_og.dart';
@@ -44,7 +45,7 @@ class ProjectDashboardMobile extends StatefulWidget {
     required this.dataApiDog,
     required this.cacheManager, required this.fcmBloc, required this.geoUploader, required this.cloudStorageBloc,
   }) : super(key: key);
-  final Project project;
+  final mrm.Project project;
   final User? user;
   final ProjectBloc projectBloc;
   final PrefsOGx prefsOGx;
@@ -227,24 +228,6 @@ class ProjectDashboardMobileState extends State<ProjectDashboardMobile>
     }
   }
 
-  void _navigateToProjectMedia(Project project) {
-    Navigator.push(
-        context,
-        PageTransition(
-            type: PageTransitionType.scale,
-            alignment: Alignment.topLeft,
-            duration: const Duration(seconds: 1),
-            child: ProjectMediaTimeline(
-              project: widget.project,
-              projectBloc: widget.projectBloc,
-              organizationBloc: widget.organizationBloc,
-              prefsOGx: widget.prefsOGx,
-              cacheManager: widget.cacheManager,
-              geoUploader: widget.geoUploader,
-              cloudStorageBloc: widget.cloudStorageBloc,
-              dataApiDog: widget.dataApiDog, fcmBloc: widget.fcmBloc,
-            )));
-  }
 
   void _navigateToActivity() {
     Navigator.push(
@@ -271,7 +254,7 @@ class ProjectDashboardMobileState extends State<ProjectDashboardMobile>
     );
   }
 
-  void _navigateToProjectMap(Project project) {
+  void _navigateToProjectMap(mrm.Project project) {
     Navigator.push(
         context,
         PageTransition(

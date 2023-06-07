@@ -8,9 +8,11 @@ import 'package:geo_monitor/library/cache_manager.dart';
 import 'package:geo_monitor/library/ui/maps/project_map_mobile.dart';
 import 'package:geo_monitor/library/ui/media/time_line/project_media_timeline.dart';
 import 'package:geo_monitor/library/ui/project_list/project_list_card.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:geo_monitor/ui/activity/geo_activity.dart';
 import 'package:geo_monitor/ui/dashboard/project_dashboard_mobile.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:realm/realm.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -40,6 +42,7 @@ import '../maps/project_map_main.dart';
 import '../maps/project_polygon_map_mobile.dart';
 import '../project_edit/project_edit_main.dart';
 import '../schedule/project_schedules_mobile.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 const goToMedia = 1;
 const goToMap = 2;
@@ -58,9 +61,9 @@ class GioProjects extends StatefulWidget {
       required this.dataApiDog,
       required this.fcmBloc,
       required this.geoUploader,
-      required this.cloudStorageBloc})
+      required this.cloudStorageBloc, required this.realmSyncApi})
       : super(key: key);
-  final Project? project;
+  final mrm.Project? project;
   final int instruction;
   final ProjectBloc projectBloc;
   final PrefsOGx prefsOGx;
@@ -70,6 +73,7 @@ class GioProjects extends StatefulWidget {
   final FCMBloc fcmBloc;
   final GeoUploader geoUploader;
   final CloudStorageBloc cloudStorageBloc;
+  final RealmSyncApi realmSyncApi;
 
   @override
   State<GioProjects> createState() => GioProjectsState();
@@ -78,7 +82,7 @@ class GioProjects extends StatefulWidget {
 class GioProjectsState extends State<GioProjects>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  var projects = <Project>[];
+  var projects = <mrm.Project>[];
   mon.User? user;
   bool isBusy = false;
   bool isProjectsByLocation = false;
@@ -86,6 +90,7 @@ class GioProjectsState extends State<GioProjects>
   final mm = '🔵🔵🔵🔵 GioProjects:  ';
   late StreamSubscription<String> killSubscription;
   late StreamSubscription<SettingsModel> settingsSubscriptionFCM;
+  RealmResults<mrm.Project>? query;
 
   int numberOfDays = 30;
   bool sortedByName = true;
@@ -107,11 +112,13 @@ class GioProjectsState extends State<GioProjects>
     super.initState();
     _setTexts();
     _getUser();
-    _listen();
+    //_listen();
   }
 
   Future _setTexts() async {
     var sett = await widget.prefsOGx.getSettings();
+    query = widget.realmSyncApi.getProjectQuery(sett.organizationId! );
+
     organizationProjects =
         await translator.translate('organizationProjects', sett.locale!);
     projectsNotFound =
@@ -122,28 +129,28 @@ class GioProjectsState extends State<GioProjects>
     searchProjects = await translator.translate('searchProjects', sett.locale!);
   }
 
-  void _listen() {
-    settingsSubscriptionFCM =
-        widget.fcmBloc.settingsStream.listen((event) async {
-      if (mounted) {
-        await _setTexts();
-        _getData(false);
-      }
-    });
-    widget.fcmBloc.projectStream.listen((Project project) {
-      if (mounted) {
-        _getData(false);
-      }
-    });
-    widget.projectBloc.projectStream.listen((List<Project> list) {
-      projects = list;
-      projects.sort((a, b) => a.name!.compareTo(b.name!));
-
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
+  // void _listen() {
+  //   settingsSubscriptionFCM =
+  //       widget.fcmBloc.settingsStream.listen((event) async {
+  //     if (mounted) {
+  //       await _setTexts();
+  //       _getData(false);
+  //     }
+  //   });
+  //   widget.fcmBloc.projectStream.listen((Project project) {
+  //     if (mounted) {
+  //       _getData(false);
+  //     }
+  //   });
+  //   widget.projectBloc.projectStream.listen((List<Project> list) {
+  //     projects = list;
+  //     projects.sort((a, b) => a.name!.compareTo(b.name!));
+  //
+  //     if (mounted) {
+  //       setState(() {});
+  //     }
+  //   });
+  // }
 
   void _sort() {
     pp('......... sort projects, sortedByName: $sortedByName');
@@ -180,7 +187,7 @@ class GioProjectsState extends State<GioProjects>
     if (user != null) {
       pp('$mm user found: ${user!.name!}');
       _setUserType();
-      await _getData(false);
+      // await _getData(false);
     } else {
       pp('$mm user NOT found!!! 🥏 🥏 🥏');
 
@@ -218,7 +225,7 @@ class GioProjectsState extends State<GioProjects>
     });
   }
 
-  var projectsToDisplay = <Project>[];
+  var projectsToDisplay = <mrm.Project>[];
 
   void _runFilter(String text) {
     pp('$mm .... _runFilter: text: $text ......');
@@ -246,7 +253,7 @@ class GioProjectsState extends State<GioProjects>
     setState(() {});
   }
 
-  Project? _findProject(String name) {
+  mrm.Project? _findProject(String name) {
     pp('$mm ... find project by name $name from ${projects.length}');
     for (var project in projects) {
       if (project.name!.toLowerCase() == name.toLowerCase()) {
@@ -262,18 +269,12 @@ class GioProjectsState extends State<GioProjects>
     super.dispose();
   }
 
-  Future _getData(bool forceRefresh) async {
-    pp('$mm 🥏 🥏 🥏 .................... refresh projects: forceRefresh: $forceRefresh');
+  Future _getData() async {
     if (mounted) {
       setState(() {
         isBusy = true;
       });
     }
-    try {
-      pp('$mm  🥏 🥏 🥏 getOrganizationProjects, orgId: ${user!.organizationId} k 🥏');
-      projects = await widget.organizationBloc.getOrganizationProjects(
-          organizationId: user!.organizationId!, forceRefresh: forceRefresh);
-
       projects.sort((a, b) => a.name!.compareTo(b.name!));
       for (var p in projects) {
         projectNames.add(p.name!);
@@ -282,29 +283,6 @@ class GioProjectsState extends State<GioProjects>
       for (var project in projects) {
         projectsToDisplay.add(project);
       }
-    } catch (e) {
-      pp(e);
-      if (mounted) {
-        setState(() {
-          busy = false;
-        });
-        if (e is GeoException) {
-          var sett = await widget.prefsOGx.getSettings();
-          errorHandler.handleError(exception: e);
-          final msg =
-              await translator.translate(e.geTranslationKey(), sett.locale!);
-          if (mounted) {
-            showToast(
-                backgroundColor: Theme.of(context).primaryColor,
-                textStyle: myTextStyleMedium(context),
-                padding: 16,
-                duration: const Duration(seconds: 10),
-                message: msg,
-                context: context);
-          }
-        }
-      }
-    }
     if (mounted) {
       setState(() {
         isBusy = false;
@@ -313,7 +291,7 @@ class GioProjectsState extends State<GioProjects>
     }
   }
 
-  void _navigateToDetail(Project? p) {
+  void _navigateToDetail(mrm.Project? p) {
     if (user!.userType == UserType.fieldMonitor) {
       pp('$mm Field Monitors not allowed to edit or create a project');
     }
@@ -339,7 +317,7 @@ class GioProjectsState extends State<GioProjects>
     }
   }
 
-  void _navigateToProjectLocation(Project p) {
+  void _navigateToProjectLocation(mrm.Project p) {
     Navigator.push(
         context,
         PageTransition(
@@ -351,7 +329,7 @@ class GioProjectsState extends State<GioProjects>
             )));
   }
 
-  void _navigateToProjectMedia(Project p) {
+  void _navigateToProjectMedia(mrm.Project p) {
     // pp('$mm _navigateToProjectMedia with project: 🔆🔆🔆${p.toJson()}🔆🔆🔆');
     Navigator.push(
         context,
@@ -372,7 +350,7 @@ class GioProjectsState extends State<GioProjects>
             )));
   }
 
-  void _navigateToProjectSchedules(Project p) {
+  void _navigateToProjectSchedules(mrm.Project p) {
     if (user!.userType == UserType.fieldMonitor) {}
     Navigator.push(
         context,
@@ -383,7 +361,7 @@ class GioProjectsState extends State<GioProjects>
             child: ProjectSchedulesMobile(project: p)));
   }
 
-  void _navigateToProjectAudio(Project p) {
+  void _navigateToProjectAudio(mrm.Project p) {
     if (user!.userType == UserType.fieldMonitor) {}
     Navigator.push(
       context,
@@ -419,7 +397,7 @@ class GioProjectsState extends State<GioProjects>
     }
   }
 
-  void _navigateToProjectMap(Project p) async {
+  void _navigateToProjectMap(mrm.Project p) async {
     pp('.................. _navigateToProjectMap: ');
 
     if (mounted) {
@@ -435,7 +413,7 @@ class GioProjectsState extends State<GioProjects>
     }
   }
 
-  void _navigateToProjectPolygonMap(Project p) async {
+  void _navigateToProjectPolygonMap(mrm.Project p) async {
     pp('.................. _navigateToProjectPolygonMap: ');
 
     if (mounted) {
@@ -451,7 +429,7 @@ class GioProjectsState extends State<GioProjects>
     }
   }
 
-  void _navigateToProjectDashboard(Project p) async {
+  void _navigateToProjectDashboard(mrm.Project p) async {
     pp('.................. _navigateToProjectDashboard: ');
 
     if (mounted) {
@@ -515,7 +493,7 @@ class GioProjectsState extends State<GioProjects>
   var positions = <ProjectPosition>[];
   var polygons = <ProjectPolygon>[];
 
-  void _startDirections(Project project) async {
+  void _startDirections(mrm.Project project) async {
     setState(() {
       isBusy = true;
     });
@@ -550,7 +528,7 @@ class GioProjectsState extends State<GioProjects>
     _animationController.forward();
   }
 
-  List<FocusedMenuItem> getPopUpMenuItems(Project project) {
+  List<FocusedMenuItem> getPopUpMenuItems(mrm.Project project) {
     List<FocusedMenuItem> menuItems = [];
     menuItems.add(
       FocusedMenuItem(
@@ -669,67 +647,67 @@ class GioProjectsState extends State<GioProjects>
 
   final _key = GlobalKey<ScaffoldState>();
 
-  List<IconButton> _getActions() {
-    List<IconButton> list = [];
-    list.add(IconButton(
-      icon: Icon(
-        Icons.refresh_rounded,
-        size: 20,
-        color: Theme.of(context).primaryColor,
-      ),
-      onPressed: () {
-        _getData(true);
-      },
-    ));
-    // list.add(IconButton(
-    //   icon: isProjectsByLocation
-    //       ? Icon(
-    //           Icons.list,
-    //           size: 24,
-    //           color: Theme.of(context).primaryColor,
-    //         )
-    //       : Icon(
-    //           Icons.location_pin,
-    //           size: 20,
-    //           color: Theme.of(context).primaryColor,
-    //         ),
-    //   onPressed: () {
-    //     isProjectsByLocation = !isProjectsByLocation;
-    //     refreshProjects(true);
-    //   },
-    // ));
-    if (projects.isNotEmpty) {
-      list.add(
-        IconButton(
-          icon: Icon(
-            Icons.map,
-            size: 20,
-            color: Theme.of(context).primaryColor,
-          ),
-          onPressed: () {
-            _navigateToOrgMap();
-          },
-        ),
-      );
-    }
-    if (user != null) {
-      if (user!.userType == UserType.orgAdministrator) {
-        list.add(
-          IconButton(
-            icon: Icon(
-              Icons.add,
-              size: 20,
-              color: Theme.of(context).primaryColor,
-            ),
-            onPressed: () {
-              _navigateToDetail(null);
-            },
-          ),
-        );
-      }
-    }
-    return list;
-  }
+  // List<IconButton> _getActions() {
+  //   List<IconButton> list = [];
+  //   list.add(IconButton(
+  //     icon: Icon(
+  //       Icons.refresh_rounded,
+  //       size: 20,
+  //       color: Theme.of(context).primaryColor,
+  //     ),
+  //     onPressed: () {
+  //       _getData(true);
+  //     },
+  //   ));
+  //   // list.add(IconButton(
+  //   //   icon: isProjectsByLocation
+  //   //       ? Icon(
+  //   //           Icons.list,
+  //   //           size: 24,
+  //   //           color: Theme.of(context).primaryColor,
+  //   //         )
+  //   //       : Icon(
+  //   //           Icons.location_pin,
+  //   //           size: 20,
+  //   //           color: Theme.of(context).primaryColor,
+  //   //         ),
+  //   //   onPressed: () {
+  //   //     isProjectsByLocation = !isProjectsByLocation;
+  //   //     refreshProjects(true);
+  //   //   },
+  //   // ));
+  //   if (projects.isNotEmpty) {
+  //     list.add(
+  //       IconButton(
+  //         icon: Icon(
+  //           Icons.map,
+  //           size: 20,
+  //           color: Theme.of(context).primaryColor,
+  //         ),
+  //         onPressed: () {
+  //           _navigateToOrgMap();
+  //         },
+  //       ),
+  //     );
+  //   }
+  //   if (user != null) {
+  //     if (user!.userType == UserType.orgAdministrator) {
+  //       list.add(
+  //         IconButton(
+  //           icon: Icon(
+  //             Icons.add,
+  //             size: 20,
+  //             color: Theme.of(context).primaryColor,
+  //           ),
+  //           onPressed: () {
+  //             _navigateToDetail(null);
+  //           },
+  //         ),
+  //       );
+  //     }
+  //   }
+  //   return list;
+  // }
 
   final projectNames = <String>[];
   int _getIndex(String value) {
@@ -745,6 +723,21 @@ class GioProjectsState extends State<GioProjects>
 
   static String _displayStringForOption(Project project) => project.name!;
   final TextEditingController _textEditingController = TextEditingController();
+
+  void _processData(RealmResultsChanges<mrm.Project> list) {
+    projects.clear();
+    for (var element in list.results) {
+      projects.add(element);
+    }
+    projects.sort((a, b) => a.name!.compareTo(b.name!));
+    for (var p in projects) {
+      projectNames.add(p.name!);
+    }
+    projectsToDisplay.clear();
+    for (var project in projects) {
+      projectsToDisplay.add(project);
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -817,212 +810,224 @@ class GioProjectsState extends State<GioProjects>
               ],
             ),
             backgroundColor: isDarkMode?Theme.of(context).canvasColor: Colors.brown[50],
-            body: ScreenTypeLayout.builder(
-              mobile: (ctx) {
-                return GestureDetector(
-                    onTap: _sort,
-                    child: bd.Badge(
-                      badgeStyle: bd.BadgeStyle(
-                        badgeColor: Theme.of(context).primaryColor,
-                        elevation: 8,
-                        padding: const EdgeInsets.all(8),
-                      ),
-                      position: bd.BadgePosition.topEnd(top: 2, end: 8),
-                      badgeContent: Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: Text('${projectsToDisplay.length}',
-                            style: myTextStyleSmallWithColor(context, color2)),
-                      ),
-                      child: user == null
-                          ? const SizedBox()
-                          : ProjectListCard(
-                              projects: projectsToDisplay,
-                              width: width,
-                              horizontalPadding: 12,
-                              navigateToDetail: _navigateToDetail,
-                              navigateToProjectLocation:
-                                  _navigateToProjectLocation,
-                              navigateToProjectMedia: _navigateToProjectMedia,
-                              navigateToProjectMap: _navigateToProjectMap,
-                              navigateToProjectPolygonMap:
-                                  _navigateToProjectPolygonMap,
-                              navigateToProjectDashboard:
-                                  _navigateToProjectDashboard,
-                              user: user!,
-                              navigateToProjectDirections: (project) async {
-                                var poss = await cacheManager
-                                    .getProjectPositions(project.projectId!);
-                                if (poss.isNotEmpty) {
-                                  _navigateToDirections(
-                                    latitude:
-                                        poss.first.position!.coordinates[1],
-                                    longitude:
-                                        poss.first.position!.coordinates[0],
-                                  );
-                                }
-                              },
-                              prefsOGx: widget.prefsOGx,
-                            ),
-                    ));
-              },
-              tablet: (ctx) {
-                return OrientationLayoutBuilder(
-                  portrait: (ctx) {
-                    return Row(
-                      children: [
-                        GestureDetector(
-                            onTap: _sort,
-                            child: bd.Badge(
-                              badgeStyle: bd.BadgeStyle(
-                                badgeColor: Theme.of(context).primaryColor,
-                                elevation: 8,
-                                padding: const EdgeInsets.all(8),
-                              ),
-                              position:
-                                  bd.BadgePosition.topEnd(top: -2, end: -4),
-                              badgeContent: Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: Text('${projectsToDisplay.length}',
-                                    style: myTextStyleSmallWithColor(
-                                        context, color)),
-                              ),
-                              child: user == null
-                                  ? const SizedBox()
-                                  : ProjectListCard(
-                                      projects: projectsToDisplay,
-                                      width: (width / 2) - 20,
-                                      horizontalPadding: 12,
-                                      navigateToDetail: _navigateToDetail,
-                                      navigateToProjectLocation:
-                                          _navigateToProjectLocation,
-                                      navigateToProjectMedia:
-                                          _navigateToProjectMedia,
-                                      navigateToProjectMap:
-                                          _navigateToProjectMap,
-                                      navigateToProjectPolygonMap:
-                                          _navigateToProjectPolygonMap,
-                                      navigateToProjectDashboard:
-                                          _navigateToProjectDashboard,
-                                      user: user!,
-                                      prefsOGx: widget.prefsOGx,
-                                      navigateToProjectDirections:
-                                          (project) async {
-                                        var poss = await cacheManager
-                                            .getProjectPositions(
-                                                project.projectId!);
-                                        if (poss.isNotEmpty) {
-                                          _navigateToDirections(
-                                            latitude: poss
-                                                .first.position!.coordinates[1],
-                                            longitude: poss
-                                                .first.position!.coordinates[0],
-                                          );
-                                        }
-                                      },
-                                    ),
-                            )),
-                        GeoActivity(
-                            width: (width / 2),
-                            thinMode: true,
+            body: StreamBuilder<RealmResultsChanges<mrm.Project>>(
+              stream: query?.changes,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                var projects = <mrm.Project>[];
+
+                if (snapshot.hasData) {
+                  var m = snapshot.data as RealmResultsChanges<mrm.Project>;
+                   _processData(m);
+                }
+                return ScreenTypeLayout.builder(
+                  mobile: (ctx) {
+                    return GestureDetector(
+                        onTap: _sort,
+                        child: bd.Badge(
+                          badgeStyle: bd.BadgeStyle(
+                            badgeColor: Theme.of(context).primaryColor,
+                            elevation: 8,
+                            padding: const EdgeInsets.all(8),
+                          ),
+                          position: bd.BadgePosition.topEnd(top: 2, end: 8),
+                          badgeContent: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Text('${projectsToDisplay.length}',
+                                style: myTextStyleSmallWithColor(context, color2)),
+                          ),
+                          child: user == null
+                              ? const SizedBox()
+                              : ProjectListCard(
+                            projects: projectsToDisplay,
+                            width: width,
+                            horizontalPadding: 12,
+                            navigateToDetail: _navigateToDetail,
+                            navigateToProjectLocation:
+                            _navigateToProjectLocation,
+                            navigateToProjectMedia: _navigateToProjectMedia,
+                            navigateToProjectMap: _navigateToProjectMap,
+                            navigateToProjectPolygonMap:
+                            _navigateToProjectPolygonMap,
+                            navigateToProjectDashboard:
+                            _navigateToProjectDashboard,
+                            user: user!,
+                            navigateToProjectDirections: (project) async {
+                              var poss = await cacheManager
+                                  .getProjectPositions(project.projectId!);
+                              if (poss.isNotEmpty) {
+                                _navigateToDirections(
+                                  latitude:
+                                  poss.first.position!.coordinates[1],
+                                  longitude:
+                                  poss.first.position!.coordinates[0],
+                                );
+                              }
+                            },
                             prefsOGx: widget.prefsOGx,
-                            cacheManager: widget.cacheManager,
-                            dataApiDog: widget.dataApiDog,
-                            organizationBloc: widget.organizationBloc,
-                            projectBloc: widget.projectBloc,
-                            fcmBloc: widget.fcmBloc,
-                            geoUploader: widget.geoUploader,
-                            cloudStorageBloc: widget.cloudStorageBloc,
-                            project: null,
-                            showPhoto: (p) {},
-                            showVideo: (p) {},
-                            showAudio: (p) {},
-                            forceRefresh: true,
-                            showLocationResponse: (p) {},
-                            showLocationRequest: (p) {},
-                            showUser: (p) {},
-                            showProjectPosition: (p) {},
-                            showOrgMessage: (p) {},
-                            showGeofenceEvent: (p) {},
-                            showProjectPolygon: (p) {}),
-                      ],
-                    );
+                          ),
+                        ));
                   },
-                  landscape: (ctx) {
-                    return Row(
-                      children: [
-                        GestureDetector(
-                            onTap: _sort,
-                            child: bd.Badge(
-                              badgeStyle: bd.BadgeStyle(
-                                badgeColor: Theme.of(context).primaryColor,
-                                elevation: 8,
-                                padding: const EdgeInsets.all(8),
-                              ),
-                              position:
-                                  bd.BadgePosition.topEnd(top: -2, end: 2),
-                              badgeContent: Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: Text('${projectsToDisplay.length}',
-                                    style: myTextStyleSmallWithColor(
-                                        context, color)),
-                              ),
-                              child: ProjectListCard(
-                                projects: projectsToDisplay,
-                                width: width / 2,
-                                horizontalPadding: 12,
-                                prefsOGx: widget.prefsOGx,
-                                navigateToDetail: _navigateToDetail,
-                                navigateToProjectLocation:
+                  tablet: (ctx) {
+                    return OrientationLayoutBuilder(
+                      portrait: (ctx) {
+                        return Row(
+                          children: [
+                            GestureDetector(
+                                onTap: _sort,
+                                child: bd.Badge(
+                                  badgeStyle: bd.BadgeStyle(
+                                    badgeColor: Theme.of(context).primaryColor,
+                                    elevation: 8,
+                                    padding: const EdgeInsets.all(8),
+                                  ),
+                                  position:
+                                  bd.BadgePosition.topEnd(top: -2, end: -4),
+                                  badgeContent: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: Text('${projectsToDisplay.length}',
+                                        style: myTextStyleSmallWithColor(
+                                            context, color)),
+                                  ),
+                                  child: user == null
+                                      ? const SizedBox()
+                                      : ProjectListCard(
+                                    projects: projectsToDisplay,
+                                    width: (width / 2) - 20,
+                                    horizontalPadding: 12,
+                                    navigateToDetail: _navigateToDetail,
+                                    navigateToProjectLocation:
                                     _navigateToProjectLocation,
-                                navigateToProjectMedia: _navigateToProjectMedia,
-                                navigateToProjectMap: _navigateToProjectMap,
-                                navigateToProjectPolygonMap:
+                                    navigateToProjectMedia:
+                                    _navigateToProjectMedia,
+                                    navigateToProjectMap:
+                                    _navigateToProjectMap,
+                                    navigateToProjectPolygonMap:
                                     _navigateToProjectPolygonMap,
-                                navigateToProjectDashboard:
+                                    navigateToProjectDashboard:
                                     _navigateToProjectDashboard,
-                                user: user!,
-                                navigateToProjectDirections: (project) async {
-                                  var poss = await cacheManager
-                                      .getProjectPositions(project.projectId!);
-                                  if (poss.isNotEmpty) {
-                                    _navigateToDirections(
-                                      latitude:
+                                    user: user!,
+                                    prefsOGx: widget.prefsOGx,
+                                    navigateToProjectDirections:
+                                        (project) async {
+                                      var poss = await cacheManager
+                                          .getProjectPositions(
+                                          project.projectId!);
+                                      if (poss.isNotEmpty) {
+                                        _navigateToDirections(
+                                          latitude: poss
+                                              .first.position!.coordinates[1],
+                                          longitude: poss
+                                              .first.position!.coordinates[0],
+                                        );
+                                      }
+                                    },
+                                  ),
+                                )),
+                            GeoActivity(
+                                width: (width / 2),
+                                thinMode: true,
+                                prefsOGx: widget.prefsOGx,
+                                cacheManager: widget.cacheManager,
+                                dataApiDog: widget.dataApiDog,
+                                organizationBloc: widget.organizationBloc,
+                                projectBloc: widget.projectBloc,
+                                fcmBloc: widget.fcmBloc,
+                                geoUploader: widget.geoUploader,
+                                cloudStorageBloc: widget.cloudStorageBloc,
+                                project: null,
+                                showPhoto: (p) {},
+                                showVideo: (p) {},
+                                showAudio: (p) {},
+                                forceRefresh: true,
+                                showLocationResponse: (p) {},
+                                showLocationRequest: (p) {},
+                                showUser: (p) {},
+                                showProjectPosition: (p) {},
+                                showOrgMessage: (p) {},
+                                showGeofenceEvent: (p) {},
+                                showProjectPolygon: (p) {}),
+                          ],
+                        );
+                      },
+                      landscape: (ctx) {
+                        return Row(
+                          children: [
+                            GestureDetector(
+                                onTap: _sort,
+                                child: bd.Badge(
+                                  badgeStyle: bd.BadgeStyle(
+                                    badgeColor: Theme.of(context).primaryColor,
+                                    elevation: 8,
+                                    padding: const EdgeInsets.all(8),
+                                  ),
+                                  position:
+                                  bd.BadgePosition.topEnd(top: -2, end: 2),
+                                  badgeContent: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: Text('${projectsToDisplay.length}',
+                                        style: myTextStyleSmallWithColor(
+                                            context, color)),
+                                  ),
+                                  child: ProjectListCard(
+                                    projects: projectsToDisplay,
+                                    width: width / 2,
+                                    horizontalPadding: 12,
+                                    prefsOGx: widget.prefsOGx,
+                                    navigateToDetail: _navigateToDetail,
+                                    navigateToProjectLocation:
+                                    _navigateToProjectLocation,
+                                    navigateToProjectMedia: _navigateToProjectMedia,
+                                    navigateToProjectMap: _navigateToProjectMap,
+                                    navigateToProjectPolygonMap:
+                                    _navigateToProjectPolygonMap,
+                                    navigateToProjectDashboard:
+                                    _navigateToProjectDashboard,
+                                    user: user!,
+                                    navigateToProjectDirections: (project) async {
+                                      var poss = await cacheManager
+                                          .getProjectPositions(project.projectId!);
+                                      if (poss.isNotEmpty) {
+                                        _navigateToDirections(
+                                          latitude:
                                           poss.first.position!.coordinates[1],
-                                      longitude:
+                                          longitude:
                                           poss.first.position!.coordinates[0],
-                                    );
-                                  }
-                                },
-                              ),
-                            )),
-                        GeoActivity(
-                            width: (width / 2) - 48,
-                            thinMode: true,
-                            prefsOGx: widget.prefsOGx,
-                            cacheManager: widget.cacheManager,
-                            fcmBloc: widget.fcmBloc,
-                            organizationBloc: widget.organizationBloc,
-                            projectBloc: widget.projectBloc,
-                            project: widget.project,
-                            dataApiDog: widget.dataApiDog,
-                            geoUploader: widget.geoUploader,
-                            cloudStorageBloc: widget.cloudStorageBloc,
-                            showPhoto: (p) {},
-                            showVideo: (p) {},
-                            showAudio: (p) {},
-                            forceRefresh: true,
-                            showLocationResponse: (p) {},
-                            showLocationRequest: (p) {},
-                            showUser: (p) {},
-                            showProjectPosition: (p) {},
-                            showOrgMessage: (p) {},
-                            showGeofenceEvent: (p) {},
-                            showProjectPolygon: (p) {}),
-                      ],
+                                        );
+                                      }
+                                    },
+                                  ),
+                                )),
+                            GeoActivity(
+                                width: (width / 2) - 48,
+                                thinMode: true,
+                                prefsOGx: widget.prefsOGx,
+                                cacheManager: widget.cacheManager,
+                                fcmBloc: widget.fcmBloc,
+                                organizationBloc: widget.organizationBloc,
+                                projectBloc: widget.projectBloc,
+                                project: widget.project,
+                                dataApiDog: widget.dataApiDog,
+                                geoUploader: widget.geoUploader,
+                                cloudStorageBloc: widget.cloudStorageBloc,
+                                showPhoto: (p) {},
+                                showVideo: (p) {},
+                                showAudio: (p) {},
+                                forceRefresh: true,
+                                showLocationResponse: (p) {},
+                                showLocationRequest: (p) {},
+                                showUser: (p) {},
+                                showProjectPosition: (p) {},
+                                showOrgMessage: (p) {},
+                                showGeofenceEvent: (p) {},
+                                showProjectPolygon: (p) {}),
+                          ],
+                        );
+                      },
                     );
                   },
                 );
               },
+
             )));
   }
 

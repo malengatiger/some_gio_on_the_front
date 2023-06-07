@@ -20,12 +20,13 @@ import '../api/data_api_og.dart';
 import '../data/settings_model.dart';
 import '../data/user.dart';
 import '../generic_functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class UserProfilePictureEditor extends StatefulWidget {
   const UserProfilePictureEditor(
       {Key? key, required this.user, required this.goToDashboardWhenDone})
       : super(key: key);
-  final User user;
+  final mrm.User user;
   final bool goToDashboardWhenDone;
   @override
   UserProfilePictureEditorState createState() => UserProfilePictureEditorState();
@@ -255,11 +256,7 @@ class UserProfilePictureEditorState extends State<UserProfilePictureEditor>
 
     try {
       await dataApiDog.updateUser(widget.user);
-      var me = await prefsOGx.getUser();
-      if (widget.user.userId == me!.userId) {
-        await prefsOGx.saveUser(widget.user);
-      }
-      await cacheManager.addUser(user: widget.user);
+
       pp('\n\n$mm User photo and thumbnail uploaded and database updated\n');
       if (mounted) {
         showToast(

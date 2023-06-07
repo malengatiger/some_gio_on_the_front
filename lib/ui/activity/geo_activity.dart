@@ -29,6 +29,9 @@ import '../../library/data/user.dart';
 import '../../library/data/video.dart';
 import '../../library/functions.dart';
 import '../../library/generic_functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
+
 
 class GeoActivity extends StatefulWidget {
   const GeoActivity({
@@ -60,23 +63,23 @@ class GeoActivity extends StatefulWidget {
   final double width;
   final bool thinMode;
 
-  final Function(Photo) showPhoto;
-  final Function(Video) showVideo;
-  final Function(Audio) showAudio;
-  final Function(LocationResponse) showLocationResponse;
-  final Function(LocationRequest) showLocationRequest;
-  final Function(User) showUser;
-  final Function(ProjectPosition) showProjectPosition;
-  final Function(OrgMessage) showOrgMessage;
-  final Function(GeofenceEvent) showGeofenceEvent;
-  final Function(ProjectPolygon) showProjectPolygon;
+  final Function(mrm.Photo) showPhoto;
+  final Function(mrm.Video) showVideo;
+  final Function(mrm.Audio) showAudio;
+  final Function(mrm.LocationResponse) showLocationResponse;
+  final Function(mrm.LocationRequest) showLocationRequest;
+  final Function(mrm.User) showUser;
+  final Function(mrm.ProjectPosition) showProjectPosition;
+  final Function(mrm.OrgMessage) showOrgMessage;
+  final Function(mrm.GeofenceEvent) showGeofenceEvent;
+  final Function(mrm.ProjectPolygon) showProjectPolygon;
 
-  final User? user;
+  final mrm.User? user;
   final bool forceRefresh;
   final PrefsOGx prefsOGx;
   final CacheManager cacheManager;
   final ProjectBloc projectBloc;
-  final Project? project;
+  final mrm.Project? project;
   final OrganizationBloc organizationBloc;
   final DataApiDog dataApiDog;
   final FCMBloc fcmBloc;
@@ -151,7 +154,7 @@ class GeoActivityState extends State<GeoActivity>
       geofenceSubscriptionFCM =
           fcmBloc.geofenceStream.listen((GeofenceEvent event) async {
         pp('$mm: 🍎geofenceSubscriptionFCM: 🍎 GeofenceEvent: '
-            'user ${event.user!.name} arrived: ${event.projectName} ');
+            'user ${event.userName} arrived: ${event.projectName} ');
         _handleGeofenceEvent(event);
       });
     } else {

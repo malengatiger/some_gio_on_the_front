@@ -9,6 +9,7 @@ import 'package:geo_monitor/dashboard_khaya/recent_event_list.dart';
 import 'package:geo_monitor/dashboard_khaya/xd_header.dart';
 import 'package:geo_monitor/library/api/prefs_og.dart';
 import 'package:geo_monitor/library/bloc/ios_polling_control.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/bloc/refresh_bloc.dart';
 import 'package:geo_monitor/library/data/activity_model.dart';
@@ -28,6 +29,7 @@ import 'package:geo_monitor/library/ui/camera/gio_video_player.dart';
 import 'package:geo_monitor/library/ui/maps/project_map_mobile.dart';
 import 'package:geo_monitor/library/ui/media/time_line/project_media_timeline.dart';
 import 'package:geo_monitor/library/ui/project_list/gio_projects.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:geo_monitor/ui/activity/gio_activities.dart';
 import 'package:geo_monitor/ui/audio/gio_audio_player.dart';
 import 'package:geo_monitor/ui/dashboard/photo_frame.dart';
@@ -62,6 +64,7 @@ import '../library/users/list/geo_user_list.dart';
 import '../library/utilities/transitions.dart';
 import '../stitch/stitch_service.dart';
 import 'member_list.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class DashboardKhaya extends StatefulWidget {
   const DashboardKhaya(
@@ -77,7 +80,8 @@ class DashboardKhaya extends StatefulWidget {
       required this.cloudStorageBloc,
       required this.firebaseAuth,
       required this.stitchService,
-      required this.refreshBloc})
+      required this.refreshBloc,
+      required this.realmSyncApi})
       : super(key: key);
 
   final DataApiDog dataApiDog;
@@ -92,6 +96,7 @@ class DashboardKhaya extends StatefulWidget {
   final auth.FirebaseAuth firebaseAuth;
   final StitchService stitchService;
   final RefreshBloc refreshBloc;
+  final RealmSyncApi realmSyncApi;
 
   @override
   State<DashboardKhaya> createState() => DashboardKhayaState();
@@ -102,16 +107,16 @@ class DashboardKhayaState extends State<DashboardKhaya>
   var totalEvents = 0;
   var totalProjects = 0;
   var totalUsers = 0;
-  User? user;
+  mrm.User? user;
   String? dashboardText;
   String? eventsText, recentEventsText;
   String? projectsText;
   String? membersText, loadingDataText;
   bool busy = false;
 
-  var projects = <Project>[];
-  var events = <ActivityModel>[];
-  var users = <User>[];
+  var projects = <mrm.Project>[];
+  var events = <mrm.ActivityModel>[];
+  var users = <mrm.User>[];
   late StreamSubscription<Photo> photoSubscriptionFCM;
   late StreamSubscription<Video> videoSubscriptionFCM;
   late StreamSubscription<Audio> audioSubscriptionFCM;
@@ -144,7 +149,6 @@ class DashboardKhayaState extends State<DashboardKhaya>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _listenForFCM();
     _getUser();
   }
 
@@ -224,167 +228,119 @@ class DashboardKhayaState extends State<DashboardKhaya>
     _getData();
   }
 
-  void _listenForFCM() async {
-    var android = UniversalPlatform.isAndroid;
-    var ios = UniversalPlatform.isIOS;
-    // if (android || ios) {
-    pp('$mm 🍎 🍎 _listen to FCM message streams ... 🍎 🍎');
-    geofenceSubscriptionFCM =
-        widget.fcmBloc.geofenceStream.listen((GeofenceEvent event) async {
-      pp('$mm: 🍎geofenceSubscriptionFCM: 🍎 GeofenceEvent: '
-          'user ${event.user!.name} arrived: ${event.projectName} ');
-      _handleGeofenceEvent(event);
-    });
-
-    activitySubscription =
-        widget.fcmBloc.activityStream.listen((ActivityModel event) async {
-      pp('\n\n$mm: 🍎activitySubscription delivered 🍎 ActivityModel: '
-          ' ${event.date} \n');
-      events.insert(0, event);
-      totalEvents++;
-      if (mounted) {
-        setState(() {});
-      }
-    });
-
-    projectSubscriptionFCM =
-        widget.fcmBloc.projectStream.listen((Project project) async {
-      _getCachedData();
-      if (mounted) {
-        pp('$mm: 🍎 🍎 project arrived: ${project.name} ... 🍎 🍎');
-        setState(() {});
-      }
-    });
-
-    settingsSubscriptionFCM =
-        widget.fcmBloc.settingsStream.listen((settings) async {
-      pp('$mm: 🍎🍎 settingsSubscriptionFCM: settings arrived with themeIndex: ${settings.themeIndex}... 🍎🍎');
-      _handleNewSettings(settings);
-    });
-
-    userSubscriptionFCM = widget.fcmBloc.userStream.listen((u) async {
-      pp('$mm: 🍎 🍎 user arrived... 🍎 🍎');
-      if (u.userId == user!.userId!) {
-        user = u;
-      }
-      _getCachedData();
-    });
-
-    photoSubscriptionFCM = widget.fcmBloc.photoStream.listen((photo) async {
-      pp('$mm: 🍎 🍎 photoSubscriptionFCM photo arrived... 🍎 🍎');
-      _getCachedData();
-    });
-
-    videoSubscriptionFCM =
-        widget.fcmBloc.videoStream.listen((Video message) async {
-      pp('$mm: 🍎 🍎 videoSubscriptionFCM video arrived... 🍎 🍎');
-      _getCachedData();
-    });
-
-    audioSubscriptionFCM =
-        widget.fcmBloc.audioStream.listen((Audio message) async {
-      pp('$mm: 🍎 🍎 audioSubscriptionFCM audio arrived... 🍎 🍎');
-      _getCachedData();
-    });
-
-    projectPositionSubscriptionFCM = widget.fcmBloc.projectPositionStream
-        .listen((ProjectPosition message) async {
-      pp('$mm: 🍎 🍎 projectPositionSubscriptionFCM position arrived... 🍎 🍎');
-      _getCachedData();
-    });
-
-    projectPolygonSubscriptionFCM = widget.fcmBloc.projectPolygonStream
-        .listen((ProjectPolygon message) async {
-      pp('$mm: 🍎 🍎 projectPolygonSubscriptionFCM polygon arrived... 🍎 🍎');
-      _getCachedData();
-      if (mounted) {}
-    });
-
-    dataBagSubscription =
-        widget.organizationBloc.dataBagStream.listen((DataBag bag) async {
-      pp('$mm: 🍎 🍎 dataBagStream bag arrived... 🍎 🍎');
-      if (bag.projects != null) {
-        projects = bag.projects!;
-        totalProjects = projects.length;
-      }
-      if (bag.users != null) {
-        users = bag.users!;
-        totalUsers = users.length;
-      }
-      if (bag.activityModels != null) {
-        events = bag.activityModels!;
-        totalEvents = events.length;
-      }
-      if (mounted) {
-        setState(() {});
-      }
-    });
-
-    refreshSub = widget.refreshBloc.refreshStream.listen((event) {
-      pp('$mm refreshStream delivered a command, call getData with forceRefresh = true ... ');
-      _getData();
-    });
-  }
+  // void _listenForFCM() async {
+  //   var android = UniversalPlatform.isAndroid;
+  //   var ios = UniversalPlatform.isIOS;
+  //   // if (android || ios) {
+  //   pp('$mm 🍎 🍎 _listen to FCM message streams ... 🍎 🍎');
+  //   geofenceSubscriptionFCM =
+  //       widget.fcmBloc.geofenceStream.listen((GeofenceEvent event) async {
+  //     pp('$mm: 🍎geofenceSubscriptionFCM: 🍎 GeofenceEvent: '
+  //         'user ${event.userName} arrived: ${event.projectName} ');
+  //     _handleGeofenceEvent(event);
+  //   });
+  //
+  //   activitySubscription =
+  //       widget.fcmBloc.activityStream.listen((ActivityModel event) async {
+  //     pp('\n\n$mm: 🍎activitySubscription delivered 🍎 ActivityModel: '
+  //         ' ${event.date} \n');
+  //     events.insert(0, event);
+  //     totalEvents++;
+  //     if (mounted) {
+  //       setState(() {});
+  //     }
+  //   });
+  //
+  //   projectSubscriptionFCM =
+  //       widget.fcmBloc.projectStream.listen((Project project) async {
+  //     _getCachedData();
+  //     if (mounted) {
+  //       pp('$mm: 🍎 🍎 project arrived: ${project.name} ... 🍎 🍎');
+  //       setState(() {});
+  //     }
+  //   });
+  //
+  //   settingsSubscriptionFCM =
+  //       widget.fcmBloc.settingsStream.listen((settings) async {
+  //     pp('$mm: 🍎🍎 settingsSubscriptionFCM: settings arrived with themeIndex: ${settings.themeIndex}... 🍎🍎');
+  //     _handleNewSettings(settings);
+  //   });
+  //
+  //   userSubscriptionFCM = widget.fcmBloc.userStream.listen((u) async {
+  //     pp('$mm: 🍎 🍎 user arrived... 🍎 🍎');
+  //     if (u.userId == user!.userId!) {
+  //       user = u;
+  //     }
+  //     _getCachedData();
+  //   });
+  //
+  //   photoSubscriptionFCM = widget.fcmBloc.photoStream.listen((photo) async {
+  //     pp('$mm: 🍎 🍎 photoSubscriptionFCM photo arrived... 🍎 🍎');
+  //     _getCachedData();
+  //   });
+  //
+  //   videoSubscriptionFCM =
+  //       widget.fcmBloc.videoStream.listen((Video message) async {
+  //     pp('$mm: 🍎 🍎 videoSubscriptionFCM video arrived... 🍎 🍎');
+  //     _getCachedData();
+  //   });
+  //
+  //   audioSubscriptionFCM =
+  //       widget.fcmBloc.audioStream.listen((Audio message) async {
+  //     pp('$mm: 🍎 🍎 audioSubscriptionFCM audio arrived... 🍎 🍎');
+  //     _getCachedData();
+  //   });
+  //
+  //   projectPositionSubscriptionFCM = widget.fcmBloc.projectPositionStream
+  //       .listen((ProjectPosition message) async {
+  //     pp('$mm: 🍎 🍎 projectPositionSubscriptionFCM position arrived... 🍎 🍎');
+  //     _getCachedData();
+  //   });
+  //
+  //   projectPolygonSubscriptionFCM = widget.fcmBloc.projectPolygonStream
+  //       .listen((ProjectPolygon message) async {
+  //     pp('$mm: 🍎 🍎 projectPolygonSubscriptionFCM polygon arrived... 🍎 🍎');
+  //     _getCachedData();
+  //     if (mounted) {}
+  //   });
+  //
+  //   dataBagSubscription =
+  //       widget.organizationBloc.dataBagStream.listen((DataBag bag) async {
+  //     pp('$mm: 🍎 🍎 dataBagStream bag arrived... 🍎 🍎');
+  //     if (bag.projects != null) {
+  //       projects = bag.projects!;
+  //       totalProjects = projects.length;
+  //     }
+  //     if (bag.users != null) {
+  //       users = bag.users!;
+  //       totalUsers = users.length;
+  //     }
+  //     if (bag.activityModels != null) {
+  //       events = bag.activityModels!;
+  //       totalEvents = events.length;
+  //     }
+  //     if (mounted) {
+  //       setState(() {});
+  //     }
+  //   });
+  //
+  //   refreshSub = widget.refreshBloc.refreshStream.listen((event) {
+  //     pp('$mm refreshStream delivered a command, call getData with forceRefresh = true ... ');
+  //     _getData();
+  //   });
+  // }
 
   var images = <Image>[];
   late SettingsModel settingsModel;
 
   void _getUser() async {
-    user = await widget.prefsOGx.getUser();
+    var u = await widget.prefsOGx.getUser();
+    user = OldToRealm.getUser(u!);
     settingsModel = await widget.prefsOGx.getSettings();
     setState(() {});
     _setTexts();
-    _getCachedData();
   }
 
-  void _getCachedData() async {
-    try {
-      setState(() {
-        busy = true;
-      });
-      pp('$mm _getCachedData .... ');
-      final m =
-          await getStartEndDates(numberOfDays: settingsModel.numberOfDays);
-      users = await widget.organizationBloc.getUsers(
-          organizationId: settingsModel.organizationId!, forceRefresh: false);
-      projects = await widget.organizationBloc.getOrganizationProjects(
-          organizationId: settingsModel.organizationId!, forceRefresh: false);
-
-      events = await widget.organizationBloc.getOrganizationActivity(
-          organizationId: settingsModel.organizationId!,
-          hours: settingsModel.activityStreamHours!,
-          forceRefresh: false);
-
-      setState(() {
-        busy = false;
-      });
-      // events = await organizationBloc.getCachedOrganizationActivity(
-      //     organizationId: settingsModel.organizationId!, hours: settingsModel.activityStreamHours!);
-
-      pp('$mm _getCachedData .... projects: ${projects.length} users: ${users.length} events: ${events.length}');
-      totalEvents = events.length;
-      totalUsers = users.length;
-      totalProjects = projects.length;
-
-      setState(() {
-        busy = false;
-      });
-      // _getData(false);
-    } catch (e) {
-      if (mounted) {
-        pp('$mm showSnack');
-        showSnackBar(
-            message: serverProblem == null ? 'Server Problem' : serverProblem!,
-            context: context,
-            backgroundColor: Theme.of(context).primaryColorDark,
-            duration: const Duration(seconds: 15),
-            padding: 16);
-      }
-    }
-    setState(() {
-      busy = false;
-    });
-  }
 
   void _getData() async {
     try {
@@ -466,6 +422,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
           dataApiDog: widget.dataApiDog,
           prefsOGx: widget.prefsOGx,
           cacheManager: widget.cacheManager,
+          realmSyncApi: realmSyncApi,
           project: null,
           fcmBloc: widget.fcmBloc,
           geoUploader: widget.geoUploader,
@@ -518,6 +475,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
           cloudStorageBloc: widget.cloudStorageBloc,
           stitchService: widget.stitchService,
           refreshBloc: widget.refreshBloc,
+          realmSyncApi: realmSyncApi,
           projectBloc: widget.projectBloc,
           firebaseAuth: widget.firebaseAuth,
         ),
@@ -545,6 +503,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
           dataApiDog: widget.dataApiDog,
           cacheManager: widget.cacheManager,
           instruction: 0,
+          realmSyncApi: realmSyncApi,
           fcmBloc: widget.fcmBloc,
           cloudStorageBloc: widget.cloudStorageBloc,
           geoUploader: widget.geoUploader,
@@ -617,8 +576,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
     _navigateToMembers();
   }
 
-  void _onEventTapped(ActivityModel act) async {
-    pp('$mm 🌀🌀🌀🌀 _onEventTapped; activityModel: ${act.toJson()}\n');
+  void _onEventTapped(mrm.ActivityModel act) async {
 
     switch (act.activityType!) {
       case ActivityType.projectAdded:
@@ -646,7 +604,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
         onProjectPolygonTapped(act.projectPolygon!);
         break;
       case ActivityType.settingsChanged:
-        onSettingsChanged(act.settingsModel!);
+        onSettingsChanged();
         break;
       case ActivityType.geofenceEventAdded:
         onGeofenceEventTapped(act.geofenceEvent!);
@@ -666,8 +624,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
     }
   }
 
-  onSettingsChanged(SettingsModel p1) {
-    pp('🌀🌀🌀🌀 onSettingsChanged; ${p1.toJson()}');
+  onSettingsChanged() {
     navigateWithScale(
         SettingsMain(
             dataHandler: widget.dataHandler,
@@ -676,24 +633,22 @@ class DashboardKhayaState extends State<DashboardKhaya>
             organizationBloc: widget.organizationBloc,
             cacheManager: widget.cacheManager,
             projectBloc: widget.projectBloc,
+            realmSyncApi: realmSyncApi,
             geoUploader: widget.geoUploader,
             cloudStorageBloc: widget.cloudStorageBloc,
             fcmBloc: widget.fcmBloc),
         context);
   }
 
-  onLocationRequest(LocationRequest p1) {
-    pp('🌀🌀🌀🌀 onLocationRequest; ${p1.toJson()}');
+  onLocationRequest(mrm.LocationRequest p1) {
     if (deviceType == 'phone') {}
   }
 
-  onUserTapped(User p1) {
-    pp('🌀🌀🌀🌀 onUserTapped; ${p1.toJson()}');
-
+  onUserTapped(mrm.User p1) {
     navigateToUserEdit(p1);
   }
 
-  void navigateToUserEdit(User? user) async {
+  void navigateToUserEdit(mrm.User? user) async {
     if (user != null) {
       if (user!.userType == UserType.fieldMonitor) {
         if (user.userId != user.userId!) {
@@ -720,13 +675,11 @@ class DashboardKhayaState extends State<DashboardKhaya>
             )));
   }
 
-  onLocationResponse(LocationResponse p1) {
-    pp('🌀🌀🌀🌀 onLocationResponse; ${p1.toJson()}');
+  onLocationResponse(mrm.LocationResponse p1) {
     if (deviceType == 'phone') {}
   }
 
-  onPhotoTapped(Photo p1) {
-    pp('🌀🌀🌀🌀 onPhotoTapped, deviceType: $deviceType ; ${p1.toJson()}');
+  onPhotoTapped(mrm.Photo p1) {
     deviceType = getThisDeviceType();
     setState(() {
       photo = p1;
@@ -766,8 +719,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
     }
   }
 
-  onVideoTapped(Video p1) {
-    pp('🌀🌀🌀🌀 onVideoTapped; ${p1.toJson()}');
+  onVideoTapped(mrm.Video p1) {
     deviceType = getThisDeviceType();
     setState(() {
       video = p1;
@@ -790,12 +742,11 @@ class DashboardKhayaState extends State<DashboardKhaya>
     }
   }
 
-  Audio? audio;
-  Video? video;
-  Photo? photo;
+  mrm.Audio? audio;
+  mrm.Video? video;
+  mrm.Photo? photo;
 
-  onAudioTapped(Audio p1) {
-    pp('🌀🌀🌀🌀 onAudioTapped; ${p1.toJson()}');
+  onAudioTapped(mrm.Audio p1) {
     setState(() {
       audio = p1;
     });
@@ -821,48 +772,49 @@ class DashboardKhayaState extends State<DashboardKhaya>
     }
   }
 
-  onProjectPositionTapped(ProjectPosition p1) async {
-    pp('🌀🌀🌀🌀 onProjectPositionTapped; ${p1.toJson()}');
+  onProjectPositionTapped(mrm.ProjectPosition p1) async {
+    //todo - stop using cacheManager
     final proj =
         await widget.cacheManager.getProjectById(projectId: p1.projectId!);
-
+    var p = OldToRealm.getProject(proj!);
     if (mounted) {
       navigateWithScale(
           ProjectMapMobile(
-            project: proj!,
+            project: p,
           ),
           context);
     }
   }
 
-  onProjectPolygonTapped(ProjectPolygon p1) async {
-    pp('🌀🌀🌀🌀 onProjectPolygonTapped; ${p1.toJson()}');
+  onProjectPolygonTapped(mrm.ProjectPolygon p1) async {
     final proj =
         await widget.cacheManager.getProjectById(projectId: p1.projectId!);
+    var p = OldToRealm.getProject(proj!);
+
     if (mounted) {
       navigateWithScale(
           ProjectPolygonMapMobile(
-            project: proj!,
+            project: p,
           ),
           context);
     }
   }
 
-  onPolygonTapped(ProjectPolygon p1) async {
-    pp('🌀🌀🌀🌀 onPolygonTapped; ${p1.toJson()}');
-    final proj =
-        await widget.cacheManager.getProjectById(projectId: p1.projectId!);
-    if (mounted) {
-      navigateWithScale(
-          ProjectPolygonMapMobile(
-            project: proj!,
-          ),
-          context);
-    }
+  onPolygonTapped(mrm.ProjectPolygon p1) async {
+    // final proj =
+    //     await widget.cacheManager.getProjectById(projectId: p1.projectId!);
+    // var p = OldToRealm.getPol(proj!);
+    //
+    // if (mounted) {
+    //   navigateWithScale(
+    //       ProjectPolygonMapMobile(
+    //         project: proj!,
+    //       ),
+    //       context);
+    // }
   }
 
-  onGeofenceEventTapped(GeofenceEvent p1) {
-    pp('🌀🌀🌀🌀 onGeofenceEventTapped; ${p1.toJson()}');
+  onGeofenceEventTapped(mrm.GeofenceEvent p1) {
 
     navigateWithScale(
         GeofenceMap(
@@ -871,13 +823,11 @@ class DashboardKhayaState extends State<DashboardKhaya>
         context);
   }
 
-  onOrgMessage(OrgMessage p1) {
-    pp('🌀🌀🌀🌀 onOrgMessage; ${p1.toJson()}');
+  onOrgMessage(mrm.OrgMessage p1) {
     if (deviceType == 'phone') {}
   }
 
-  void onProjectTapped(Project project) async {
-    pp('🌀🌀🌀🌀 _onProjectTapped; navigate to timeLine: project: ${project.toJson()}');
+  void onProjectTapped(mrm.Project project) async {
     if (deviceType == 'phone') {}
     if (mounted) {
       navigateWithScale(
@@ -1319,21 +1269,21 @@ class RealDashboard extends StatelessWidget {
 
   final Function onEventsSubtitleTapped;
   final Function(int) onEventsAcquired;
-  final Function(ActivityModel) onEventTapped;
+  final Function(mrm.ActivityModel) onEventTapped;
   final Function onProjectSubtitleTapped;
   final int totalEvents, totalProjects, totalUsers;
   final Function(int) onProjectsAcquired;
-  final Function(Project) onProjectTapped;
+  final Function(mrm.Project) onProjectTapped;
   final Function onUserSubtitleTapped;
   final Function(int) onUsersAcquired;
-  final Function(User) onUserTapped;
+  final Function(mrm.User) onUserTapped;
   final double sigmaX, sigmaY;
   final Function onRefreshRequested,
       onSearchTapped,
       onSettingsRequested,
       onDeviceUserTapped,
       onGioSubscriptionRequired;
-  final User user;
+  final mrm.User user;
   final double width;
   final String dashboardText,
       eventsText,
@@ -1343,8 +1293,8 @@ class RealDashboard extends StatelessWidget {
       recentEventsText;
   final bool forceRefresh;
 
-  final List<Project> projects;
-  final List<User> users;
+  final List<mrm.Project> projects;
+  final List<mrm.User> users;
   final double? topCardSpacing;
   final bool centerTopCards;
   final Function navigateToIntro, navigateToActivities;
@@ -1384,10 +1334,14 @@ class RealDashboard extends StatelessWidget {
         onTap: () {
           onDeviceUserTapped();
         },
-        child: CircleAvatar(
-          radius: 14,
-          backgroundImage: NetworkImage(user.thumbnailUrl!),
-        ),
+        child: user.thumbnailUrl == null
+            ? const CircleAvatar(
+                radius: 12,
+              )
+            : CircleAvatar(
+                radius: 14,
+                backgroundImage: NetworkImage(user.thumbnailUrl!),
+              ),
       ),
       const SizedBox(
         width: 16,
@@ -1400,9 +1354,13 @@ class RealDashboard extends StatelessWidget {
           return [
             PopupMenuItem(
               value: 3,
-              child: CircleAvatar(
-                  radius: 24.0,
-                  backgroundImage: NetworkImage(user.thumbnailUrl!)),
+              child: user.thumbnailUrl == null
+                  ? const CircleAvatar(
+                      radius: 8,
+                    )
+                  : CircleAvatar(
+                      radius: 24.0,
+                      backgroundImage: NetworkImage(user.thumbnailUrl!)),
             ),
             PopupMenuItem(
                 value: 1,
@@ -1479,6 +1437,7 @@ class RealDashboard extends StatelessWidget {
                         cacheManager: cacheManager,
                         projectBloc: projectBloc,
                         geoUploader: geoUploader,
+                        realmSyncApi: realmSyncApi,
                         cloudStorageBloc: cloudStorageBloc,
                       ),
                       const SizedBox(height: 20),
@@ -1723,7 +1682,8 @@ class TopCardList extends StatefulWidget {
       required this.dataApiDog,
       required this.cacheManager,
       required this.geoUploader,
-      required this.cloudStorageBloc})
+      required this.cloudStorageBloc,
+      required this.realmSyncApi})
       : super(key: key);
 
   final OrganizationBloc organizationBloc;
@@ -1734,6 +1694,7 @@ class TopCardList extends StatefulWidget {
   final CacheManager cacheManager;
   final GeoUploader geoUploader;
   final CloudStorageBloc cloudStorageBloc;
+  final RealmSyncApi realmSyncApi;
 
   @override
   State<TopCardList> createState() => TopCardListState();
@@ -1784,17 +1745,60 @@ class TopCardListState extends State<TopCardList> {
       setState(() {
         busy = true;
       });
-
       final sett = await widget.prefsOGx.getSettings();
-      final m = await getStartEndDates(numberOfDays: sett.numberOfDays!);
 
-      final bag = await widget.organizationBloc.getOrganizationData(
-          organizationId: sett.organizationId!,
-          forceRefresh: forceRefresh,
-          startDate: m['startDate']!,
-          endDate: m['endDate']!);
+      var projectQuery =
+          widget.realmSyncApi.getProjectQuery(sett.organizationId!);
+      projectQuery.changes.listen((event) {
+        projects = event.results.length;
+        setState(() {});
+      });
+      var dates = getStartEndDatesFromDays(numberOfDays: sett.numberOfDays!);
+      var actQuery = widget.realmSyncApi
+          .getOrganizationActivitiesQuery(sett.organizationId!, dates.$1);
+      actQuery.changes.listen((event) {
+        events = event.results.length;
+        setState(() {});
+      });
 
-      _setTotals(bag);
+      var userQuery = widget.realmSyncApi.getUserQuery(
+        sett.organizationId!,
+      );
+      userQuery.changes.listen((event) {
+        members = event.results.length;
+        setState(() {});
+      });
+      var photoQuery = widget.realmSyncApi
+          .getProjectPhotoQuery(sett.organizationId!, dates.$1);
+      photoQuery.changes.listen((event) {
+        photos = event.results.length;
+        setState(() {});
+      });
+      var videoQuery = widget.realmSyncApi
+          .getProjectVideoQuery(sett.organizationId!, dates.$1);
+      videoQuery.changes.listen((event) {
+        videos = event.results.length;
+        setState(() {});
+      });
+      var audioQuery = widget.realmSyncApi
+          .getProjectPhotoQuery(sett.organizationId!, dates.$1);
+      audioQuery.changes.listen((event) {
+        audios = event.results.length;
+        setState(() {});
+      });
+      var posQuery =
+          widget.realmSyncApi.getProjectPositionQuery(sett.organizationId!);
+      posQuery.changes.listen((event) {
+        locations = event.results.length;
+        setState(() {});
+      });
+      var polQuery = widget.realmSyncApi.getProjectPolygonQuery(
+        sett.organizationId!,
+      );
+      polQuery.changes.listen((event) {
+        areas = event.results.length;
+        setState(() {});
+      });
     } catch (e) {
       pp(e);
     }
@@ -1939,6 +1943,7 @@ class TopCardListState extends State<TopCardList> {
             dataApiDog: widget.dataApiDog,
             cacheManager: widget.cacheManager,
             instruction: 0,
+            realmSyncApi: widget.realmSyncApi,
             fcmBloc: widget.fcmBloc,
             geoUploader: widget.geoUploader,
             cloudStorageBloc: widget.cloudStorageBloc,
@@ -2087,7 +2092,7 @@ class TopCardListState extends State<TopCardList> {
     }
     return Stack(children: [
       SizedBox(
-        height: 140,
+        height: 144,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: busy
@@ -2106,7 +2111,7 @@ class TopCardListState extends State<TopCardList> {
                   shrinkWrap: true,
                   children: [
                     DashboardTopCard(
-                        width: events > 999 ? 128 : 108,
+                        width: events > 999 ? 140 : 128,
                         number: events,
                         title: eventsText,
                         onTapped: () {
@@ -2116,7 +2121,7 @@ class TopCardListState extends State<TopCardList> {
                       width: padding1,
                     ),
                     DashboardTopCard(
-                        width: projects > 999 ? 128 : 108,
+                        width: projects > 999 ? 140 : 128,
                         number: projects,
                         title: projectsText,
                         onTapped: () {
@@ -2126,7 +2131,7 @@ class TopCardListState extends State<TopCardList> {
                       width: padding1,
                     ),
                     DashboardTopCard(
-                        width: members > 999 ? 128 : 108,
+                        width: members > 999 ? 140 : 128,
                         number: members,
                         title: membersText,
                         onTapped: () {
@@ -2136,7 +2141,7 @@ class TopCardListState extends State<TopCardList> {
                       width: padding2,
                     ),
                     DashboardTopCard(
-                        width: photos > 999 ? 128 : 108,
+                        width: photos > 999 ? 140 : 128,
                         textStyle:
                             myNumberStyleLargerPrimaryColorLight(context),
                         number: photos,
@@ -2150,7 +2155,7 @@ class TopCardListState extends State<TopCardList> {
                     DashboardTopCard(
                         textStyle:
                             myNumberStyleLargerPrimaryColorLight(context),
-                        width: videos > 999 ? 128 : 108,
+                        width: videos > 999 ? 140 : 128,
                         number: videos,
                         title: videosText,
                         onTapped: () {
@@ -2160,7 +2165,7 @@ class TopCardListState extends State<TopCardList> {
                       width: padding1,
                     ),
                     DashboardTopCard(
-                        width: audios > 999 ? 128 : 108,
+                        width: audios > 999 ? 140 : 128,
                         textStyle:
                             myNumberStyleLargerPrimaryColorLight(context),
                         number: audios,
@@ -2173,7 +2178,7 @@ class TopCardListState extends State<TopCardList> {
                     ),
                     DashboardTopCard(
                         textStyle: myNumberStyleLargerPrimaryColorDark(context),
-                        width: locations > 999 ? 128 : 108,
+                        width: locations > 999 ? 140 : 128,
                         number: locations,
                         title: locationsText,
                         onTapped: () {
@@ -2184,7 +2189,7 @@ class TopCardListState extends State<TopCardList> {
                     ),
                     DashboardTopCard(
                         textStyle: myNumberStyleLargerPrimaryColorDark(context),
-                        width: areas > 999 ? 128 : 108,
+                        width: areas > 999 ? 140 : 128,
                         number: areas,
                         title: areasText,
                         onTapped: () {
@@ -2247,7 +2252,7 @@ class PhoneVideoPlayer extends StatelessWidget {
       required this.title})
       : super(key: key);
 
-  final Video video;
+  final mrm.Video video;
   final Function onCloseRequested;
   final DataApiDog dataApiDog;
   final double? width;

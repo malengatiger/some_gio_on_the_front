@@ -9,6 +9,7 @@ import 'package:geo_monitor/library/data/organization.dart';
 import 'package:geo_monitor/library/data/organization_registration_bag.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:uuid/uuid.dart';
+import '../../../realm_data/data/schemas.dart' as mrm;
 
 import '../../device_location/device_location_bloc.dart';
 import '../../l10n/translation_handler.dart';
@@ -51,7 +52,7 @@ class AuthEmailRegistrationPortraitState
   bool busy = false;
   final _formKey = GlobalKey<FormState>();
   ur.User? user;
-  Country? country;
+  mrm.Country? country;
 
   final errorController = StreamController<ErrorAnimationType>();
   String? currentText;
@@ -220,7 +221,7 @@ class AuthEmailRegistrationPortraitState
     }
   }
 
-  _onCountrySelected(Country p1) {
+  _onCountrySelected(mrm.Country p1) {
     if (mounted) {
       setState(() {
         country = p1;
@@ -250,9 +251,9 @@ class AuthEmailRegistrationPortraitState
                         child: Column(
                           children: [
                             busy
-                                ? Row(
+                                ? const Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const [
+                                    children: [
                                       Padding(
                                         padding: EdgeInsets.all(12.0),
                                         child: SizedBox(

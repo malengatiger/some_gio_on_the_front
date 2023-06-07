@@ -3,6 +3,7 @@ import 'package:geo_monitor/ui/activity/user_profile_card.dart';
 
 import '../../library/data/activity_model.dart';
 import '../../library/functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ThinCard extends StatelessWidget {
   const ThinCard(
@@ -17,7 +18,7 @@ class ThinCard extends StatelessWidget {
       required this.userType,
       required this.avatarRadius})
       : super(key: key);
-  final ActivityModel model;
+  final mrm.ActivityModel model;
   final Icon icon;
   final String message, userType;
   final double width, height, avatarRadius;

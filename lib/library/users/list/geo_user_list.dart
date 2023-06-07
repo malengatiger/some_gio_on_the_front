@@ -3,12 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/api/data_api_og.dart';
 import 'package:geo_monitor/library/api/prefs_og.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/data/photo.dart';
 import 'package:geo_monitor/library/data/video.dart';
 import 'package:geo_monitor/library/users/edit/user_edit_main.dart';
 import 'package:geo_monitor/library/users/edit/user_edit_tablet.dart';
 import 'package:geo_monitor/library/users/list/user_list_card.dart';
+import 'package:geo_monitor/realm_data/data/app_services.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:geo_monitor/ui/activity/geo_activity.dart';
 import 'package:geo_monitor/ui/dashboard/user_dashboard.dart';
 import 'package:page_transition/page_transition.dart';
@@ -39,6 +42,7 @@ import '../../ui/message/message_mobile.dart';
 import '../../ui/schedule/scheduler_mobile.dart';
 import '../kill_user_page.dart';
 import '../user_batch_control.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class GioUserList extends StatefulWidget {
   const GioUserList({
@@ -67,48 +71,47 @@ class GioUserList extends StatefulWidget {
 }
 
 class _GioUserListState extends State<GioUserList> {
-  var users = <User>[];
-  User? user;
+  var users = <mrm.User>[];
+  mrm.User? user;
 
   @override
   void initState() {
     super.initState();
     _setTexts();
     _getData(false);
-    _listen();
   }
 
   late StreamSubscription<User> _streamSubscription;
   late StreamSubscription<LocationResponse> _locationResponseSubscription;
   late StreamSubscription<SettingsModel> settingsSubscriptionFCM;
 
-  LocationResponse? locationResponse;
+  mrm.LocationResponse? locationResponse;
 
   String? title;
 
-  void _listen() {
-    settingsSubscriptionFCM = fcmBloc.settingsStream.listen((event) async {
-      if (mounted) {
-        await _setTexts();
-        _getData(false);
-      }
-    });
-    _streamSubscription = fcmBloc.userStream.listen((User user) {
-      pp('$mm new user just arrived: ${user.toJson()}');
-      if (mounted) {
-        _getData(false);
-      }
-    });
-    _locationResponseSubscription =
-        fcmBloc.locationResponseStream.listen((LocationResponse event) {
-      pp('$mm locationResponseStream delivered ... response: ${event.toJson()}');
-      locationResponse = event;
-      if (mounted) {
-        setState(() {});
-        _showLocationResponseDialog();
-      }
-    });
-  }
+  // void _listen() {
+  //   settingsSubscriptionFCM = fcmBloc.settingsStream.listen((event) async {
+  //     if (mounted) {
+  //       await _setTexts();
+  //       _getData(false);
+  //     }
+  //   });
+  //   _streamSubscription = fcmBloc.userStream.listen((User user) {
+  //     pp('$mm new user just arrived: ${user.toJson()}');
+  //     if (mounted) {
+  //       _getData(false);
+  //     }
+  //   });
+  //   _locationResponseSubscription =
+  //       fcmBloc.locationResponseStream.listen((LocationResponse event) {
+  //     pp('$mm locationResponseStream delivered ... response: ${event.toJson()}');
+  //     locationResponse = event;
+  //     if (mounted) {
+  //       setState(() {});
+  //       _showLocationResponseDialog();
+  //     }
+  //   });
+  // }
 
   void _showLocationResponseDialog() async {
     showDialog(
@@ -199,11 +202,11 @@ class _GioUserListState extends State<GioUserList> {
       busy = true;
     });
     try {
-      user = await prefsOGx.getUser();
+      var p = await prefsOGx.getUser();
+      user = OldToRealm.getUser(p!);
 
-      users = await organizationBloc.getUsers(
-          organizationId: user!.organizationId!, forceRefresh: forceRefresh);
-      p('$mm data refreshed, users: ${users.length}');
+      users = realmSyncApi.getUsers(user!.organizationId!);
+      pp('$mm data refreshed, users: ${users.length}');
     } catch (e) {
       pp(e);
       if (mounted) {
@@ -232,7 +235,7 @@ class _GioUserListState extends State<GioUserList> {
     });
   }
 
-  void navigateToUserReport(User user) {
+  void navigateToUserReport(mrm.User user) {
     Navigator.push(
         context,
         PageTransition(
@@ -252,7 +255,7 @@ class _GioUserListState extends State<GioUserList> {
             )));
   }
 
-  void navigateToUserBatchUpload(User? user) async {
+  void navigateToUserBatchUpload(mrm.User? user) async {
     if (user != null) {
       if (user!.userType == UserType.fieldMonitor) {
         if (user.userId != user.userId!) {
@@ -271,7 +274,7 @@ class _GioUserListState extends State<GioUserList> {
     _getData(false);
   }
 
-  void navigateToMessaging(User user) {
+  void navigateToMessaging(mrm.User user) {
     Navigator.push(
         context,
         PageTransition(
@@ -283,7 +286,7 @@ class _GioUserListState extends State<GioUserList> {
             )));
   }
 
-  Future<void> navigateToPhone(User user) async {
+  Future<void> navigateToPhone(mrm.User user) async {
     pp('💛️💛️💛 ... starting phone call ....');
     final Uri phoneUri = Uri(scheme: "tel", path: user.cellphone!);
     try {
@@ -295,7 +298,7 @@ class _GioUserListState extends State<GioUserList> {
     }
   }
 
-  void navigateToMap(User user) {
+  void navigateToMap(mrm.User user) {
     Navigator.push(
         context,
         PageTransition(
@@ -305,7 +308,7 @@ class _GioUserListState extends State<GioUserList> {
             child: FieldMonitorMapMobile(user)));
   }
 
-  void navigateToScheduler(User user) {
+  void navigateToScheduler(mrm.User user) {
     Navigator.push(
         context,
         PageTransition(
@@ -317,7 +320,7 @@ class _GioUserListState extends State<GioUserList> {
 
   bool sortedByName = false;
 
-  void navigateToUserEdit(User? user) async {
+  void navigateToUserEdit(mrm.User? user) async {
     if (user != null) {
       if (user!.userType == UserType.fieldMonitor) {
         if (user.userId != user.userId!) {
@@ -344,7 +347,7 @@ class _GioUserListState extends State<GioUserList> {
             )));
   }
 
-  Future<void> navigateToKillPage(User user) async {
+  Future<void> navigateToKillPage(mrm.User user) async {
     await Navigator.push(
         context,
         PageTransition(
@@ -357,7 +360,7 @@ class _GioUserListState extends State<GioUserList> {
     pp('💛️💛️💛 ... back from KillPage; will refresh user list ....');
   }
 
-  void _sendLocationRequest(User otherUser) async {
+  void _sendLocationRequest(mrm.User otherUser) async {
     setState(() {
       busy = true;
     });
@@ -383,7 +386,7 @@ class _GioUserListState extends State<GioUserList> {
     });
   }
 
-  void navigateToUserDashboard(User user) {
+  void navigateToUserDashboard(mrm.User user) {
     Navigator.push(
         context,
         PageTransition(
@@ -779,13 +782,13 @@ class _GioUserListState extends State<GioUserList> {
   bool _showPhoto = false;
   bool _playAudio = false;
   bool _playVideo = false;
-  Photo? selectedPhoto;
-  Video? selectedVideo;
-  Audio? selectedAudio;
+  mrm.Photo? selectedPhoto;
+  mrm.Video? selectedVideo;
+  mrm.Audio? selectedAudio;
 
-  Audio? audio;
+  mrm.Audio? audio;
   String? translatedDate;
-  showPhoto(Photo p1) async {
+  showPhoto(mrm.Photo p1) async {
     selectedPhoto = p1;
     final settings = await prefsOGx.getSettings();
     translatedDate = getFmtDate(p1.created!, settings!.locale!);
@@ -796,7 +799,7 @@ class _GioUserListState extends State<GioUserList> {
     });
   }
 
-  showVideo(Video p1) {
+  showVideo(mrm.Video p1) {
     selectedVideo = p1;
     setState(() {
       _showPhoto = false;
@@ -805,7 +808,7 @@ class _GioUserListState extends State<GioUserList> {
     });
   }
 
-  showAudio(Audio p1) {
+  showAudio(mrm.Audio p1) {
     selectedAudio = p1;
     setState(() {
       _showPhoto = false;
@@ -814,7 +817,7 @@ class _GioUserListState extends State<GioUserList> {
     });
   }
 
-  onMapRequested(Photo p1) {}
+  onMapRequested(mrm.Photo p1) {}
 
-  onRatingRequested(Photo p1) {}
+  onRatingRequested(mrm.Photo p1) {}
 }

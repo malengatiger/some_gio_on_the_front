@@ -18,6 +18,8 @@ import '../../library/cache_manager.dart';
 import '../../library/data/country.dart';
 import '../../library/data/user.dart' as ur;
 import '../../library/functions.dart';
+import '../../../realm_data/data/schemas.dart' as mrm;
+
 
 class AuthPhoneSignIn extends StatefulWidget {
   const AuthPhoneSignIn({
@@ -246,10 +248,10 @@ class _AuthPhoneSigninCardState extends State<AuthPhoneSigninCard> {
         pp('$mm Gio user found on database:  🍎 ${user!.name!} 🍎');
         final org =
         await widget.dataApiDog.getOrganization(user!.organizationId!);
-        final countries = await widget.dataApiDog.getCountries();
-        Country? myCountry;
+        final countries =  realmSyncApi.getCountries();
+        mrm.Country? myCountry;
         for (var country in countries) {
-          await widget.cacheManager.addCountry(country: country);
+          // await widget.cacheManager.addCountry(country: country);
           if (country.countryId == org!.countryId!) {
             myCountry = country;
             await widget.prefsOGx.saveCountry(myCountry);

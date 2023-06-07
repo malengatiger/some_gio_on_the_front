@@ -13,9 +13,10 @@ import '../../data/project_polygon.dart';
 import '../../data/project_position.dart';
 import '../../data/user.dart';
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class GeofenceMap extends StatefulWidget {
-  final GeofenceEvent geofenceEvent;
+  final mrm.GeofenceEvent geofenceEvent;
 
   const GeofenceMap({
     super.key,
@@ -59,7 +60,8 @@ class GeofenceMapState extends State<GeofenceMap>
 
   Future _setTexts() async {
     final sett = await prefsOGx.getSettings();
-    memberAtProject = await translator.translate('memberAtProject', sett!.locale!);
+    memberAtProject =
+        await translator.translate('memberAtProject', sett!.locale!);
     translatedDate = getFmtDate(widget.geofenceEvent.date!, sett!.locale!);
   }
 
@@ -77,6 +79,7 @@ class GeofenceMapState extends State<GeofenceMap>
   }
 
   User? geofenceUser;
+
   void _getUser() async {
     user = await prefsOGx.getUser();
   }
@@ -123,6 +126,7 @@ class GeofenceMapState extends State<GeofenceMap>
   }
 
   bool isWithin = false;
+
   void _animateCamera(
       {required double latitude,
       required double longitude,
@@ -140,11 +144,10 @@ class GeofenceMapState extends State<GeofenceMap>
   @override
   Widget build(BuildContext context) {
     var showPicture = false;
-    if (widget.geofenceEvent.user != null) {
-      if (widget.geofenceEvent.user!.thumbnailUrl != null) {
-        showPicture = true;
-      }
+    if (widget.geofenceEvent.userUrl != null) {
+      showPicture = true;
     }
+
     var deviceType = getThisDeviceType();
     var color = getTextColorForBackground(Theme.of(context).primaryColor);
     var brightness = MediaQuery.of(context).platformBrightness;
@@ -233,8 +236,7 @@ class GeofenceMapState extends State<GeofenceMap>
                                     ? Expanded(
                                         child: InteractiveViewer(
                                           child: Image.network(
-                                            widget.geofenceEvent.user!
-                                                .thumbnailUrl!!,
+                                            widget.geofenceEvent.userUrl!,
                                             fit: BoxFit.cover,
                                           ),
                                         ),
@@ -247,13 +249,14 @@ class GeofenceMapState extends State<GeofenceMap>
                                   translatedDate == null
                                       ? widget.geofenceEvent.date!
                                       : translatedDate!,
-                                  style: myTextStyleSmallBoldPrimaryColor(context),
+                                  style:
+                                      myTextStyleSmallBoldPrimaryColor(context),
                                 ),
                                 const SizedBox(
                                   height: 8,
                                 ),
                                 Text(
-                                  widget.geofenceEvent.user!.name!,
+                                  widget.geofenceEvent.userName!,
                                   style: myTextStyleSmall(context),
                                 ),
                                 const SizedBox(
@@ -302,8 +305,7 @@ class GeofenceMapState extends State<GeofenceMap>
                                   showPicture
                                       ? InteractiveViewer(
                                           child: Image.network(
-                                            widget.geofenceEvent.user!
-                                                .thumbnailUrl!,
+                                            widget.geofenceEvent.userUrl!,
                                             fit: BoxFit.fill,
                                           ),
                                         )
@@ -315,14 +317,16 @@ class GeofenceMapState extends State<GeofenceMap>
                                     translatedDate == null
                                         ? widget.geofenceEvent.date!
                                         : translatedDate!,
-                                    style: myTextStyleSmallWithColor(context, color),
+                                    style: myTextStyleSmallWithColor(
+                                        context, color),
                                   ),
                                   const SizedBox(
                                     height: 8,
                                   ),
                                   Text(
-                                    widget.geofenceEvent.user!.name!,
-                                    style: myTextStyleSmallWithColor(context, color),
+                                    widget.geofenceEvent.userName!,
+                                    style: myTextStyleSmallWithColor(
+                                        context, color),
                                   ),
                                   const SizedBox(
                                     height: 8,
@@ -357,6 +361,7 @@ class ProjectPositionChooser extends StatelessWidget {
   final List<ProjectPosition> projectPositions;
   final List<ProjectPolygon> projectPolygons;
   final Function(local.Position) onSelected;
+
   @override
   Widget build(BuildContext context) {
     var list = <local.Position>[];

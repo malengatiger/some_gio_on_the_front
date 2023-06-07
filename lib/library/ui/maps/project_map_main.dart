@@ -9,12 +9,13 @@ import '../../data/project_position.dart';
 import '../../functions.dart';
 import 'project_map_mobile.dart';
 import 'project_map_tablet.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 
 
 class ProjectMapMain extends StatefulWidget {
-  final Project project;
-  final Photo? photo;
+  final mrm.Project project;
+  final mrm.Photo? photo;
 
   const ProjectMapMain({super.key, required this.project, this.photo});
 
@@ -24,8 +25,6 @@ class ProjectMapMain extends StatefulWidget {
 
 class ProjectMapMainState extends State<ProjectMapMain> {
   var isBusy = false;
-  var _positions = <ProjectPosition>[];
-  var _polygons = <ProjectPolygon>[];
   final _key = GlobalKey<ScaffoldState>();
   @override
   void initState() {
@@ -41,10 +40,6 @@ class ProjectMapMainState extends State<ProjectMapMain> {
       var map = await getStartEndDates();
       final startDate = map['startDate'];
       final endDate = map['endDate'];
-      _positions = await projectBloc.getProjectPositions(
-          projectId: widget.project.projectId!, forceRefresh: false, startDate: startDate!, endDate: endDate!);
-      _polygons = await projectBloc.getProjectPolygons(
-          projectId: widget.project.projectId!, forceRefresh: false);
     } catch (e) {
       pp(e);
       ScaffoldMessenger.of(context).showSnackBar(

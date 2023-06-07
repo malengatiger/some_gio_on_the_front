@@ -7,6 +7,7 @@ import '../../../l10n/translation_handler.dart';
 import '../../data/project.dart';
 import '../../data/user.dart';
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectListCard extends StatefulWidget {
   const ProjectListCard(
@@ -20,21 +21,23 @@ class ProjectListCard extends StatefulWidget {
       required this.navigateToProjectPolygonMap,
       required this.navigateToProjectDashboard,
       required this.user,
-      required this.horizontalPadding, required this.navigateToProjectDirections, required this.prefsOGx})
+      required this.horizontalPadding,
+      required this.navigateToProjectDirections,
+      required this.prefsOGx})
       : super(key: key);
 
-  final List<Project> projects;
+  final List<mrm.Project> projects;
   final User user;
   final double width;
   final double horizontalPadding;
 
-  final Function(Project) navigateToDetail;
-  final Function(Project) navigateToProjectLocation;
-  final Function(Project) navigateToProjectMedia;
-  final Function(Project) navigateToProjectMap;
-  final Function(Project) navigateToProjectPolygonMap;
-  final Function(Project) navigateToProjectDashboard;
-  final Function(Project) navigateToProjectDirections;
+  final Function(mrm.Project) navigateToDetail;
+  final Function(mrm.Project) navigateToProjectLocation;
+  final Function(mrm.Project) navigateToProjectMedia;
+  final Function(mrm.Project) navigateToProjectMap;
+  final Function(mrm.Project) navigateToProjectPolygonMap;
+  final Function(mrm.Project) navigateToProjectDashboard;
+  final Function(mrm.Project) navigateToProjectDirections;
   final PrefsOGx prefsOGx;
 
   @override
@@ -42,10 +45,16 @@ class ProjectListCard extends StatefulWidget {
 }
 
 class _ProjectListCardState extends State<ProjectListCard> {
-
-  String? projectDashboard, directionsToProject, photosVideosAudioClips,
-      projectDetails, editProject, projectLocationsMap,
-      media, addLocation, addProjectAreas, addProjectLocationHere;
+  String? projectDashboard,
+      directionsToProject,
+      photosVideosAudioClips,
+      projectDetails,
+      editProject,
+      projectLocationsMap,
+      media,
+      addLocation,
+      addProjectAreas,
+      addProjectLocationHere;
   @override
   void initState() {
     super.initState();
@@ -54,26 +63,33 @@ class _ProjectListCardState extends State<ProjectListCard> {
 
   void _setText() async {
     var sett = await prefsOGx.getSettings();
-    projectDashboard = await translator.translate('projectDashboard', sett.locale!);
-    addProjectAreas = await translator.translate('addProjectAreas', sett.locale!);
-    directionsToProject = await translator.translate('directionsToProject', sett.locale!);
-    addProjectLocationHere = await translator.translate('addProjectLocationHere', sett.locale!);
+    projectDashboard =
+        await translator.translate('projectDashboard', sett.locale!);
+    addProjectAreas =
+        await translator.translate('addProjectAreas', sett.locale!);
+    directionsToProject =
+        await translator.translate('directionsToProject', sett.locale!);
+    addProjectLocationHere =
+        await translator.translate('addProjectLocationHere', sett.locale!);
     projectDetails = await translator.translate('projectDetails', sett.locale!);
     editProject = await translator.translate('editProject', sett.locale!);
-    projectLocationsMap = await translator.translate('projectLocationsMap', sett.locale!);
-    photosVideosAudioClips = await translator.translate('photosVideosAudioClips', sett.locale!);
-    setState(() {
-
-    });
+    projectLocationsMap =
+        await translator.translate('projectLocationsMap', sett.locale!);
+    photosVideosAudioClips =
+        await translator.translate('photosVideosAudioClips', sett.locale!);
+    setState(() {});
   }
 
-  List<FocusedMenuItem> getPopUpMenuItems(Project project) {
+  List<FocusedMenuItem> getPopUpMenuItems(mrm.Project project) {
     List<FocusedMenuItem> menuItems = [];
     menuItems.add(
       FocusedMenuItem(
-        // backgroundColor: Theme.of(context).primaryColor,
+          // backgroundColor: Theme.of(context).primaryColor,
           title: Expanded(
-            child: Text(projectDashboard == null?'Project Dashboard':projectDashboard!,
+            child: Text(
+                projectDashboard == null
+                    ? 'Project Dashboard'
+                    : projectDashboard!,
                 style: myTextStyleSmallBlack(context)),
           ),
           trailingIcon: Icon(
@@ -81,17 +97,18 @@ class _ProjectListCardState extends State<ProjectListCard> {
             color: Theme.of(context).primaryColor,
           ),
           onPressed: () async {
-            await widget.prefsOGx.saveProject(project);
+            //await widget.prefsOGx.saveProject(project);
             widget.navigateToProjectDashboard(project);
-
           }),
     );
     menuItems.add(
       FocusedMenuItem(
-        // backgroundColor: Theme.of(context).primaryColor,
+          // backgroundColor: Theme.of(context).primaryColor,
           title: Expanded(
-            child: Text(directionsToProject == null?
-            'Project Directions': directionsToProject!,
+            child: Text(
+              directionsToProject == null
+                  ? 'Project Directions'
+                  : directionsToProject!,
               style: myTextStyleSmallBlack(context),
             ),
           ),
@@ -106,10 +123,12 @@ class _ProjectListCardState extends State<ProjectListCard> {
     );
     menuItems.add(
       FocusedMenuItem(
-        // backgroundColor: Theme.of(context).primaryColor,
+          // backgroundColor: Theme.of(context).primaryColor,
           title: Expanded(
-            child: Text(projectLocationsMap == null?
-            'Project Locations Map': projectLocationsMap!,
+            child: Text(
+              projectLocationsMap == null
+                  ? 'Project Locations Map'
+                  : projectLocationsMap!,
               style: myTextStyleSmallBlack(context),
             ),
           ),
@@ -124,10 +143,12 @@ class _ProjectListCardState extends State<ProjectListCard> {
     );
     menuItems.add(
       FocusedMenuItem(
-        // backgroundColor: Theme.of(context).primaryColor,
+          // backgroundColor: Theme.of(context).primaryColor,
           title: Expanded(
-            child: Text(photosVideosAudioClips == null?
-            'Photos & Video & Audio': photosVideosAudioClips!,
+            child: Text(
+                photosVideosAudioClips == null
+                    ? 'Photos & Video & Audio'
+                    : photosVideosAudioClips!,
                 style: myTextStyleSmallBlack(context)),
           ),
           trailingIcon: Icon(
@@ -144,10 +165,12 @@ class _ProjectListCardState extends State<ProjectListCard> {
     if (widget.user.userType == UserType.orgAdministrator ||
         widget.user.userType == UserType.orgExecutive) {
       menuItems.add(FocusedMenuItem(
-        // backgroundColor: Theme.of(context).primaryColor,
+          // backgroundColor: Theme.of(context).primaryColor,
           title: Expanded(
-            child: Text(addProjectLocationHere == null?
-            'Add Project Location Here': addProjectLocationHere!,
+            child: Text(
+                addProjectLocationHere == null
+                    ? 'Add Project Location Here'
+                    : addProjectLocationHere!,
                 style: myTextStyleSmallBlack(context)),
           ),
           trailingIcon: Icon(
@@ -160,10 +183,12 @@ class _ProjectListCardState extends State<ProjectListCard> {
           }));
       menuItems.add(
         FocusedMenuItem(
-          // backgroundColor: Theme.of(context).primaryColor,
+            // backgroundColor: Theme.of(context).primaryColor,
             title: Expanded(
-              child: Text(addProjectAreas == null?
-              'Create Project Areas': addProjectAreas!,
+              child: Text(
+                addProjectAreas == null
+                    ? 'Create Project Areas'
+                    : addProjectAreas!,
                 style: myTextStyleSmallBlack(context),
               ),
             ),
@@ -177,10 +202,9 @@ class _ProjectListCardState extends State<ProjectListCard> {
             }),
       );
       menuItems.add(FocusedMenuItem(
-        // backgroundColor: Theme.of(context).primaryColor,
+          // backgroundColor: Theme.of(context).primaryColor,
           title: Expanded(
-            child: Text(editProject == null?
-            'Edit Project': editProject!,
+            child: Text(editProject == null ? 'Edit Project' : editProject!,
                 style: myTextStyleSmallBlack(context)),
           ),
           trailingIcon: Icon(
@@ -198,7 +222,6 @@ class _ProjectListCardState extends State<ProjectListCard> {
 
   @override
   Widget build(BuildContext context) {
-
     return SizedBox(
       width: widget.width,
       child: ListView.builder(
@@ -213,11 +236,11 @@ class _ProjectListCardState extends State<ProjectListCard> {
             animateMenuItems: true,
             openWithTap: true,
             onPressed: () {
-              pp('💛️💛️💛️ .... FocusedMenuHolder: will pop up menu items '
-                  'for project: ${mProject.toJson()} ...');
+              pp('💛️💛️💛️ .... FocusedMenuHolder: will pop up menu items ');
             },
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
+              padding:
+                  EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
               child: Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(

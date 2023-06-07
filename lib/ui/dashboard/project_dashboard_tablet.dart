@@ -19,6 +19,7 @@ import '../../library/bloc/cloud_storage_bloc.dart';
 import '../../library/bloc/connection_check.dart';
 import '../../library/bloc/fcm_bloc.dart';
 import '../../library/bloc/geo_uploader.dart';
+import '../../library/bloc/old_to_realm.dart';
 import '../../library/bloc/organization_bloc.dart';
 import '../../library/bloc/project_bloc.dart';
 import '../../library/bloc/theme_bloc.dart';
@@ -43,6 +44,7 @@ import '../../library/ui/maps/photo_map.dart';
 import '../../library/ui/maps/project_map_main.dart';
 import '../../utilities/constants.dart';
 import '../activity/geo_activity.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectDashboardTablet extends StatefulWidget {
   const ProjectDashboardTablet(
@@ -56,7 +58,7 @@ class ProjectDashboardTablet extends StatefulWidget {
       required this.fcmBloc, required this.geoUploader, required this.cloudStorageBloc})
       : super(key: key);
 
-  final Project project;
+  final mrm.Project project;
   final ProjectBloc projectBloc;
   final PrefsOGx prefsOGx;
   final OrganizationBloc organizationBloc;
@@ -283,7 +285,7 @@ class ProjectDashboardTabletState extends State<ProjectDashboardTablet>
   bool _showAudio = false;
   final mm = ' 🍔 🍔 🍔 🍔 🍔 🍔ProjectDashboardTabletLandscape: ';
 
-  void _displayPhoto(Photo photo) async {
+  void _displayPhoto(mrm.Photo photo) async {
     pp('$mm _displayPhoto ...');
     this.photo = photo;
     final settings = await prefsOGx.getSettings();
@@ -295,7 +297,7 @@ class ProjectDashboardTabletState extends State<ProjectDashboardTablet>
     });
   }
 
-  void _displayVideo(Video video) async {
+  void _displayVideo(mrm.Video video) async {
     pp('$mm _displayVideo ...');
     this.video = video;
     setState(() {
@@ -305,7 +307,7 @@ class ProjectDashboardTabletState extends State<ProjectDashboardTablet>
     });
   }
 
-  void _displayAudio(Audio audio) async {
+  void _displayAudio(mrm.Audio audio) async {
     pp('$mm _displayAudio ...');
     this.audio = audio;
     setState(() {
@@ -315,9 +317,9 @@ class ProjectDashboardTabletState extends State<ProjectDashboardTablet>
     });
   }
 
-  Photo? photo;
-  Video? video;
-  Audio? audio;
+  mrm.Photo? photo;
+  mrm.Video? video;
+  mrm.Audio? audio;
   String? translatedDate;
 
   void _navigateToPositionsMap() async {
@@ -344,7 +346,7 @@ class ProjectDashboardTabletState extends State<ProjectDashboardTablet>
             )));
   }
 
-  void _navigateToGeofenceMap(GeofenceEvent event) async {
+  void _navigateToGeofenceMap(mrm.GeofenceEvent event) async {
     Navigator.push(
         context,
         PageTransition(
@@ -372,7 +374,7 @@ class ProjectDashboardTabletState extends State<ProjectDashboardTablet>
     }
   }
 
-  void _navigateToProjectMap(Project project) {
+  void _navigateToProjectMap(mrm.Project project) {
     pp('$mm _navigateToProjectMap ...');
 
     if (mounted) {
@@ -455,15 +457,18 @@ class ProjectDashboardTabletState extends State<ProjectDashboardTablet>
                   showProjectPolygon: (polygon) async {
                     var proj = await cacheManager.getProjectById(
                         projectId: polygon.projectId!);
+
                     if (proj != null) {
-                      _navigateToProjectMap(proj);
+                      var p = OldToRealm.getProject(proj);
+                      _navigateToProjectMap(p);
                     }
                   },
                   showProjectPosition: (position) async {
                     var proj = await cacheManager.getProjectById(
                         projectId: position.projectId!);
                     if (proj != null) {
-                      _navigateToProjectMap(proj);
+                      var p = OldToRealm.getProject(proj);
+                      _navigateToProjectMap(p);
                     }
                   },
                   showOrgMessage: (message) {},
@@ -520,14 +525,16 @@ class ProjectDashboardTabletState extends State<ProjectDashboardTablet>
                     var proj = await cacheManager.getProjectById(
                         projectId: polygon.projectId!);
                     if (proj != null) {
-                      _navigateToProjectMap(proj);
+                      var p = OldToRealm.getProject(proj);
+                      _navigateToProjectMap(p);
                     }
                   },
                   showProjectPosition: (position) async {
                     var proj = await cacheManager.getProjectById(
                         projectId: position.projectId!);
                     if (proj != null) {
-                      _navigateToProjectMap(proj);
+                      var p = OldToRealm.getProject(proj);
+                      _navigateToProjectMap(p);
                     }
                   },
                   showOrgMessage: (message) {},
@@ -615,7 +622,7 @@ class ProjectDashboardTabletState extends State<ProjectDashboardTablet>
     ));
   }
 
-  void _navigateToLocationResponseMap(LocationResponse locationResponse) async {
+  void _navigateToLocationResponseMap(mrm.LocationResponse locationResponse) async {
     Navigator.push(
         context,
         PageTransition(
@@ -623,7 +630,7 @@ class ProjectDashboardTabletState extends State<ProjectDashboardTablet>
             alignment: Alignment.topLeft,
             duration: const Duration(seconds: 1),
             child: LocationResponseMap(
-              locationResponse: locationResponse!,
+              locationResponse: locationResponse,
             )));
   }
 

@@ -8,6 +8,7 @@ import '../../../data/video.dart';
 import '../../../functions.dart';
 import '../list/audio_card.dart';
 import '../video_cover.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class MediaGrid extends StatefulWidget {
   const MediaGrid({
@@ -21,9 +22,9 @@ class MediaGrid extends StatefulWidget {
     required this.scrollToTop,
   }) : super(key: key);
 
-  final Function(Video) onVideoTapped;
-  final Function(Audio) onAudioTapped;
-  final Function(Photo) onPhotoTapped;
+  final Function(mrm.Video) onVideoTapped;
+  final Function(mrm.Audio) onAudioTapped;
+  final Function(mrm.Photo) onPhotoTapped;
   final int crossAxisCount;
   final String durationText;
   final List<MediaGridItem> mediaGridItems;
@@ -106,9 +107,9 @@ class MediaGridState extends State<MediaGrid> {
 }
 
 class MediaGridItem {
-  Photo? photo;
-  Video? video;
-  Audio? audio;
+  mrm.Photo? photo;
+  mrm.Video? video;
+  mrm.Audio? audio;
   late String created;
   late int intCreated;
 
@@ -123,7 +124,7 @@ class MediaGridItem {
 class RoundedPhoto extends StatelessWidget {
   const RoundedPhoto({Key? key, required this.photo, required this.url})
       : super(key: key);
-  final Photo photo;
+  final mrm.Photo photo;
   final String url;
   @override
   Widget build(BuildContext context) {
@@ -140,7 +141,7 @@ class RoundedVideo extends StatelessWidget {
     Key? key,
     required this.video,
   }) : super(key: key);
-  final Video video;
+  final mrm.Video video;
 
   @override
   Widget build(BuildContext context) {

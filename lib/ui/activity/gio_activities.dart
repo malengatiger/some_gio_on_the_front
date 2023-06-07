@@ -31,6 +31,7 @@ import '../../library/data/video.dart';
 import '../../library/emojis.dart';
 import '../../library/functions.dart';
 import '../../library/ui/media/time_line/project_media_timeline.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class GioActivities extends StatefulWidget {
   const GioActivities(
@@ -58,19 +59,19 @@ class GioActivities extends StatefulWidget {
       required this.cloudStorageBloc, required this.onRefreshRequested})
       : super(key: key);
 
-  final Function(Photo) onPhotoTapped;
-  final Function(Video) onVideoTapped;
-  final Function(Audio) onAudioTapped;
-  final Function(User) onUserTapped;
-  final Function(Project) onProjectTapped;
-  final Function(ProjectPosition) onProjectPositionTapped;
-  final Function(ProjectPolygon) onPolygonTapped;
-  final Function(GeofenceEvent) onGeofenceEventTapped;
-  final Function(OrgMessage) onOrgMessage;
-  final Function(LocationResponse) onLocationResponse;
-  final Function(LocationRequest) onLocationRequest;
-  final Project? project;
-  final User? user;
+  final Function(mrm.Photo) onPhotoTapped;
+  final Function(mrm.Video) onVideoTapped;
+  final Function(mrm.Audio) onAudioTapped;
+  final Function(mrm.User) onUserTapped;
+  final Function(mrm.Project) onProjectTapped;
+  final Function(mrm.ProjectPosition) onProjectPositionTapped;
+  final Function(mrm.ProjectPolygon) onPolygonTapped;
+  final Function(mrm.GeofenceEvent) onGeofenceEventTapped;
+  final Function(mrm.OrgMessage) onOrgMessage;
+  final Function(mrm.LocationResponse) onLocationResponse;
+  final Function(mrm.LocationRequest) onLocationRequest;
+  final mrm.Project? project;
+  final mrm.User? user;
   final PrefsOGx prefsOGx;
   final CacheManager cacheManager;
   final ProjectBloc projectBloc;
@@ -113,8 +114,8 @@ class GioActivitiesState extends State<GioActivities>
     super.dispose();
   }
 
-  void _onTapped(ActivityModel activity) async {
-    pp('${E.redDot} GioActivitiesState: onTapped - ActivityModel: ${activity.toJson()}');
+  void _onTapped(mrm.ActivityModel activity) async {
+    pp('${E.redDot} GioActivitiesState: onTapped - ActivityModel');
     if (activity.photo != null) {
       widget.onPhotoTapped(activity.photo!);
     }
@@ -143,7 +144,6 @@ class GioActivitiesState extends State<GioActivities>
 
   @override
   Widget build(BuildContext context) {
-    final  color = getTextColorForBackground(Theme.of(context).primaryColor);
     return ScreenTypeLayout.builder(
       mobile: (context) {
         return MobileList(
@@ -193,11 +193,11 @@ class TabletList extends StatefulWidget {
       required this.dataApiDog,
       required this.fcmBloc, required this.onRefreshRequested})
       : super(key: key);
-  final Function(ActivityModel) onTapped;
+  final Function(mrm.ActivityModel) onTapped;
   final PrefsOGx prefsOGx;
   final CacheManager cacheManager;
   final ProjectBloc projectBloc;
-  final Project? project;
+  final mrm.Project? project;
   final OrganizationBloc organizationBloc;
   final DataApiDog dataApiDog;
   final FCMBloc fcmBloc;
@@ -223,8 +223,7 @@ class TabletListState extends State<TabletList> {
     setState(() {});
   }
 
-  onTapped(ActivityModel act) {
-    pp(' 🍎 onTapped ... ${act.toJson()}');
+  onTapped(mrm.ActivityModel act) {
     widget.onTapped(act);
   }
 
@@ -259,11 +258,11 @@ class MobileList extends StatefulWidget {
       required this.geoUploader,
       required this.cloudStorageBloc, required this.onRefreshRequested})
       : super(key: key);
-  final Function(ActivityModel) onTapped;
+  final Function(mrm.ActivityModel) onTapped;
   final PrefsOGx prefsOGx;
   final CacheManager cacheManager;
   final ProjectBloc projectBloc;
-  final Project? project;
+  final mrm.Project? project;
   final OrganizationBloc organizationBloc;
   final DataApiDog dataApiDog;
   final FCMBloc fcmBloc;
@@ -314,7 +313,7 @@ class MobileListState extends State<MobileList> {
             )));
   }
 
-  _onTapped(ActivityModel activity) async {
+  _onTapped(mrm.ActivityModel activity) async {
     widget.onTapped(activity);
   }
 

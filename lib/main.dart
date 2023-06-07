@@ -101,6 +101,8 @@ import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/bloc/project_bloc.dart';
 import 'package:geo_monitor/library/functions.dart';
 import 'package:geo_monitor/realm_data/data/realm_skunk.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
+import 'package:geo_monitor/realm_data/test_realm_sync.dart';
 import 'package:geo_monitor/splash/splash_page.dart';
 import 'package:geo_monitor/stitch/stitch_service.dart';
 import 'package:geo_monitor/ui/dashboard/dashboard_main.dart';
@@ -133,8 +135,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   firebaseApp = await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform);
-  pp('$mx initializeGioServices: '
-      ' Firebase App has been initialized: ${firebaseApp.name}, checking for authed current user');
+  pp('\n\n$mx main: 🍎'
+      ' Firebase App has been initialized: ${firebaseApp.name}, checking for authed current user\n');
   fbAuthedUser = fb.FirebaseAuth.instance.currentUser;
 
   // runApp(ProviderScope(
@@ -179,18 +181,18 @@ class GeoApp extends ConsumerWidget {
             theme: themeBloc.getTheme(themeIndex).lightTheme,
             darkTheme: themeBloc.getTheme(themeIndex).darkTheme,
             themeMode: ThemeMode.system,
-            // home:  const MediaGetter(),
-            home: AnimatedSplashScreen(
-              duration: 5000,
-              splash: const SplashWidget(),
-              animationDuration: const Duration(milliseconds: 3000),
-              curve: Curves.easeInCirc,
-              splashIconSize: 160.0,
-              nextScreen: LandingPage(prefsOGx: PrefsOGx()),
-              splashTransition: SplashTransition.fadeTransition,
-              pageTransitionType: PageTransitionType.leftToRight,
-              backgroundColor: Colors.pink.shade900,
-            ),
+            home:  const TestRealmSync(),
+            // home: AnimatedSplashScreen(
+            //   duration: 5000,
+            //   splash: const SplashWidget(),
+            //   animationDuration: const Duration(milliseconds: 3000),
+            //   curve: Curves.easeInCirc,
+            //   splashIconSize: 160.0,
+            //   nextScreen: LandingPage(prefsOGx: PrefsOGx()),
+            //   splashTransition: SplashTransition.fadeTransition,
+            //   pageTransitionType: PageTransitionType.leftToRight,
+            //   backgroundColor: Colors.pink.shade900,
+            // ),
           );
         },
       ),
@@ -314,6 +316,7 @@ class LandingPageState extends State<LandingPage> {
         cacheManager: cacheManager,
         isolateHandler: dataHandler,
         fcmBloc: fcmBloc,
+        realmSyncApi: realmSyncApi,
         refreshBloc: refreshBloc,
         organizationBloc: organizationBloc,
         projectBloc: projectBloc,
@@ -330,6 +333,7 @@ class LandingPageState extends State<LandingPage> {
         fcmBloc: fcmBloc,
         projectBloc: projectBloc,
         prefsOGx: prefsOGx,
+        realmSyncApi: realmSyncApi,
         refreshBloc: refreshBloc,
         firebaseAuth: FirebaseAuth.instance,
         cloudStorageBloc: cloudStorageBloc,

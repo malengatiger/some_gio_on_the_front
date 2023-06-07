@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../data/project.dart';
 
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
+
 class ProjectSchedulesMobile extends StatefulWidget {
   const ProjectSchedulesMobile({Key? key, required this.project}) : super(key: key);
-  final Project project;
+  final mrm.Project project;
   @override
   ProjectSchedulesMobileState createState() => ProjectSchedulesMobileState();
 }

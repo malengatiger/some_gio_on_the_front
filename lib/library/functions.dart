@@ -25,6 +25,8 @@ import 'data/activity_model.dart';
 import 'data/position.dart';
 import 'data/project_position.dart';
 import 'data/user.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
+
 
 List<String> logs = [];
 bool busy = false;
@@ -961,12 +963,12 @@ Future<Map<String, String>> getStartEndDates({int? numberOfDays}) async {
   return rec;
 }
 
-void sortActivitiesDescending(List<ActivityModel> models) {
+void sortActivitiesDescending(List<mrm.ActivityModel> models) {
   models.sort((a, b) => DateTime.parse(b.date!)
       .millisecondsSinceEpoch
       .compareTo(DateTime.parse(a.date!).millisecondsSinceEpoch));
 }
-void sortActivitiesAscending(List<ActivityModel> models) {
+void sortActivitiesAscending(List<mrm.ActivityModel> models) {
   models.sort((a, b) => DateTime.parse(a.date!)
       .millisecondsSinceEpoch
       .compareTo(DateTime.parse(b.date!).millisecondsSinceEpoch));
@@ -1524,13 +1526,13 @@ abstract class SnackBarListener {
   onActionPressed(int action);
 }
 
-ProjectPolygon? getPolygonUserIsWithin(
-    {required List<ProjectPolygon> polygons,
+mrm.ProjectPolygon? getPolygonUserIsWithin(
+    {required List<mrm.ProjectPolygon> polygons,
     required double latitude,
     required double longitude}) {
   pp('🍎🍎 getPolygonUserIsWithin: location: 🍎 lat: $latitude lng: $longitude ');
 
-  ProjectPolygon? polygon;
+  mrm.ProjectPolygon? polygon;
   for (var p in polygons) {
     var isWithinPolygon = checkIfLocationIsWithinPolygon(
         positions: p.positions, latitude: latitude, longitude: longitude);
@@ -1549,7 +1551,7 @@ ProjectPolygon? getPolygonUserIsWithin(
 }
 
 bool checkIfLocationIsWithinPolygons(
-    {required List<ProjectPolygon> polygons,
+    {required List<mrm.ProjectPolygon> polygons,
     required double latitude,
     required double longitude}) {
   pp('🍎🍎 checkIfLocationIsWithinPolygons: location: 🍎 lat: $latitude lng: $longitude ');
@@ -1574,7 +1576,7 @@ bool checkIfLocationIsWithinPolygons(
 }
 
 bool checkIfLocationIsWithinPolygon(
-    {required List<Position> positions,
+    {required List<mrm.Position> positions,
     required double latitude,
     required double longitude}) {
   var polygonPoints = <Point>[];

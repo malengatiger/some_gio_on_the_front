@@ -6,6 +6,7 @@ import 'package:geo_monitor/library/ui/settings/settings_form.dart';
 import 'package:geo_monitor/library/ui/settings/settings_form_monitor.dart';
 
 import '../../../l10n/translation_handler.dart';
+import '../../../realm_data/data/realm_sync_api.dart';
 import '../../api/data_api_og.dart';
 import '../../api/prefs_og.dart';
 import '../../bloc/fcm_bloc.dart';
@@ -23,7 +24,7 @@ class SettingsMobile extends StatefulWidget {
       required this.isolateHandler,
       required this.dataApiDog,
       required this.prefsOGx,
-      required this.organizationBloc})
+      required this.organizationBloc, required this.realmSyncApi})
       : super(key: key);
 
   final IsolateDataHandler isolateHandler;
@@ -31,6 +32,8 @@ class SettingsMobile extends StatefulWidget {
 
   final PrefsOGx prefsOGx;
   final OrganizationBloc organizationBloc;
+  final RealmSyncApi realmSyncApi;
+
   @override
   SettingsMobileState createState() => SettingsMobileState();
 }
@@ -171,6 +174,7 @@ class SettingsMobileState extends State<SettingsMobile>
                       onLocaleChanged: (String locale) {
                         _handleOnLocaleChanged(locale);
                       },
+                realmSyncApi: widget.realmSyncApi,
                       dataApiDog: widget.dataApiDog,
                       prefsOGx: widget.prefsOGx,
                       organizationBloc: widget.organizationBloc,

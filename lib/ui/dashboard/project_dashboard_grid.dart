@@ -21,6 +21,7 @@ import '../../library/data/user.dart';
 import '../../library/data/video.dart';
 import '../../library/functions.dart';
 import '../../utilities/constants.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class ProjectDashboardGrid extends StatefulWidget {
   const ProjectDashboardGrid(
@@ -37,7 +38,7 @@ class ProjectDashboardGrid extends StatefulWidget {
   final double? totalHeight;
   final double? topPadding;
   final double? horizontalPadding;
-  final Project project;
+  final mrm.Project project;
   final bool showProjectName;
   final int crossAxisCount;
   final DashboardStrings dashboardStrings;

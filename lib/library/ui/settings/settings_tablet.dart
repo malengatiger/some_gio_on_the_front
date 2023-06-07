@@ -6,6 +6,7 @@ import 'package:geo_monitor/library/data/audio.dart';
 import 'package:geo_monitor/library/data/photo.dart';
 import 'package:geo_monitor/library/data/video.dart';
 import 'package:geo_monitor/library/ui/settings/settings_form.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:geo_monitor/ui/activity/geo_activity.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:responsive_builder/responsive_builder.dart';
@@ -24,6 +25,7 @@ import '../../data/project.dart';
 import '../../data/settings_model.dart';
 import '../../functions.dart';
 import '../maps/location_response_map.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class SettingsTablet extends StatefulWidget {
   const SettingsTablet(
@@ -31,7 +33,7 @@ class SettingsTablet extends StatefulWidget {
       required this.dataApiDog,
       required this.prefsOGx,
       required this.organizationBloc,
-      required this.dataHandler, required this.cacheManager, required this.projectBloc, required this.project, required this.fcmBloc, required this.geoUploader, required this.cloudStorageBloc})
+      required this.dataHandler, required this.cacheManager, required this.projectBloc, required this.project, required this.fcmBloc, required this.geoUploader, required this.cloudStorageBloc, required this.realmSyncApi})
       : super(key: key);
   final DataApiDog dataApiDog;
   final PrefsOGx prefsOGx;
@@ -39,10 +41,11 @@ class SettingsTablet extends StatefulWidget {
   final IsolateDataHandler dataHandler;
   final CacheManager cacheManager;
   final ProjectBloc projectBloc;
-  final Project? project;
+  final mrm.Project? project;
   final FCMBloc fcmBloc;
   final GeoUploader geoUploader;
   final CloudStorageBloc cloudStorageBloc;
+  final RealmSyncApi realmSyncApi;
 
 
   @override
@@ -123,7 +126,7 @@ class SettingsTabletState extends State<SettingsTablet>
                     dataHandler: widget.dataHandler,
                     dataApiDog: widget.dataApiDog,
                     prefsOGx: widget.prefsOGx,
-                    organizationBloc: widget.organizationBloc,
+                    organizationBloc: widget.organizationBloc, realmSyncApi: widget.realmSyncApi,
                   ),
                 ),
               ),
@@ -174,6 +177,7 @@ class SettingsTabletState extends State<SettingsTablet>
                   dataApiDog: widget.dataApiDog,
                   prefsOGx: widget.prefsOGx,
                   organizationBloc: widget.organizationBloc,
+                  realmSyncApi: widget.realmSyncApi,
                 ),
               ),
             ),
@@ -207,7 +211,7 @@ class SettingsTabletState extends State<SettingsTablet>
     ));
   }
 
-  void _navigateToLocationResponseMap(LocationResponse locationResponse) async {
+  void _navigateToLocationResponseMap(mrm.LocationResponse locationResponse) async {
     Navigator.push(
         context,
         PageTransition(
@@ -219,11 +223,11 @@ class SettingsTabletState extends State<SettingsTablet>
             )));
   }
 
-  showPhoto(Photo p1) {}
+  showPhoto(mrm.Photo p1) {}
 
-  showVideo(Video p1) {}
+  showVideo(mrm.Video p1) {}
 
-  showAudio(Audio p1) {}
+  showAudio(mrm.Audio p1) {}
 
   void _handleOnLocaleChanged(String locale) {
     pp('SettingsForm 😎😎😎😎 _handleOnLocaleChanged: $locale');

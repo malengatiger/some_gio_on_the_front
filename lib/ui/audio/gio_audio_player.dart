@@ -18,6 +18,7 @@ import '../../library/functions.dart';
 import '../../library/ui/loading_card.dart';
 import '../../library/ui/ratings/rating_adder.dart';
 import '../activity/user_profile_card.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class GioAudioPlayer extends StatefulWidget {
   const GioAudioPlayer(
@@ -31,7 +32,7 @@ class GioAudioPlayer extends StatefulWidget {
       required this.cacheManager})
       : super(key: key);
 
-  final Audio audio;
+  final mrm.Audio audio;
   final double? width, height;
   final Function() onCloseRequested;
   final DataApiDog dataApiDog;
@@ -43,7 +44,7 @@ class GioAudioPlayer extends StatefulWidget {
 }
 
 class GioAudioPlayerState extends State<GioAudioPlayer> {
-  static const mm = '🌎🌎🌎🌎🌎🌎 AudioPlayerOGS: 🍎 🍎 🍎';
+  static const mm = '🌎🌎🌎🌎🌎🌎 GioAudioPlayer: 🍎 🍎 🍎';
   late AudioPlayer player;
   Duration? duration;
   User? user;
@@ -412,7 +413,7 @@ class AudioPlayerWidget extends StatelessWidget {
   final String projectName, durationText;
   final SettingsModel settingsModel;
   final Duration duration;
-  final Audio audio;
+  final mrm.Audio audio;
   final bool isPlaying, isPaused, isStopped, showControls;
   final double padding;
 

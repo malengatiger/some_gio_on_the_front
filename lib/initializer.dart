@@ -70,10 +70,19 @@ class Initializer {
     realmSyncApi = RealmSyncApi();
     final sett = await prefsOGx.getSettings();
     var ok = await realmSyncApi.initialize();
+
+
     if (sett.organizationId != null) {
+      var m = getStartEndDatesFromDays(numberOfDays: sett.numberOfDays!);
       if (ok) {
         realmSyncApi.setSubscriptions(
-            organizationId: sett.organizationId, countryId: null);
+            organizationId: sett.organizationId, countryId: null, startDate: m.$1);
+      }
+    } else {
+      if (ok) {
+        realmSyncApi.setSubscriptions(
+            organizationId: null, countryId: null, startDate: DateTime.now().toUtc()
+            .subtract(const Duration(days: 30)).toIso8601String());
       }
     }
 

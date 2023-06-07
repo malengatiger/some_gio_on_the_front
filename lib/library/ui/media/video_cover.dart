@@ -4,10 +4,11 @@ import 'package:geo_monitor/library/ui/media/photo_cover.dart';
 
 import '../../data/video.dart';
 import '../../functions.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class VideoCover extends StatelessWidget {
   const VideoCover({Key? key, required this.video}) : super(key: key);
-  final Video video;
+  final mrm.Video video;
   @override
   Widget build(BuildContext context) {
     return Stack(

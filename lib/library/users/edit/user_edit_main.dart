@@ -13,9 +13,10 @@ import '../../cache_manager.dart';
 import '../../data/project.dart';
 import '../../data/user.dart';
 import 'user_edit_mobile.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class UserEditMain extends StatelessWidget {
-  final User? user;
+  final mrm.User? user;
   final PrefsOGx prefsOGx;
   final CacheManager cacheManager;
   final ProjectBloc projectBloc;
