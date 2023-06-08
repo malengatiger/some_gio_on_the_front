@@ -1,6 +1,4 @@
-import 'dart:typed_data';
 
-import 'package:geo_monitor/library/functions.dart';
 import 'package:realm/realm.dart';
 
 part 'schemas.g.dart';
@@ -181,7 +179,7 @@ class _Project {
   late String? projectId;
   late String? name;
   late String? created;
-  late List<_City> nearestCities = [];
+  late List<String> nearestCities = [];
   @Indexed()
   late String? organizationId;
   late String? organizationName;
@@ -206,11 +204,13 @@ class _ProjectPosition {
   late String? projectPositionId;
   @Indexed()
   late String? organizationId;
+  late String? organizationName;
   late _Position? position;
-  late List<_City> nearestCities = [];
+  late List<String> nearestCities = [];
   late String? name;
   late String? userId;
   late String? userName;
+  late String? userUrl;
   late String? possibleAddress;
   late String? translatedMessage;
   late String? translatedTitle;
@@ -231,9 +231,11 @@ class _ProjectPolygon {
   late String? organizationId;
   late String? organizationName;
   late List<_Position> positions = [];
-  late List<_City> nearestCities = [];
+  late List<String> nearestCities = [];
   late String? userId;
   late String? userName;
+  late String? userUrl;
+
   late String? translatedMessage;
   late String? translatedTitle;
 }
@@ -376,7 +378,7 @@ class _GioSubscription {
   late ObjectId id;
   late String? subscriptionId;
   late String? date;
-  late _User? user;
+  late String? user;
   @Indexed()
   late String? organizationId;
   late String? organizationName, updated;
@@ -478,21 +480,21 @@ class _ActivityModel {
   late String? organizationName;
   @Indexed()
   late String? organizationId;
-  late _Photo? photo;
-  late _Video? video;
-  late _Audio? audio;
-  late _User? user;
-  late _Project? project;
-  late _ProjectPosition? projectPosition;
-  late _ProjectPolygon? projectPolygon;
-  late _OrgMessage? orgMessage;
-  late _GeofenceEvent? geofenceEvent;
-  late _LocationRequest? locationRequest;
-  late _LocationResponse? locationResponse;
+  late String? photo;
+  late String? video;
+  late String? audio;
+  late String? user;
+  late String? project;
+  late String? projectPosition;
+  late String? projectPolygon;
+  late String? orgMessage;
+  late String? geofenceEvent;
+  late String? locationRequest;
+  late String? locationResponse;
   late String? userThumbnailUrl;
   late String? userType;
   late String? translatedUserType;
-  late _SettingsModel? settingsModel;
+  late String? settingsModel;
   late int? intDate = 0;
 }
 

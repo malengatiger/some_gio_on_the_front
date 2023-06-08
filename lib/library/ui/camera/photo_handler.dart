@@ -97,6 +97,8 @@ class PhotoHandlerState extends State<PhotoHandler>
   Future _setTexts() async {
     var p = await widget.prefsOGx.getSettings();
     sett = OldToRealm.getSettings(p);
+    var t = await widget.prefsOGx.getUser();
+    user = OldToRealm.getUser(t!);
     fileSavedWillUpload =
         await translator.translate('fileSavedWillUpload', sett.locale!);
     takePicture = await translator.translate('takePicture', sett.locale!);

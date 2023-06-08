@@ -46,7 +46,7 @@ class AuthPhoneSignInState extends State<AuthPhoneSignIn>
   final mm = '🥬🥬🥬🥬🥬🥬 AuthPhoneSignIn: ';
   String? phoneVerificationId;
   String? code;
-  final phoneController = TextEditingController(text: "+19985550000");
+  final phoneController = TextEditingController(text: "+19095550000");
   final codeController = TextEditingController(text: '123456');
   final orgNameController = TextEditingController();
   final adminController = TextEditingController();
@@ -65,9 +65,14 @@ class AuthPhoneSignInState extends State<AuthPhoneSignIn>
         reverseDuration: const Duration(milliseconds: 2000),
         vsync: this);
     super.initState();
+    _seedCountries();
     _setTexts();
   }
 
+  void _seedCountries() {
+    final r = realmSyncApi.getCountries();
+    pp('$mm found ${r.length} countries');
+  }
   Future _setTexts() async {
     final sett = await widget.prefsOGx.getSettings();
     signInStrings = await SignInStrings.getTranslated(sett);
@@ -190,7 +195,7 @@ class _AuthPhoneSigninCardState extends State<AuthPhoneSigninCard> {
   final mm = '🥬🥬🥬🥬🥬🥬😡 AuthPhoneSigninCard: 😡';
   String? phoneVerificationId;
   String? code;
-  final phoneController = TextEditingController(text: "+19985550000");
+  final phoneController = TextEditingController(text: "+19095550000");
   final codeController = TextEditingController(text: '123456');
   final orgNameController = TextEditingController();
   final adminController = TextEditingController();
@@ -292,7 +297,7 @@ class _AuthPhoneSigninCardState extends State<AuthPhoneSigninCard> {
       }
     } catch (e) {
       pp('\n\n\n .... $e \n\n\n');
-      String msg = '$e';
+      String msg = 'Unable lo Sign in. Have you registered an organization?';
       if (msg.contains('dup key')) {
         msg = signInStrings == null
             ? 'Duplicate organization name'
@@ -317,7 +322,6 @@ class _AuthPhoneSigninCardState extends State<AuthPhoneSigninCard> {
       if (mounted) {
         showSnackBar(
             duration: const Duration(seconds: 5),
-            backgroundColor: Colors.pink.shade700,
             textStyle: myTextStyleMedium(context),
             padding: 20.0,
             message: msg,

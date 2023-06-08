@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 
 import '../library/data/user.dart';
 import '../library/functions.dart';
@@ -6,29 +7,38 @@ import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
 class MemberList extends StatelessWidget {
   final Function(mrm.User) onUserTapped;
-  final List<mrm.User> users;
+  final RealmSyncApi realmSyncApi;
 
-  const MemberList(
-      {super.key,
-      required this.onUserTapped,
-      required this.users});
+  const MemberList({
+    super.key,
+    required this.onUserTapped,
+    required this.realmSyncApi,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 160,
-      child: ListView.builder(
-          itemCount: users.length,
-          scrollDirection: Axis.horizontal,
-          itemBuilder: (context, index) {
-            final user = users.elementAt(index);
-            return GestureDetector(
-                onTap: () {
-                  onUserTapped(user);
-                },
-                child: UserView(user: user, height: 40, width: 140));
-          }),
-    );
+    return StreamBuilder<List<mrm.User>>(
+        stream: realmSyncApi.userStream,
+        builder: (ctx, snapshot) {
+          var users = <mrm.User>[];
+          if (snapshot.hasData) {
+            users = snapshot.data!;
+          }
+          return SizedBox(
+            height: 160,
+            child: ListView.builder(
+                itemCount: users.length,
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (context, index) {
+                  final user = users.elementAt(index);
+                  return GestureDetector(
+                      onTap: () {
+                        onUserTapped(user);
+                      },
+                      child: UserView(user: user, height: 40, width: 140));
+                }),
+          );
+        });
   }
 }
 

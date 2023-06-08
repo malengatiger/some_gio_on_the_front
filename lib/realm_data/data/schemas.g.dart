@@ -1199,7 +1199,7 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
     String? translatedMessage,
     String? translatedTitle,
     int? monitorMaxDistanceInMetres,
-    Iterable<City> nearestCities = const [],
+    Iterable<String> nearestCities = const [],
   }) {
     RealmObjectBase.set(this, '_id', id);
     RealmObjectBase.set(this, 'projectId', projectId);
@@ -1212,8 +1212,8 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
     RealmObjectBase.set(this, 'translatedTitle', translatedTitle);
     RealmObjectBase.set(
         this, 'monitorMaxDistanceInMetres', monitorMaxDistanceInMetres);
-    RealmObjectBase.set<RealmList<City>>(
-        this, 'nearestCities', RealmList<City>(nearestCities));
+    RealmObjectBase.set<RealmList<String>>(
+        this, 'nearestCities', RealmList<String>(nearestCities));
   }
 
   Project._();
@@ -1241,10 +1241,10 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
   set created(String? value) => RealmObjectBase.set(this, 'created', value);
 
   @override
-  RealmList<City> get nearestCities =>
-      RealmObjectBase.get<City>(this, 'nearestCities') as RealmList<City>;
+  RealmList<String> get nearestCities =>
+      RealmObjectBase.get<String>(this, 'nearestCities') as RealmList<String>;
   @override
-  set nearestCities(covariant RealmList<City> value) =>
+  set nearestCities(covariant RealmList<String> value) =>
       throw RealmUnsupportedSetError();
 
   @override
@@ -1306,8 +1306,8 @@ class Project extends _Project with RealmEntity, RealmObjectBase, RealmObject {
       SchemaProperty('projectId', RealmPropertyType.string, optional: true),
       SchemaProperty('name', RealmPropertyType.string, optional: true),
       SchemaProperty('created', RealmPropertyType.string, optional: true),
-      SchemaProperty('nearestCities', RealmPropertyType.object,
-          linkTarget: 'City', collectionType: RealmCollectionType.list),
+      SchemaProperty('nearestCities', RealmPropertyType.string,
+          collectionType: RealmCollectionType.list),
       SchemaProperty('organizationId', RealmPropertyType.string,
           optional: true, indexed: true),
       SchemaProperty('organizationName', RealmPropertyType.string,
@@ -1333,14 +1333,16 @@ class ProjectPosition extends _ProjectPosition
     String? created,
     String? projectPositionId,
     String? organizationId,
+    String? organizationName,
     Position? position,
     String? name,
     String? userId,
     String? userName,
+    String? userUrl,
     String? possibleAddress,
     String? translatedMessage,
     String? translatedTitle,
-    Iterable<City> nearestCities = const [],
+    Iterable<String> nearestCities = const [],
   }) {
     RealmObjectBase.set(this, 'projectName', projectName);
     RealmObjectBase.set(this, 'projectId', projectId);
@@ -1349,15 +1351,17 @@ class ProjectPosition extends _ProjectPosition
     RealmObjectBase.set(this, '_id', id);
     RealmObjectBase.set(this, 'projectPositionId', projectPositionId);
     RealmObjectBase.set(this, 'organizationId', organizationId);
+    RealmObjectBase.set(this, 'organizationName', organizationName);
     RealmObjectBase.set(this, 'position', position);
     RealmObjectBase.set(this, 'name', name);
     RealmObjectBase.set(this, 'userId', userId);
     RealmObjectBase.set(this, 'userName', userName);
+    RealmObjectBase.set(this, 'userUrl', userUrl);
     RealmObjectBase.set(this, 'possibleAddress', possibleAddress);
     RealmObjectBase.set(this, 'translatedMessage', translatedMessage);
     RealmObjectBase.set(this, 'translatedTitle', translatedTitle);
-    RealmObjectBase.set<RealmList<City>>(
-        this, 'nearestCities', RealmList<City>(nearestCities));
+    RealmObjectBase.set<RealmList<String>>(
+        this, 'nearestCities', RealmList<String>(nearestCities));
   }
 
   ProjectPosition._();
@@ -1407,6 +1411,13 @@ class ProjectPosition extends _ProjectPosition
       RealmObjectBase.set(this, 'organizationId', value);
 
   @override
+  String? get organizationName =>
+      RealmObjectBase.get<String>(this, 'organizationName') as String?;
+  @override
+  set organizationName(String? value) =>
+      RealmObjectBase.set(this, 'organizationName', value);
+
+  @override
   Position? get position =>
       RealmObjectBase.get<Position>(this, 'position') as Position?;
   @override
@@ -1414,10 +1425,10 @@ class ProjectPosition extends _ProjectPosition
       RealmObjectBase.set(this, 'position', value);
 
   @override
-  RealmList<City> get nearestCities =>
-      RealmObjectBase.get<City>(this, 'nearestCities') as RealmList<City>;
+  RealmList<String> get nearestCities =>
+      RealmObjectBase.get<String>(this, 'nearestCities') as RealmList<String>;
   @override
-  set nearestCities(covariant RealmList<City> value) =>
+  set nearestCities(covariant RealmList<String> value) =>
       throw RealmUnsupportedSetError();
 
   @override
@@ -1435,6 +1446,12 @@ class ProjectPosition extends _ProjectPosition
       RealmObjectBase.get<String>(this, 'userName') as String?;
   @override
   set userName(String? value) => RealmObjectBase.set(this, 'userName', value);
+
+  @override
+  String? get userUrl =>
+      RealmObjectBase.get<String>(this, 'userUrl') as String?;
+  @override
+  set userUrl(String? value) => RealmObjectBase.set(this, 'userUrl', value);
 
   @override
   String? get possibleAddress =>
@@ -1482,13 +1499,16 @@ class ProjectPosition extends _ProjectPosition
           optional: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
           optional: true, indexed: true),
+      SchemaProperty('organizationName', RealmPropertyType.string,
+          optional: true),
       SchemaProperty('position', RealmPropertyType.object,
           optional: true, linkTarget: 'Position'),
-      SchemaProperty('nearestCities', RealmPropertyType.object,
-          linkTarget: 'City', collectionType: RealmCollectionType.list),
+      SchemaProperty('nearestCities', RealmPropertyType.string,
+          collectionType: RealmCollectionType.list),
       SchemaProperty('name', RealmPropertyType.string, optional: true),
       SchemaProperty('userId', RealmPropertyType.string, optional: true),
       SchemaProperty('userName', RealmPropertyType.string, optional: true),
+      SchemaProperty('userUrl', RealmPropertyType.string, optional: true),
       SchemaProperty('possibleAddress', RealmPropertyType.string,
           optional: true),
       SchemaProperty('translatedMessage', RealmPropertyType.string,
@@ -1511,10 +1531,11 @@ class ProjectPolygon extends _ProjectPolygon
     String? organizationName,
     String? userId,
     String? userName,
+    String? userUrl,
     String? translatedMessage,
     String? translatedTitle,
     Iterable<Position> positions = const [],
-    Iterable<City> nearestCities = const [],
+    Iterable<String> nearestCities = const [],
   }) {
     RealmObjectBase.set(this, 'projectName', projectName);
     RealmObjectBase.set(this, 'projectId', projectId);
@@ -1525,12 +1546,13 @@ class ProjectPolygon extends _ProjectPolygon
     RealmObjectBase.set(this, 'organizationName', organizationName);
     RealmObjectBase.set(this, 'userId', userId);
     RealmObjectBase.set(this, 'userName', userName);
+    RealmObjectBase.set(this, 'userUrl', userUrl);
     RealmObjectBase.set(this, 'translatedMessage', translatedMessage);
     RealmObjectBase.set(this, 'translatedTitle', translatedTitle);
     RealmObjectBase.set<RealmList<Position>>(
         this, 'positions', RealmList<Position>(positions));
-    RealmObjectBase.set<RealmList<City>>(
-        this, 'nearestCities', RealmList<City>(nearestCities));
+    RealmObjectBase.set<RealmList<String>>(
+        this, 'nearestCities', RealmList<String>(nearestCities));
   }
 
   ProjectPolygon._();
@@ -1588,10 +1610,10 @@ class ProjectPolygon extends _ProjectPolygon
       throw RealmUnsupportedSetError();
 
   @override
-  RealmList<City> get nearestCities =>
-      RealmObjectBase.get<City>(this, 'nearestCities') as RealmList<City>;
+  RealmList<String> get nearestCities =>
+      RealmObjectBase.get<String>(this, 'nearestCities') as RealmList<String>;
   @override
-  set nearestCities(covariant RealmList<City> value) =>
+  set nearestCities(covariant RealmList<String> value) =>
       throw RealmUnsupportedSetError();
 
   @override
@@ -1604,6 +1626,12 @@ class ProjectPolygon extends _ProjectPolygon
       RealmObjectBase.get<String>(this, 'userName') as String?;
   @override
   set userName(String? value) => RealmObjectBase.set(this, 'userName', value);
+
+  @override
+  String? get userUrl =>
+      RealmObjectBase.get<String>(this, 'userUrl') as String?;
+  @override
+  set userUrl(String? value) => RealmObjectBase.set(this, 'userUrl', value);
 
   @override
   String? get translatedMessage =>
@@ -1645,10 +1673,11 @@ class ProjectPolygon extends _ProjectPolygon
           optional: true),
       SchemaProperty('positions', RealmPropertyType.object,
           linkTarget: 'Position', collectionType: RealmCollectionType.list),
-      SchemaProperty('nearestCities', RealmPropertyType.object,
-          linkTarget: 'City', collectionType: RealmCollectionType.list),
+      SchemaProperty('nearestCities', RealmPropertyType.string,
+          collectionType: RealmCollectionType.list),
       SchemaProperty('userId', RealmPropertyType.string, optional: true),
       SchemaProperty('userName', RealmPropertyType.string, optional: true),
+      SchemaProperty('userUrl', RealmPropertyType.string, optional: true),
       SchemaProperty('translatedMessage', RealmPropertyType.string,
           optional: true),
       SchemaProperty('translatedTitle', RealmPropertyType.string,
@@ -2575,7 +2604,7 @@ class GioSubscription extends _GioSubscription
     ObjectId id, {
     String? subscriptionId,
     String? date,
-    User? user,
+    String? user,
     String? organizationId,
     String? organizationName,
     String? updated,
@@ -2617,9 +2646,9 @@ class GioSubscription extends _GioSubscription
   set date(String? value) => RealmObjectBase.set(this, 'date', value);
 
   @override
-  User? get user => RealmObjectBase.get<User>(this, 'user') as User?;
+  String? get user => RealmObjectBase.get<String>(this, 'user') as String?;
   @override
-  set user(covariant User? value) => RealmObjectBase.set(this, 'user', value);
+  set user(String? value) => RealmObjectBase.set(this, 'user', value);
 
   @override
   String? get organizationId =>
@@ -2682,8 +2711,7 @@ class GioSubscription extends _GioSubscription
       SchemaProperty('subscriptionId', RealmPropertyType.string,
           optional: true),
       SchemaProperty('date', RealmPropertyType.string, optional: true),
-      SchemaProperty('user', RealmPropertyType.object,
-          optional: true, linkTarget: 'User'),
+      SchemaProperty('user', RealmPropertyType.string, optional: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
           optional: true, indexed: true),
       SchemaProperty('organizationName', RealmPropertyType.string,
@@ -3206,21 +3234,21 @@ class ActivityModel extends _ActivityModel
     String? projectName,
     String? organizationName,
     String? organizationId,
-    Photo? photo,
-    Video? video,
-    Audio? audio,
-    User? user,
-    Project? project,
-    ProjectPosition? projectPosition,
-    ProjectPolygon? projectPolygon,
-    OrgMessage? orgMessage,
-    GeofenceEvent? geofenceEvent,
-    LocationRequest? locationRequest,
-    LocationResponse? locationResponse,
+    String? photo,
+    String? video,
+    String? audio,
+    String? user,
+    String? project,
+    String? projectPosition,
+    String? projectPolygon,
+    String? orgMessage,
+    String? geofenceEvent,
+    String? locationRequest,
+    String? locationResponse,
     String? userThumbnailUrl,
     String? userType,
     String? translatedUserType,
-    SettingsModel? settingsModel,
+    String? settingsModel,
     int? intDate = 0,
   }) {
     if (!_defaultsSet) {
@@ -3321,80 +3349,71 @@ class ActivityModel extends _ActivityModel
       RealmObjectBase.set(this, 'organizationId', value);
 
   @override
-  Photo? get photo => RealmObjectBase.get<Photo>(this, 'photo') as Photo?;
+  String? get photo => RealmObjectBase.get<String>(this, 'photo') as String?;
   @override
-  set photo(covariant Photo? value) =>
-      RealmObjectBase.set(this, 'photo', value);
+  set photo(String? value) => RealmObjectBase.set(this, 'photo', value);
 
   @override
-  Video? get video => RealmObjectBase.get<Video>(this, 'video') as Video?;
+  String? get video => RealmObjectBase.get<String>(this, 'video') as String?;
   @override
-  set video(covariant Video? value) =>
-      RealmObjectBase.set(this, 'video', value);
+  set video(String? value) => RealmObjectBase.set(this, 'video', value);
 
   @override
-  Audio? get audio => RealmObjectBase.get<Audio>(this, 'audio') as Audio?;
+  String? get audio => RealmObjectBase.get<String>(this, 'audio') as String?;
   @override
-  set audio(covariant Audio? value) =>
-      RealmObjectBase.set(this, 'audio', value);
+  set audio(String? value) => RealmObjectBase.set(this, 'audio', value);
 
   @override
-  User? get user => RealmObjectBase.get<User>(this, 'user') as User?;
+  String? get user => RealmObjectBase.get<String>(this, 'user') as String?;
   @override
-  set user(covariant User? value) => RealmObjectBase.set(this, 'user', value);
+  set user(String? value) => RealmObjectBase.set(this, 'user', value);
 
   @override
-  Project? get project =>
-      RealmObjectBase.get<Project>(this, 'project') as Project?;
+  String? get project =>
+      RealmObjectBase.get<String>(this, 'project') as String?;
   @override
-  set project(covariant Project? value) =>
-      RealmObjectBase.set(this, 'project', value);
+  set project(String? value) => RealmObjectBase.set(this, 'project', value);
 
   @override
-  ProjectPosition? get projectPosition =>
-      RealmObjectBase.get<ProjectPosition>(this, 'projectPosition')
-          as ProjectPosition?;
+  String? get projectPosition =>
+      RealmObjectBase.get<String>(this, 'projectPosition') as String?;
   @override
-  set projectPosition(covariant ProjectPosition? value) =>
+  set projectPosition(String? value) =>
       RealmObjectBase.set(this, 'projectPosition', value);
 
   @override
-  ProjectPolygon? get projectPolygon =>
-      RealmObjectBase.get<ProjectPolygon>(this, 'projectPolygon')
-          as ProjectPolygon?;
+  String? get projectPolygon =>
+      RealmObjectBase.get<String>(this, 'projectPolygon') as String?;
   @override
-  set projectPolygon(covariant ProjectPolygon? value) =>
+  set projectPolygon(String? value) =>
       RealmObjectBase.set(this, 'projectPolygon', value);
 
   @override
-  OrgMessage? get orgMessage =>
-      RealmObjectBase.get<OrgMessage>(this, 'orgMessage') as OrgMessage?;
+  String? get orgMessage =>
+      RealmObjectBase.get<String>(this, 'orgMessage') as String?;
   @override
-  set orgMessage(covariant OrgMessage? value) =>
+  set orgMessage(String? value) =>
       RealmObjectBase.set(this, 'orgMessage', value);
 
   @override
-  GeofenceEvent? get geofenceEvent =>
-      RealmObjectBase.get<GeofenceEvent>(this, 'geofenceEvent')
-          as GeofenceEvent?;
+  String? get geofenceEvent =>
+      RealmObjectBase.get<String>(this, 'geofenceEvent') as String?;
   @override
-  set geofenceEvent(covariant GeofenceEvent? value) =>
+  set geofenceEvent(String? value) =>
       RealmObjectBase.set(this, 'geofenceEvent', value);
 
   @override
-  LocationRequest? get locationRequest =>
-      RealmObjectBase.get<LocationRequest>(this, 'locationRequest')
-          as LocationRequest?;
+  String? get locationRequest =>
+      RealmObjectBase.get<String>(this, 'locationRequest') as String?;
   @override
-  set locationRequest(covariant LocationRequest? value) =>
+  set locationRequest(String? value) =>
       RealmObjectBase.set(this, 'locationRequest', value);
 
   @override
-  LocationResponse? get locationResponse =>
-      RealmObjectBase.get<LocationResponse>(this, 'locationResponse')
-          as LocationResponse?;
+  String? get locationResponse =>
+      RealmObjectBase.get<String>(this, 'locationResponse') as String?;
   @override
-  set locationResponse(covariant LocationResponse? value) =>
+  set locationResponse(String? value) =>
       RealmObjectBase.set(this, 'locationResponse', value);
 
   @override
@@ -3418,11 +3437,10 @@ class ActivityModel extends _ActivityModel
       RealmObjectBase.set(this, 'translatedUserType', value);
 
   @override
-  SettingsModel? get settingsModel =>
-      RealmObjectBase.get<SettingsModel>(this, 'settingsModel')
-          as SettingsModel?;
+  String? get settingsModel =>
+      RealmObjectBase.get<String>(this, 'settingsModel') as String?;
   @override
-  set settingsModel(covariant SettingsModel? value) =>
+  set settingsModel(String? value) =>
       RealmObjectBase.set(this, 'settingsModel', value);
 
   @override
@@ -3458,35 +3476,27 @@ class ActivityModel extends _ActivityModel
           optional: true),
       SchemaProperty('organizationId', RealmPropertyType.string,
           optional: true, indexed: true),
-      SchemaProperty('photo', RealmPropertyType.object,
-          optional: true, linkTarget: 'Photo'),
-      SchemaProperty('video', RealmPropertyType.object,
-          optional: true, linkTarget: 'Video'),
-      SchemaProperty('audio', RealmPropertyType.object,
-          optional: true, linkTarget: 'Audio'),
-      SchemaProperty('user', RealmPropertyType.object,
-          optional: true, linkTarget: 'User'),
-      SchemaProperty('project', RealmPropertyType.object,
-          optional: true, linkTarget: 'Project'),
-      SchemaProperty('projectPosition', RealmPropertyType.object,
-          optional: true, linkTarget: 'ProjectPosition'),
-      SchemaProperty('projectPolygon', RealmPropertyType.object,
-          optional: true, linkTarget: 'ProjectPolygon'),
-      SchemaProperty('orgMessage', RealmPropertyType.object,
-          optional: true, linkTarget: 'OrgMessage'),
-      SchemaProperty('geofenceEvent', RealmPropertyType.object,
-          optional: true, linkTarget: 'GeofenceEvent'),
-      SchemaProperty('locationRequest', RealmPropertyType.object,
-          optional: true, linkTarget: 'LocationRequest'),
-      SchemaProperty('locationResponse', RealmPropertyType.object,
-          optional: true, linkTarget: 'LocationResponse'),
+      SchemaProperty('photo', RealmPropertyType.string, optional: true),
+      SchemaProperty('video', RealmPropertyType.string, optional: true),
+      SchemaProperty('audio', RealmPropertyType.string, optional: true),
+      SchemaProperty('user', RealmPropertyType.string, optional: true),
+      SchemaProperty('project', RealmPropertyType.string, optional: true),
+      SchemaProperty('projectPosition', RealmPropertyType.string,
+          optional: true),
+      SchemaProperty('projectPolygon', RealmPropertyType.string,
+          optional: true),
+      SchemaProperty('orgMessage', RealmPropertyType.string, optional: true),
+      SchemaProperty('geofenceEvent', RealmPropertyType.string, optional: true),
+      SchemaProperty('locationRequest', RealmPropertyType.string,
+          optional: true),
+      SchemaProperty('locationResponse', RealmPropertyType.string,
+          optional: true),
       SchemaProperty('userThumbnailUrl', RealmPropertyType.string,
           optional: true),
       SchemaProperty('userType', RealmPropertyType.string, optional: true),
       SchemaProperty('translatedUserType', RealmPropertyType.string,
           optional: true),
-      SchemaProperty('settingsModel', RealmPropertyType.object,
-          optional: true, linkTarget: 'SettingsModel'),
+      SchemaProperty('settingsModel', RealmPropertyType.string, optional: true),
       SchemaProperty('intDate', RealmPropertyType.int, optional: true),
     ]);
   }

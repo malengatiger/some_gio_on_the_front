@@ -64,32 +64,39 @@ class Initializer {
     geoUploader = GeoUploader(errorHandler, cacheManager, dataApiDog);
 
     organizationBloc = OrganizationBloc(dataApiDog, cacheManager);
-    theGreatGeofencer = TheGreatGeofencer(dataApiDog, prefsOGx);
     locationRequestHandler = LocationRequestHandler(dataApiDog);
 
     realmSyncApi = RealmSyncApi();
     final sett = await prefsOGx.getSettings();
     var ok = await realmSyncApi.initialize();
-
+    final list = realmSyncApi.getCountries();
+    list.sort((a,b) => a.name!.compareTo(b.name!));
+    pp('\n$mx COUNTRIES LOADED: 🔵🔵🔵🔵🔵🔵🔵🔵🔵 ${list.length}');
+    // for (var country in list) {
+    //   pp('$mx country: ${country.name} 🔵');
+    // }
 
     if (sett.organizationId != null) {
       var m = getStartEndDatesFromDays(numberOfDays: sett.numberOfDays!);
       if (ok) {
         realmSyncApi.setSubscriptions(
-            organizationId: sett.organizationId, countryId: null, startDate: m.$1);
+            organizationId: sett.organizationId, countryId: null, startDate: m.$1, projectId: null);
       }
+      theGreatGeofencer = TheGreatGeofencer( prefsOGx, realmSyncApi,dataApiDog);
+
     } else {
       if (ok) {
         realmSyncApi.setSubscriptions(
-            organizationId: null, countryId: null, startDate: DateTime.now().toUtc()
-            .subtract(const Duration(days: 30)).toIso8601String());
+            organizationId: null, countryId: null, startDate: null, projectId: null);
       }
     }
 
+    //todo - dataHandler might not be needed
     dataHandler =
         IsolateDataHandler(prefsOGx, appAuth, cacheManager, realmSyncApi);
     pollingControl = IosPollingControl(dataHandler);
 
+    //todo - dataHandler might not be needed
     projectBloc = ProjectBloc(dataApiDog, cacheManager, dataHandler);
     userBloc = UserBloc(dataApiDog, cacheManager, dataHandler);
 
@@ -104,7 +111,6 @@ class Initializer {
     pp('$mx Heavy lifting starting ....');
 
     final start = DateTime.now();
-
     final settings = await prefsOGx.getSettings();
 
     FirebaseMessaging.instance.requestPermission();
@@ -125,10 +131,6 @@ class Initializer {
     pp('$mx organizationDataRefresh starting ........................');
     pp('$mx start with delay of 5 seconds before data refresh ..............');
 
-    final list = await cacheManager.getCountries();
-    for (var country in list) {
-      pp('$mx country: ${country.name}');
-    }
 
     if (settings.organizationId != null) {
       pp('$mx heavyLifting: manageMediaUploads starting ...............');
@@ -145,14 +147,14 @@ class Initializer {
 
     pp('$mx initializeGeo, heavyLifting: realmSyncApi to be initialized ...');
 
-    Future.delayed(const Duration(seconds: 15)).then((value) {
-      pp('$mx initializeGeo, heavyLifting: refreshing org data after delay of 15 seconds');
-      organizationBloc.getOrganizationData(
-          organizationId: sett.organizationId!,
-          forceRefresh: true,
-          startDate: m['startDate']!,
-          endDate: m['endDate']!);
-    });
+    // Future.delayed(const Duration(seconds: 15)).then((value) {
+    //   pp('$mx initializeGeo, heavyLifting: refreshing org data after delay of 15 seconds');
+    //   organizationBloc.getOrganizationData(
+    //       organizationId: sett.organizationId!,
+    //       forceRefresh: true,
+    //       startDate: m['startDate']!,
+    //       endDate: m['endDate']!);
+    // });
     //
     // Future.delayed(const Duration(seconds: 30)).then((value) {
     //   pp('$mx initializeGeo, heavyLifting: '

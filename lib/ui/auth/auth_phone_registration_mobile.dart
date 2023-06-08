@@ -5,14 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geo_monitor/library/api/prefs_og.dart';
 import 'package:geo_monitor/library/cache_manager.dart';
-import 'package:geo_monitor/library/data/country.dart';
-import 'package:geo_monitor/library/data/organization.dart';
-import 'package:geo_monitor/library/data/organization_registration_bag.dart';
 import 'package:geo_monitor/library/data/settings_model.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:geo_monitor/ui/auth/auth_phone_signin.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:uuid/uuid.dart';
+import 'package:realm/realm.dart';
 
 import '../../device_location/device_location_bloc.dart';
 import '../../l10n/translation_handler.dart';
@@ -60,7 +58,7 @@ class AuthPhoneRegistrationMobileState
   bool verificationFailed = false, verificationCompleted = false;
   bool busy = false;
   final _formKey = GlobalKey<FormState>();
-  ur.User? user;
+  mrm.User? user;
   mrm.Country? country;
 
   final errorController = StreamController<ErrorAnimationType>();
@@ -247,7 +245,7 @@ class AuthPhoneRegistrationMobileState
 
   Future<void> _doTheRegistration(UserCredential userCred) async {
     pp('$mm _doTheRegistration; userCred: $userCred');
-    final organizationId = const Uuid().v4();
+    final organizationId = Uuid.v4().toString();
     if (country == null) {
       showToast(
           backgroundColor: Theme.of(context).primaryColor,
@@ -256,7 +254,7 @@ class AuthPhoneRegistrationMobileState
           context: context);
       return;
     }
-    var org = Organization(
+    var org = mrm.Organization(ObjectId(),
         name: orgNameController.value.text,
         countryId: country!.countryId,
         email: emailController.value.text,
@@ -266,63 +264,71 @@ class AuthPhoneRegistrationMobileState
 
     var loc = await locationBloc.getLocation();
 
-    if (loc != null) {
-      pp('$mm firebase user credential obtained:  🍎 $userCred');
-      var gender = 'Unknown';
-      pp('$mm set up settings ...');
-      settingsModel ??= getBaseSettings();
-      settingsModel!.organizationId = organizationId;
-      pp('$mm create user object');
-      final sett = await cacheManager.getSettings();
-      final memberAddedChanged =
-          await translator.translate('memberAddedChanged', sett!.locale!);
-      final messageFromGeo = await getFCMMessageTitle();
-      user = ur.User(
-          name: adminController.value.text,
-          email: emailController.value.text,
-          userId: userCred.user!.uid,
-          cellphone: phoneController.value.text,
-          created: DateTime.now().toUtc().toIso8601String(),
-          userType: ur.UserType.orgAdministrator,
-          gender: gender,
-          active: 0,
-          organizationName: orgNameController.value.text,
-          organizationId: org.organizationId,
-          countryId: country!.countryId,
-          translatedTitle: messageFromGeo,
-          translatedMessage: memberAddedChanged,
-          password: null);
-      pp('$mm create OrganizationRegistrationBag');
-      var bag = OrganizationRegistrationBag(
-          organization: org,
-          projectPosition: null,
-          settings: settingsModel,
-          user: user,
-          project: null,
-          date: DateTime.now().toUtc().toIso8601String(),
-          latitude: loc.latitude,
-          longitude: loc.longitude);
+    pp('$mm firebase user credential obtained:  🍎 $userCred');
+    var gender = 'Unknown';
+    pp('$mm set up settings ...');
+    settingsModel ??= getBaseSettings();
+    settingsModel!.organizationId = organizationId;
+    pp('$mm create user object');
+    final sett = await cacheManager.getSettings();
+    final memberAddedChanged =
+        await translator.translate('memberAddedChanged', sett!.locale!);
+    final messageFromGeo = await getFCMMessageTitle();
+    var user =
+        _buildUser(userCred, gender, org, messageFromGeo, memberAddedChanged);
+    pp('$mm register Organization ................');
 
-      var resultBag = await widget.dataApiDog.registerOrganization(bag);
-      await widget.cacheManager
-          .addOrganization(organization: resultBag.organization!);
-      user!.password = const Uuid().v4();
-      // var result = await DataAPI.updateAuthedUser(user!);
+    var res = realmSyncApi.registerOrganization(organization: org, user: user);
 
-      pp('\n$mm Organization OG Administrator registered OK: adding org settings default. '
-          '😡😡😡😡  ');
-      await widget.prefsOGx.saveSettings(settingsModel!);
-      await themeBloc.changeToTheme(settingsModel!.themeIndex!);
-      await widget.prefsOGx.saveUser(user!);
-      await widget.cacheManager.addUser(user: user!);
-      await widget.cacheManager.addProject(project: resultBag.project!);
-      // await widget.cacheManager.addsub
-      await widget.cacheManager
-          .addProjectPosition(projectPosition: resultBag.projectPosition!);
-      pp('\n$mm Organization OG Administrator registered OK:🌍🌍🌍🌍  🍎 '
-          '${user!.toJson()} 🌍🌍🌍🌍');
-      pp('\n\n$mm Organization registered: 🌍🌍🌍🌍 🍎 ${resultBag.toJson()} 🌍🌍🌍🌍\n\n');
-    }
+    pp('\n$mm Organization OG Administrator registered OK: adding org settings default. '
+        '😡😡😡😡  registration result $res');
+    await widget.prefsOGx.saveSettings(settingsModel!);
+    await themeBloc.changeToTheme(settingsModel!.themeIndex!);
+    var oldUser = ur.User(
+        name: user.name,
+        email: user.email,
+        userId: user.userId,
+        cellphone: user.cellphone,
+        created: user.created,
+        userType: user.userType,
+        gender: gender,
+        organizationName: user.organizationName,
+        organizationId: organizationId,
+        countryId: country!.countryId,
+        active: 0,
+        translatedMessage: 'User Added',
+        translatedTitle: 'Member has been added to Organization',
+        password: null);
+
+    await widget.prefsOGx.saveUser(oldUser);
+    var cs = await widget.prefsOGx.getSettings();
+    cs.organizationId = org.organizationId;
+    await widget.prefsOGx.saveSettings(cs);
+
+    pp('\n$mm Organization OG Administrator registered OK:🌍🌍🌍🌍  🍎 '
+        '${user.name!} 🌍🌍🌍🌍');
+    pp('\n\n$mm Organization registered: 🌍🌍🌍🌍 🍎 ${org.name!} 🌍🌍🌍🌍\n\n');
+  }
+
+  mrm.User _buildUser(UserCredential userCred, String gender,
+      mrm.Organization org, String messageFromGeo, String memberAddedChanged) {
+    user = mrm.User(ObjectId(),
+        name: adminController.value.text,
+        email: emailController.value.text,
+        userId: userCred.user!.uid,
+        cellphone: phoneController.value.text,
+        created: DateTime.now().toUtc().toIso8601String(),
+        userType: ur.UserType.orgAdministrator,
+        gender: gender,
+        active: 0,
+        organizationName: orgNameController.value.text,
+        organizationId: org.organizationId,
+        countryId: country!.countryId,
+        translatedTitle: messageFromGeo,
+        translatedMessage: memberAddedChanged,
+        password: null);
+
+    return user!;
   }
 
   void _popOut() {
@@ -445,7 +451,6 @@ class AuthPhoneRegistrationMobileState
                     const SizedBox(
                       height: 8,
                     ),
-
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: SingleChildScrollView(

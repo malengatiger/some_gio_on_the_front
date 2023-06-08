@@ -1,14 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:geo_monitor/library/data/activity_model.dart';
 import 'package:geo_monitor/library/data/settings_model.dart';
 import 'package:geo_monitor/library/functions.dart';
 import 'package:geo_monitor/ui/activity/user_profile_card.dart';
 
 import '../../l10n/translation_handler.dart';
 import '../../library/api/prefs_og.dart';
-import '../../library/cache_manager.dart';
 import '../../library/data/activity_type_enum.dart';
-import '../../library/data/user.dart';
+import '../../library/data/geofence_event.dart';
+import '../../library/data/location_request.dart';
+import '../../library/data/location_response.dart';
 import 'activity_cards.dart';
 import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
@@ -207,82 +209,86 @@ class ActivityStreamCardState extends State<ActivityStreamCard> {
     late String message;
     // pp('$mm activityType: ${widget.activityModel.activityType}');
     switch (widget.activityModel.activityType!) {
-      case ActivityType.projectAdded:
+      case 'projectAdded':
         icon = Icon(Icons.access_time, color: Theme.of(context).primaryColor);
         message = widget.activityStrings.projectAdded == null
             ? '${widget.activityStrings.projectAdded}: ${widget.activityModel.projectName}'
             : '${widget.activityStrings.projectAdded}: ${widget.activityModel.projectName}';
         return _getGeneric(icon, message, 80.0);
 
-      case ActivityType.photoAdded:
+      case 'photoAdded':
         icon = Icon(Icons.camera_alt, color: Theme.of(context).primaryColor);
         message = '${widget.activityModel.projectName}';
         return _getGeneric(icon, message, 160.0);
 
-      case ActivityType.videoAdded:
+      case 'videoAdded':
         icon = Icon(Icons.video_camera_front,
             color: Theme.of(context).primaryColorLight);
         message = '${widget.activityModel.projectName}';
         return _getGeneric(icon, message, 160.0);
 
-      case ActivityType.audioAdded:
+      case 'audioAdded':
         icon = Icon(Icons.mic, color: Theme.of(context).primaryColor);
         message = '${widget.activityModel.projectName}';
         return _getGeneric(icon, message, 160.0);
 
-      case ActivityType.messageAdded:
+      case 'messageAdded':
         icon = Icon(Icons.message, color: Theme.of(context).primaryColor);
         message = 'Message added';
         return _getGeneric(icon, message, 100);
 
-      case ActivityType.userAddedOrModified:
+      case 'userAddedOrModified':
         icon = Icon(Icons.person, color: Theme.of(context).primaryColor);
         message = '${widget.activityStrings.memberAddedChanged}';
         return _getUserAdded(icon, message);
 
-      case ActivityType.positionAdded:
+      case 'positionAdded':
         icon = Icon(Icons.home, color: Theme.of(context).primaryColor);
         message =
             '${widget.activityStrings.projectLocationAdded}: ${widget.activityModel.projectName}';
         return _getGeneric(icon, message, 160);
 
-      case ActivityType.polygonAdded:
+      case 'polygonAdded':
         icon =
             Icon(Icons.circle_outlined, color: Theme.of(context).primaryColor);
         message =
             '${widget.activityStrings.projectAreaAdded} ${widget.activityModel.projectName}';
         return _getGeneric(icon, message, 160);
 
-      case ActivityType.settingsChanged:
+      case 'settingsChanged':
         icon = Icon(Icons.settings, color: Theme.of(context).primaryColor);
         message = widget.activityStrings.settingsChanged!;
         return _getShortie(icon, message);
 
-      case ActivityType.geofenceEventAdded:
+      case 'geofenceEventAdded':
         icon = Icon(Icons.person_2, color: Theme.of(context).primaryColor);
+        var bb = GeofenceEvent.fromJson(jsonDecode(widget.activityModel.geofenceEvent!));
         message =
-            '${widget.activityStrings.arrivedAt} - ${widget.activityModel.geofenceEvent?.projectName!}';
+            '${widget.activityStrings.arrivedAt} - ${bb.projectName}';
         return _getUserAdded(icon, message);
 
-      case ActivityType.conditionAdded:
+      case 'conditionAdded':
         icon = Icon(Icons.access_alarm, color: Theme.of(context).primaryColor);
         message = 'Project Condition added';
         return _getGeneric(icon, message, 120);
 
-      case ActivityType.locationRequest:
+      case 'locationRequest':
         icon = Icon(Icons.location_on, color: Theme.of(context).primaryColor);
+        var bb = LocationRequest.fromJson(jsonDecode(widget.activityModel.locationRequest!));
         message =
-            '${widget.activityStrings.requestMemberLocation} ${widget.activityModel.locationRequest!.userName}';
+            '${widget.activityStrings.requestMemberLocation} ${bb.userName}';
         return _getGeneric(icon, message, 160);
 
-      case ActivityType.locationResponse:
+      case 'locationResponse':
         icon =
             Icon(Icons.location_history, color: Theme.of(context).primaryColor);
+        var bb = LocationResponse.fromJson(jsonDecode(widget.activityModel.locationRequest!));
+
         message =
-            '${widget.activityStrings.memberLocationResponse} : ${widget.activityModel.locationResponse!.userName}';
+            '${widget.activityStrings.memberLocationResponse} : ${bb.userName}';
         return _getGeneric(icon, message, 160);
 
-      case ActivityType.kill:
+      case 'kill':
         icon = Icon(Icons.cancel, color: Theme.of(context).primaryColor);
         message =
             'User KILL request made, cancel ${widget.activityModel.userName}';

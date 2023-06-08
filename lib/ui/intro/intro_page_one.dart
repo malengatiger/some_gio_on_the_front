@@ -132,9 +132,9 @@ class IntroPageState extends State<IntroPage> with TickerProviderStateMixin {
                               children: [
                                 ClipRect(
                                   child: Container(
-                                    decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.6),
-                                        borderRadius: const BorderRadius.all(
+                                    decoration: const BoxDecoration(
+                                        // color: Colors.white.withOpacity(0.6),
+                                        borderRadius: BorderRadius.all(
                                           Radius.circular(16.0),
                                         )),
                                     child: Padding(

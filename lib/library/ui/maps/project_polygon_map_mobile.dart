@@ -255,6 +255,11 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
         mCities.add(m);
       }
 
+      var cityStrings = <String>[];
+      for (var element in mCities) { 
+        cityStrings.add(OldToRealm.getCityString(element));
+      }
+
       pp('$mm Cities around this project polygon: ${cities.length}');
 
       var positions = <mrm.Position>[];
@@ -276,7 +281,7 @@ class ProjectPolygonMapMobileState extends State<ProjectPolygonMapMobile>
           projectPolygonId: Uuid.v4().toString(),
           created: DateTime.now().toUtc().toIso8601String(),
           positions: positions,
-          nearestCities: mCities,
+          nearestCities: cityStrings,
           translatedTitle: messageFromGeo,
           translatedMessage: projectAreaAdded,
           organizationId: widget.project.organizationId,

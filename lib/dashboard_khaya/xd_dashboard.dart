@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:core';
 
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geo_monitor/dashboard_khaya/project_list.dart';
+import 'package:geo_monitor/dashboard_khaya/real_dashboard.dart';
 import 'package:geo_monitor/dashboard_khaya/recent_event_list.dart';
 import 'package:geo_monitor/dashboard_khaya/xd_header.dart';
 import 'package:geo_monitor/library/api/prefs_og.dart';
@@ -341,7 +343,6 @@ class DashboardKhayaState extends State<DashboardKhaya>
     _setTexts();
   }
 
-
   void _getData() async {
     try {
       pp('$mm _getData ...................................... forceRefresh: $forceRefresh  ');
@@ -371,6 +372,11 @@ class DashboardKhayaState extends State<DashboardKhaya>
       // users = bag.users!;
       //
       // totalEvents = events.length;
+      /*
+      projectId: "someId",
+    name: "Studio 3T",
+    organization: "829c3f4e-eaa7-42b5-9a38-7d57f097b074"
+       */
       // totalUsers = users.length;
       // totalProjects = projects.length;
     } catch (e) {
@@ -390,7 +396,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
   }
 
   String? serverProblem, videoTitle;
-  late String deviceType;
+  late String deviceType, startDate;
   late SettingsModel settings;
 
   void _setTexts() async {
@@ -409,6 +415,8 @@ class DashboardKhayaState extends State<DashboardKhaya>
         await translator.translate('serverProblem', settings.locale!);
 
     deviceType = getThisDeviceType();
+    startDate =
+        getStartEndDatesFromDays(numberOfDays: settings.numberOfDays!).$1;
     setState(() {});
   }
 
@@ -444,17 +452,38 @@ class DashboardKhayaState extends State<DashboardKhaya>
           geoUploader: widget.geoUploader,
           cloudStorageBloc: widget.cloudStorageBloc,
           project: null,
-          onPhotoTapped: onPhotoTapped,
-          onVideoTapped: onVideoTapped,
-          onAudioTapped: onAudioTapped,
-          onUserTapped: onUserTapped,
-          onProjectTapped: onProjectTapped,
-          onProjectPositionTapped: onProjectPositionTapped,
-          onPolygonTapped: onPolygonTapped,
-          onGeofenceEventTapped: onGeofenceEventTapped,
-          onOrgMessage: onOrgMessage,
-          onLocationResponse: onLocationResponse,
-          onLocationRequest: onLocationRequest,
+          onPhotoTapped: (p) {
+            onPhotoTapped(OldToRealm.getPhotoString(p));
+          },
+          onVideoTapped: (p){
+            onVideoTapped(OldToRealm.getVideoString(p));
+          },
+          onAudioTapped: (p){
+            onAudioTapped(OldToRealm.getAudioString(p));
+          },
+          onUserTapped: (p){
+            onUserTapped(OldToRealm.getUserString(p));
+          },
+          onProjectTapped: (p){
+            onProjectTapped(OldToRealm.getProjectString(p));
+          },
+          onProjectPositionTapped: (p){
+            onProjectPositionTapped(OldToRealm.getProjectPositionString(p));
+          },
+          onPolygonTapped: (p){
+            onPolygonTapped(OldToRealm.getProjectPolygonString(p));
+
+          },
+          onGeofenceEventTapped: (p){
+            onGeofenceEventTapped(OldToRealm.getGeofenceString(p));
+          },
+          onOrgMessage: (p){},
+          onLocationResponse: (p){
+            onLocationResponse(OldToRealm.getLocationResponseString(p));
+          },
+          onLocationRequest: (p){
+            onLocationRequest(OldToRealm.getLocationRequestString(p));
+          },
           prefsOGx: widget.prefsOGx,
           cacheManager: widget.cacheManager,
           onRefreshRequested: _onRefreshRequested,
@@ -577,49 +606,48 @@ class DashboardKhayaState extends State<DashboardKhaya>
   }
 
   void _onEventTapped(mrm.ActivityModel act) async {
-
     switch (act.activityType!) {
-      case ActivityType.projectAdded:
+      case 'projectAdded':
         // TODO: Handle this case.
         break;
-      case ActivityType.photoAdded:
+      case 'photoAdded':
         onPhotoTapped(act.photo!);
         break;
-      case ActivityType.videoAdded:
+      case 'videoAdded':
         onVideoTapped(act.video!);
         break;
-      case ActivityType.audioAdded:
+      case 'audioAdded':
         onAudioTapped(act.audio!);
         break;
-      case ActivityType.messageAdded:
+      case 'messageAdded':
         onOrgMessage(act.orgMessage!);
         break;
-      case ActivityType.userAddedOrModified:
+      case 'userAddedOrModified':
         onUserTapped(act.user!);
         break;
-      case ActivityType.positionAdded:
+      case 'positionAdded':
         onProjectPositionTapped(act.projectPosition!);
         break;
-      case ActivityType.polygonAdded:
+      case 'polygonAdded':
         onProjectPolygonTapped(act.projectPolygon!);
         break;
-      case ActivityType.settingsChanged:
+      case 'settingsChanged':
         onSettingsChanged();
         break;
-      case ActivityType.geofenceEventAdded:
+      case 'geofenceEventAdded':
         onGeofenceEventTapped(act.geofenceEvent!);
         break;
-      case ActivityType.conditionAdded:
+      case 'conditionAdded':
         // TODO: Handle this case.
         break;
-      case ActivityType.locationRequest:
+      case 'locationRequest':
         onLocationRequest(act.locationRequest!);
         break;
-      case ActivityType.locationResponse:
+      case 'locationResponse':
         onLocationResponse(act.locationResponse!);
         break;
-      case ActivityType.kill:
-        // TODO: Handle this case.
+      case 'kill':
+        // TODO: Handle the KILL case.
         break;
     }
   }
@@ -640,17 +668,19 @@ class DashboardKhayaState extends State<DashboardKhaya>
         context);
   }
 
-  onLocationRequest(mrm.LocationRequest p1) {
+  onLocationRequest(String p1) {
     if (deviceType == 'phone') {}
   }
 
-  onUserTapped(mrm.User p1) {
-    navigateToUserEdit(p1);
+  onUserTapped(String p1) {
+    var bb = User.fromJson(jsonDecode(p1));
+    var mp = OldToRealm.getUser(bb);
+    navigateToUserEdit(mp);
   }
 
   void navigateToUserEdit(mrm.User? user) async {
     if (user != null) {
-      if (user!.userType == UserType.fieldMonitor) {
+      if (user.userType == UserType.fieldMonitor) {
         if (user.userId != user.userId!) {
           return;
         }
@@ -675,14 +705,16 @@ class DashboardKhayaState extends State<DashboardKhaya>
             )));
   }
 
-  onLocationResponse(mrm.LocationResponse p1) {
+  onLocationResponse(String p1) {
     if (deviceType == 'phone') {}
   }
 
-  onPhotoTapped(mrm.Photo p1) {
+  onPhotoTapped(String p1) {
     deviceType = getThisDeviceType();
+    var bb = Photo.fromJson(jsonDecode(p1));
+    var mPhoto = OldToRealm.getPhoto(bb);
     setState(() {
-      photo = p1;
+      photo = mPhoto;
     });
     if (deviceType == 'phone') {
       if (mounted) {
@@ -693,7 +725,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
                 alignment: Alignment.topLeft,
                 duration: const Duration(milliseconds: 1000),
                 child: PhotoFrame(
-                  photo: p1,
+                  photo: mPhoto,
                   onMapRequested: (photo) {},
                   onRatingRequested: (photo) {},
                   elevation: 8.0,
@@ -719,15 +751,17 @@ class DashboardKhayaState extends State<DashboardKhaya>
     }
   }
 
-  onVideoTapped(mrm.Video p1) {
+  onVideoTapped(String p1) {
     deviceType = getThisDeviceType();
+    var bb = Video.fromJson(jsonDecode(p1));
+    var mVideo = OldToRealm.getVideo(bb);
     setState(() {
-      video = p1;
+      video = mVideo;
     });
     if (deviceType == 'phone') {
       navigateWithSlide(
           PhoneVideoPlayer(
-            video: p1,
+            video: mVideo,
             onCloseRequested: () {},
             dataApiDog: widget.dataApiDog,
             title: videoTitle!,
@@ -746,9 +780,11 @@ class DashboardKhayaState extends State<DashboardKhaya>
   mrm.Video? video;
   mrm.Photo? photo;
 
-  onAudioTapped(mrm.Audio p1) {
+  onAudioTapped(String p1) {
+    var bb = Audio.fromJson(jsonDecode(p1));
+    var mAudio = OldToRealm.getAudio(bb);
     setState(() {
-      audio = p1;
+      audio = mAudio;
     });
     deviceType = getThisDeviceType();
     if (deviceType == 'phone') {
@@ -772,69 +808,76 @@ class DashboardKhayaState extends State<DashboardKhaya>
     }
   }
 
-  onProjectPositionTapped(mrm.ProjectPosition p1) async {
+  onProjectPositionTapped(String p1) async {
     //todo - stop using cacheManager
+    var bb = ProjectPosition.fromJson(jsonDecode(p1));
+    var ps = OldToRealm.getProjectPosition(bb);
     final proj =
-        await widget.cacheManager.getProjectById(projectId: p1.projectId!);
-    var p = OldToRealm.getProject(proj!);
+         widget.realmSyncApi.getProject( ps.projectId!);
     if (mounted) {
       navigateWithScale(
           ProjectMapMobile(
-            project: p,
+            project: proj!,
           ),
           context);
     }
   }
 
-  onProjectPolygonTapped(mrm.ProjectPolygon p1) async {
+  onProjectPolygonTapped(String p1) async {
+    var bb = ProjectPolygon.fromJson(jsonDecode(p1));
+    var pp = OldToRealm.getProjectPolygon(bb);
     final proj =
-        await widget.cacheManager.getProjectById(projectId: p1.projectId!);
-    var p = OldToRealm.getProject(proj!);
+        widget.realmSyncApi.getProject(pp.projectId!);
 
     if (mounted) {
       navigateWithScale(
           ProjectPolygonMapMobile(
-            project: p,
+            project: proj!,
           ),
           context);
     }
   }
 
-  onPolygonTapped(mrm.ProjectPolygon p1) async {
-    // final proj =
-    //     await widget.cacheManager.getProjectById(projectId: p1.projectId!);
-    // var p = OldToRealm.getPol(proj!);
-    //
-    // if (mounted) {
-    //   navigateWithScale(
-    //       ProjectPolygonMapMobile(
-    //         project: proj!,
-    //       ),
-    //       context);
-    // }
+  onPolygonTapped(String p1) async {
+    var bb = ProjectPolygon.fromJson(jsonDecode(p1));
+    var mp = OldToRealm.getProjectPolygon(bb);
+    final proj =
+        widget.realmSyncApi.getProject(mp.projectId!);
+
+    if (mounted) {
+      navigateWithScale(
+          ProjectPolygonMapMobile(
+            project: proj!,
+          ),
+          context);
+    }
   }
 
-  onGeofenceEventTapped(mrm.GeofenceEvent p1) {
+  onGeofenceEventTapped(String p1) {
+    var bb = GeofenceEvent.fromJson(jsonDecode(p1));
+    var mp = OldToRealm.getGeofenceEvent(bb);
 
     navigateWithScale(
         GeofenceMap(
-          geofenceEvent: p1,
+          geofenceEvent: mp,
         ),
         context);
   }
 
-  onOrgMessage(mrm.OrgMessage p1) {
+  onOrgMessage(String p1) {
     if (deviceType == 'phone') {}
   }
 
-  void onProjectTapped(mrm.Project project) async {
+  void onProjectTapped(String p1) async {
     if (deviceType == 'phone') {}
-    if (mounted) {
+    var bb = Project.fromJson(jsonDecode(p1));
+    var mp = OldToRealm.getProject(bb);
+        if (mounted) {
       navigateWithScale(
           ProjectMediaTimeline(
             projectBloc: widget.projectBloc,
             prefsOGx: widget.prefsOGx,
-            project: project,
+            project: mp,
             fcmBloc: widget.fcmBloc,
             organizationBloc: widget.organizationBloc,
             cacheManager: widget.cacheManager,
@@ -912,6 +955,8 @@ class DashboardKhayaState extends State<DashboardKhaya>
                         sigmaX: sigmaX,
                         sigmaY: sigmaY,
                         user: user!,
+                        startDate: startDate,
+                        organizationId: user!.organizationId!,
                         width: width,
                         forceRefresh: forceRefresh,
                         membersText: membersText!,
@@ -935,7 +980,8 @@ class DashboardKhayaState extends State<DashboardKhaya>
                           _onProjectsAcquired(projects);
                         },
                         onProjectTapped: (project) {
-                          onProjectTapped(project);
+                          var s = OldToRealm.getProjectString(project);
+                          onProjectTapped(s);
                         },
                         onUserSubtitleTapped: () {
                           _onUserSubtitleTapped();
@@ -944,7 +990,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
                           _onUsersAcquired(users);
                         },
                         onUserTapped: (user) {
-                          onUserTapped(user);
+                          onUserTapped(OldToRealm.getUserString(user));
                         },
                         onEventsSubtitleTapped: () {
                           _onEventsSubtitleTapped();
@@ -974,6 +1020,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
                         organizationBloc: widget.organizationBloc,
                         fcmBloc: widget.fcmBloc,
                         onGioSubscriptionRequired: navigateToSubscription,
+                        realmSyncApi: widget.realmSyncApi,
                       );
               },
               tablet: (ctx) {
@@ -988,6 +1035,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
                                 centerTopCards: true,
                                 projects: projects,
                                 users: users,
+                                organizationId: user!.organizationId!,
                                 fcmBloc: widget.fcmBloc,
                                 navigateToActivities: () {
                                   _navigateToActivities();
@@ -999,6 +1047,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
                                 geoUploader: widget.geoUploader,
                                 cloudStorageBloc: widget.cloudStorageBloc,
                                 projectBloc: widget.projectBloc,
+                                realmSyncApi: widget.realmSyncApi,
                                 locale: settings.locale!,
                                 forceRefresh: forceRefresh,
                                 totalEvents: totalEvents,
@@ -1006,6 +1055,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
                                 totalUsers: totalUsers,
                                 sigmaX: sigmaX,
                                 sigmaY: sigmaY,
+                                startDate: startDate,
                                 user: user!,
                                 width: width,
                                 membersText: membersText!,
@@ -1025,7 +1075,8 @@ class DashboardKhayaState extends State<DashboardKhaya>
                                   _onProjectsAcquired(projects);
                                 },
                                 onProjectTapped: (project) {
-                                  onProjectTapped(project);
+                                  var s = OldToRealm.getProjectString(project);
+                                  onProjectTapped(s);
                                 },
                                 onUserSubtitleTapped: () {
                                   _onUserSubtitleTapped();
@@ -1034,7 +1085,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
                                   _onUsersAcquired(users);
                                 },
                                 onUserTapped: (user) {
-                                  onUserTapped(user);
+                                  onUserTapped(OldToRealm.getUserString(user));
                                 },
                                 onEventsSubtitleTapped: () {
                                   _onEventsSubtitleTapped();
@@ -1067,6 +1118,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
                                 forceRefresh: forceRefresh,
                                 projects: projects,
                                 users: users,
+                                organizationId: user!.organizationId!,
                                 fcmBloc: widget.fcmBloc,
                                 navigateToActivities: () {
                                   _navigateToActivities();
@@ -1078,6 +1130,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
                                 geoUploader: widget.geoUploader,
                                 cloudStorageBloc: widget.cloudStorageBloc,
                                 projectBloc: widget.projectBloc,
+                                realmSyncApi: widget.realmSyncApi,
                                 totalEvents: totalEvents,
                                 totalProjects: totalProjects,
                                 totalUsers: totalUsers,
@@ -1089,6 +1142,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
                                 dashboardText: dashboardText!,
                                 recentEventsText: recentEventsText!,
                                 user: user!,
+                                startDate: startDate,
                                 width: width,
                                 navigateToIntro: () {
                                   navigateToIntro();
@@ -1103,7 +1157,9 @@ class DashboardKhayaState extends State<DashboardKhaya>
                                   _onProjectsAcquired(projects);
                                 },
                                 onProjectTapped: (project) {
-                                  onProjectTapped(project);
+                                  var s = OldToRealm.getProjectString(project);
+
+                                  onProjectTapped(s);
                                 },
                                 onUserSubtitleTapped: () {
                                   _onUserSubtitleTapped();
@@ -1112,7 +1168,7 @@ class DashboardKhayaState extends State<DashboardKhaya>
                                   _onUsersAcquired(users);
                                 },
                                 onUserTapped: (user) {
-                                  onUserTapped(user);
+                                  onUserTapped(OldToRealm.getUserString(user));
                                 },
                                 onEventsSubtitleTapped: () {
                                   _onEventsSubtitleTapped();
@@ -1220,317 +1276,6 @@ class DashboardKhayaState extends State<DashboardKhaya>
   }
 }
 
-class RealDashboard extends StatelessWidget {
-  const RealDashboard({
-    Key? key,
-    required this.totalEvents,
-    required this.totalProjects,
-    required this.totalUsers,
-    required this.sigmaX,
-    required this.sigmaY,
-    required this.user,
-    required this.width,
-    required this.onEventTapped,
-    required this.onProjectSubtitleTapped,
-    required this.onProjectsAcquired,
-    required this.onProjectTapped,
-    required this.onUserSubtitleTapped,
-    required this.onUsersAcquired,
-    required this.onUserTapped,
-    required this.onEventsSubtitleTapped,
-    required this.onEventsAcquired,
-    required this.onRefreshRequested,
-    required this.onSearchTapped,
-    required this.onSettingsRequested,
-    required this.onDeviceUserTapped,
-    required this.dashboardText,
-    required this.eventsText,
-    required this.projectsText,
-    required this.membersText,
-    required this.forceRefresh,
-    required this.projects,
-    required this.users,
-    this.topCardSpacing,
-    required this.centerTopCards,
-    required this.recentEventsText,
-    required this.navigateToIntro,
-    required this.locale,
-    required this.navigateToActivities,
-    required this.organizationBloc,
-    required this.fcmBloc,
-    required this.cacheManager,
-    required this.dataApiDog,
-    required this.prefsOGx,
-    required this.geoUploader,
-    required this.cloudStorageBloc,
-    required this.projectBloc,
-    required this.onGioSubscriptionRequired,
-  }) : super(key: key);
-
-  final Function onEventsSubtitleTapped;
-  final Function(int) onEventsAcquired;
-  final Function(mrm.ActivityModel) onEventTapped;
-  final Function onProjectSubtitleTapped;
-  final int totalEvents, totalProjects, totalUsers;
-  final Function(int) onProjectsAcquired;
-  final Function(mrm.Project) onProjectTapped;
-  final Function onUserSubtitleTapped;
-  final Function(int) onUsersAcquired;
-  final Function(mrm.User) onUserTapped;
-  final double sigmaX, sigmaY;
-  final Function onRefreshRequested,
-      onSearchTapped,
-      onSettingsRequested,
-      onDeviceUserTapped,
-      onGioSubscriptionRequired;
-  final mrm.User user;
-  final double width;
-  final String dashboardText,
-      eventsText,
-      projectsText,
-      membersText,
-      locale,
-      recentEventsText;
-  final bool forceRefresh;
-
-  final List<mrm.Project> projects;
-  final List<mrm.User> users;
-  final double? topCardSpacing;
-  final bool centerTopCards;
-  final Function navigateToIntro, navigateToActivities;
-  final OrganizationBloc organizationBloc;
-  final FCMBloc fcmBloc;
-  final CacheManager cacheManager;
-  final DataApiDog dataApiDog;
-  final PrefsOGx prefsOGx;
-  final GeoUploader geoUploader;
-  final CloudStorageBloc cloudStorageBloc;
-  final ProjectBloc projectBloc;
-
-  @override
-  Widget build(BuildContext context) {
-    final type = getThisDeviceType();
-    final tabletActions = <Widget>[
-      IconButton(
-          onPressed: () {
-            onRefreshRequested();
-          },
-          icon: Icon(
-            Icons.refresh,
-            color: Theme.of(context).primaryColor,
-          )),
-      IconButton(
-          onPressed: () {
-            onSettingsRequested();
-          },
-          icon: Icon(
-            Icons.settings,
-            color: Theme.of(context).primaryColor,
-          )),
-      const SizedBox(
-        width: 8,
-      ),
-      GestureDetector(
-        onTap: () {
-          onDeviceUserTapped();
-        },
-        child: user.thumbnailUrl == null
-            ? const CircleAvatar(
-                radius: 12,
-              )
-            : CircleAvatar(
-                radius: 14,
-                backgroundImage: NetworkImage(user.thumbnailUrl!),
-              ),
-      ),
-      const SizedBox(
-        width: 16,
-      ),
-    ];
-    final phoneActions = <Widget>[
-      PopupMenuButton(
-        elevation: 8,
-        itemBuilder: (context) {
-          return [
-            PopupMenuItem(
-              value: 3,
-              child: user.thumbnailUrl == null
-                  ? const CircleAvatar(
-                      radius: 8,
-                    )
-                  : CircleAvatar(
-                      radius: 24.0,
-                      backgroundImage: NetworkImage(user.thumbnailUrl!)),
-            ),
-            PopupMenuItem(
-                value: 1,
-                child: Icon(
-                  Icons.refresh,
-                  color: Theme.of(context).primaryColor,
-                )),
-            PopupMenuItem(
-                value: 2,
-                child: Icon(
-                  Icons.settings,
-                  color: Theme.of(context).primaryColor,
-                )),
-            PopupMenuItem(
-                value: 4,
-                child: Icon(
-                  Icons.subscriptions_sharp,
-                  color: Theme.of(context).primaryColor,
-                )),
-          ];
-        },
-        onSelected: (index) {
-          switch (index) {
-            case 1:
-              onRefreshRequested();
-              break;
-            case 2:
-              onSettingsRequested();
-              break;
-            case 3:
-              onDeviceUserTapped();
-              break;
-            case 4:
-              onGioSubscriptionRequired();
-              break;
-          }
-        },
-      )
-    ];
-    var brightness = MediaQuery.of(context).platformBrightness;
-    bool isDarkMode = brightness == Brightness.dark;
-    var backgroundColor = Theme.of(context).canvasColor;
-    if ((!isDarkMode)) {
-      backgroundColor = Colors.black;
-    }
-
-    return SizedBox(
-      width: width,
-      child: Stack(
-        children: [
-          Stack(
-            children: [
-              SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 16.0),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 100),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            dashboardText,
-                            style: myTextStyleLargePrimaryColor(context),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      TopCardList(
-                        organizationBloc: organizationBloc,
-                        fcmBloc: fcmBloc,
-                        dataApiDog: dataApiDog,
-                        prefsOGx: prefsOGx,
-                        cacheManager: cacheManager,
-                        projectBloc: projectBloc,
-                        geoUploader: geoUploader,
-                        realmSyncApi: realmSyncApi,
-                        cloudStorageBloc: cloudStorageBloc,
-                      ),
-                      const SizedBox(height: 20),
-                      SubTitleWidget(
-                          title: eventsText,
-                          onTapped: () {
-                            onEventsSubtitleTapped();
-                          },
-                          number: totalEvents,
-                          color: Colors.blue),
-                      const SizedBox(height: 12),
-                      RecentEventList(
-                        organizationBloc: organizationBloc,
-                        fcmBloc: fcmBloc,
-                        prefsOGx: prefsOGx,
-                        onEventTapped: (act) {
-                          onEventTapped(act);
-                        },
-                        locale: locale,
-                      ),
-                      const SizedBox(
-                        height: 36,
-                      ),
-                      SubTitleWidget(
-                          title: projectsText,
-                          onTapped: () {
-                            pp('💚💚💚💚 project subtitle tapped');
-                            onProjectSubtitleTapped();
-                          },
-                          number: totalProjects,
-                          color: Colors.blue),
-                      const SizedBox(
-                        height: 12,
-                      ),
-                      ProjectListView(
-                        projects: projects,
-                        onProjectTapped: (project) {
-                          onProjectTapped(project);
-                        },
-                      ),
-                      const SizedBox(height: 36),
-                      SubTitleWidget(
-                          title: membersText,
-                          onTapped: () {
-                            onUserSubtitleTapped();
-                          },
-                          number: totalUsers,
-                          color: Theme.of(context).indicatorColor),
-                      const SizedBox(
-                        height: 12,
-                      ),
-                      MemberList(
-                        users: users,
-                        onUserTapped: (user) {
-                          onUserTapped(user);
-                        },
-                      ),
-                      const SizedBox(height: 200),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Positioned(
-            child: SizedBox(
-              height: 80,
-              child: AppBar(
-                backgroundColor: backgroundColor,
-                // flexibleSpace: ClipRect(
-                //   child: BackdropFilter(
-                //     filter: ImageFilter.blur(sigmaX: sigmaX, sigmaY: sigmaY),
-                //     child: Container(
-                //       decoration:
-                //           BoxDecoration(color: Colors.white.withOpacity(0.0)),
-                //     ),
-                //   ),
-                // ),
-                title: GioHeader(
-                  navigateToIntro: () {
-                    navigateToIntro();
-                  },
-                ),
-                actions: type == 'phone' ? phoneActions : tabletActions,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class SubTitleWidget extends StatelessWidget {
   const SubTitleWidget(
       {Key? key,
@@ -1582,663 +1327,6 @@ class SubTitleWidget extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class DashboardTopCard extends StatelessWidget {
-  const DashboardTopCard(
-      {Key? key,
-      required this.number,
-      required this.title,
-      this.height,
-      this.topPadding,
-      this.textStyle,
-      this.labelTitleStyle,
-      required this.onTapped,
-      this.width})
-      : super(key: key);
-  final int number;
-  final String title;
-  final double? height, topPadding, width;
-  final TextStyle? textStyle, labelTitleStyle;
-  final Function() onTapped;
-
-  @override
-  Widget build(BuildContext context) {
-    // pp('primary color ${Theme.of(context).primaryColor} canvas color ${Theme.of(context).canvasColor}');
-
-    Color color = Theme.of(context).primaryColor;
-    if (Theme.of(context).canvasColor.value == const Color(0xff121212).value) {
-      color = Theme.of(context).primaryColor;
-    } else {
-      color = Theme.of(context).canvasColor;
-    }
-    // var style = GoogleFonts.roboto(
-    //     textStyle: Theme.of(context).textTheme.titleLarge,
-    //     fontSize: 40,
-    //     color: color,
-    //     fontWeight: FontWeight.w900);
-
-    var style2 = GoogleFonts.roboto(
-        textStyle: Theme.of(context).textTheme.bodyMedium,
-        fontSize: 12,
-        color: color,
-        fontWeight: FontWeight.normal);
-    final fmt = NumberFormat.decimalPattern();
-    final mNumber = fmt.format(number);
-    var color2 = Colors.white;
-    var brightness = MediaQuery.of(context).platformBrightness;
-    bool isDarkMode = brightness == Brightness.dark;
-
-    if (!isDarkMode) {
-      color2 = Colors.black;
-    }
-
-    return GestureDetector(
-      onTap: () {
-        onTapped();
-      },
-      child: Card(
-        shape: getRoundedBorder(radius: 16),
-        elevation: 4,
-        child: SizedBox(
-          height: height == null ? 104 : height!,
-          width: width == null ? 128 : width!,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: topPadding == null ? 8 : topPadding!,
-                ),
-                Text(mNumber,
-                    style: textStyle == null
-                        ? myNumberStyleLargerPrimaryColor(context)
-                        : textStyle!),
-                const SizedBox(
-                  height: 8,
-                ),
-                Text(
-                  title,
-                  style: myTextStyleSmallWithColor(context, color2),
-                )
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class TopCardList extends StatefulWidget {
-  const TopCardList(
-      {Key? key,
-      required this.organizationBloc,
-      required this.fcmBloc,
-      required this.prefsOGx,
-      required this.projectBloc,
-      required this.dataApiDog,
-      required this.cacheManager,
-      required this.geoUploader,
-      required this.cloudStorageBloc,
-      required this.realmSyncApi})
-      : super(key: key);
-
-  final OrganizationBloc organizationBloc;
-  final FCMBloc fcmBloc;
-  final PrefsOGx prefsOGx;
-  final ProjectBloc projectBloc;
-  final DataApiDog dataApiDog;
-  final CacheManager cacheManager;
-  final GeoUploader geoUploader;
-  final CloudStorageBloc cloudStorageBloc;
-  final RealmSyncApi realmSyncApi;
-
-  @override
-  State<TopCardList> createState() => TopCardListState();
-}
-
-class TopCardListState extends State<TopCardList> {
-  final mm = '🛎🛎🛎🛎TopCardList: 🐸';
-  late StreamSubscription<DataBag> bagSub;
-  late StreamSubscription<SettingsModel> settingsSub;
-  late StreamSubscription<ActivityModel> actSub;
-  late StreamSubscription<bool> refreshSub;
-
-  bool busy = false;
-
-  // DataBag? dataBag;
-  var eventsText = 'Events',
-      projectsText = 'Projects',
-      membersText = 'Members',
-      photosText = 'Photos',
-      videosText = 'Videos',
-      audiosText = 'Audios',
-      locationsText = 'Locations',
-      areasText = 'Areas';
-  var topCardSpacing = 24.0;
-
-  var events = 0,
-      projects = 0,
-      members = 0,
-      photos = 0,
-      videos = 0,
-      audios = 0,
-      locations = 0,
-      areas = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _setTexts();
-    _getData(false);
-    _listen();
-  }
-
-  int cnt = 0;
-
-  void _getData(bool forceRefresh) async {
-    pp('$mm _getData ... forceRefresh: $forceRefresh');
-    try {
-      setState(() {
-        busy = true;
-      });
-      final sett = await widget.prefsOGx.getSettings();
-
-      var projectQuery =
-          widget.realmSyncApi.getProjectQuery(sett.organizationId!);
-      projectQuery.changes.listen((event) {
-        projects = event.results.length;
-        setState(() {});
-      });
-      var dates = getStartEndDatesFromDays(numberOfDays: sett.numberOfDays!);
-      var actQuery = widget.realmSyncApi
-          .getOrganizationActivitiesQuery(sett.organizationId!, dates.$1);
-      actQuery.changes.listen((event) {
-        events = event.results.length;
-        setState(() {});
-      });
-
-      var userQuery = widget.realmSyncApi.getUserQuery(
-        sett.organizationId!,
-      );
-      userQuery.changes.listen((event) {
-        members = event.results.length;
-        setState(() {});
-      });
-      var photoQuery = widget.realmSyncApi
-          .getProjectPhotoQuery(sett.organizationId!, dates.$1);
-      photoQuery.changes.listen((event) {
-        photos = event.results.length;
-        setState(() {});
-      });
-      var videoQuery = widget.realmSyncApi
-          .getProjectVideoQuery(sett.organizationId!, dates.$1);
-      videoQuery.changes.listen((event) {
-        videos = event.results.length;
-        setState(() {});
-      });
-      var audioQuery = widget.realmSyncApi
-          .getProjectPhotoQuery(sett.organizationId!, dates.$1);
-      audioQuery.changes.listen((event) {
-        audios = event.results.length;
-        setState(() {});
-      });
-      var posQuery =
-          widget.realmSyncApi.getProjectPositionQuery(sett.organizationId!);
-      posQuery.changes.listen((event) {
-        locations = event.results.length;
-        setState(() {});
-      });
-      var polQuery = widget.realmSyncApi.getProjectPolygonQuery(
-        sett.organizationId!,
-      );
-      polQuery.changes.listen((event) {
-        areas = event.results.length;
-        setState(() {});
-      });
-    } catch (e) {
-      pp(e);
-    }
-
-    if (mounted) {
-      pp('$mm _getData ; setting state ..');
-      setState(() {
-        busy = false;
-      });
-    }
-  }
-
-  late SettingsModel settings;
-
-  Future _setTexts() async {
-    settings = await prefsOGx.getSettings();
-    photosText = await translator.translate('photos', settings.locale!);
-    videosText = await translator.translate('videos', settings.locale!);
-    audiosText = await translator.translate('audioClips', settings.locale!);
-    locationsText = await translator.translate('locations', settings.locale!);
-    areasText = await translator.translate('areas', settings.locale!);
-    projectsText = await translator.translate('projects', settings.locale!);
-    membersText = await translator.translate('members', settings.locale!);
-    eventsText = await translator.translate('events', settings.locale!);
-
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  void _listen() {
-    refreshSub = refreshBloc.refreshStream.listen((event) {
-      pp('$mm refreshStream delivered a command, call getData with forceRefresh = true ... ');
-      _getData(true);
-    });
-
-    bagSub = widget.organizationBloc.dataBagStream.listen((bag) {
-      pp('$mm Stream delivered a bag, set ui ... ');
-      _setTotals(bag);
-      if (mounted) {
-        setState(() {});
-      }
-    });
-
-    settingsSub = widget.fcmBloc.settingsStream.listen((event) async {
-      await _setTexts();
-      _getData(true);
-    });
-
-    actSub = widget.fcmBloc.activityStream.listen((act) {
-      setState(() {
-        events++;
-      });
-      switch (act.activityType) {
-        case ActivityType.projectAdded:
-          setState(() {
-            projects++;
-          });
-          break;
-        case ActivityType.photoAdded:
-          setState(() {
-            photos++;
-          });
-          break;
-        case ActivityType.videoAdded:
-          setState(() {
-            videos++;
-          });
-          break;
-        case ActivityType.audioAdded:
-          setState(() {
-            audios++;
-          });
-          break;
-        case ActivityType.messageAdded:
-          // TODO: Handle this case.
-          break;
-        case ActivityType.userAddedOrModified:
-          // TODO: Handle this case.
-          break;
-        case ActivityType.positionAdded:
-          setState(() {
-            locations++;
-          });
-          break;
-        case ActivityType.polygonAdded:
-          setState(() {
-            areas++;
-          });
-          break;
-        case ActivityType.settingsChanged:
-          //_getData(true);
-          break;
-        case ActivityType.geofenceEventAdded:
-          // TODO: Handle this case.
-          break;
-        case ActivityType.conditionAdded:
-          // TODO: Handle this case.
-          break;
-        case ActivityType.locationRequest:
-          // TODO: Handle this case.
-          break;
-        case ActivityType.locationResponse:
-          // TODO: Handle this case.
-          break;
-        case ActivityType.kill:
-          // TODO: Handle this case.
-          break;
-        default:
-          break;
-      }
-    });
-  }
-
-  void _setTotals(DataBag dataBag) {
-    events = dataBag.activityModels!.length;
-    projects = dataBag.projects!.length;
-    members = dataBag.users!.length;
-    photos = dataBag.photos!.length;
-    videos = dataBag.videos!.length;
-    audios = dataBag.audios!.length;
-    locations = dataBag.projectPositions!.length;
-    areas = dataBag.projectPolygons!.length;
-    pp('$mm dataBag totals extracted .... ');
-  }
-
-  @override
-  void dispose() {
-    bagSub.cancel();
-    settingsSub.cancel();
-    super.dispose();
-  }
-
-  void _navigateToProjects() {
-    pp(' 🌀🌀🌀🌀 .................. _navigateToProjects  ....');
-    if (mounted) {
-      navigateWithScale(
-          GioProjects(
-            projectBloc: widget.projectBloc,
-            organizationBloc: widget.organizationBloc,
-            prefsOGx: widget.prefsOGx,
-            dataApiDog: widget.dataApiDog,
-            cacheManager: widget.cacheManager,
-            instruction: 0,
-            realmSyncApi: widget.realmSyncApi,
-            fcmBloc: widget.fcmBloc,
-            geoUploader: widget.geoUploader,
-            cloudStorageBloc: widget.cloudStorageBloc,
-          ),
-          context);
-    }
-  }
-
-  void _navigateToMembers() {
-    pp(' 🌀🌀🌀🌀 .................. _navigateToMembers  ....');
-    if (mounted) {
-      navigateWithScale(
-          GioUserList(
-              fcmBloc: widget.fcmBloc,
-              organizationBloc: widget.organizationBloc,
-              projectBloc: widget.projectBloc,
-              prefsOGx: widget.prefsOGx,
-              cacheManager: widget.cacheManager,
-              geoUploader: widget.geoUploader,
-              cloudStorageBloc: widget.cloudStorageBloc,
-              dataApiDog: widget.dataApiDog),
-          context);
-    }
-  }
-
-  void _navigateToMap() {
-    pp(' 🌀🌀🌀🌀 .................. _navigateToMap ....');
-    if (mounted) {
-      navigateWithScale(
-          OrganizationMap(
-            organizationBloc: widget.organizationBloc,
-            prefsOGx: widget.prefsOGx,
-          ),
-          context);
-    }
-  }
-
-  void _navigateToTimeline() {
-    pp(' 🌀🌀🌀🌀 .................. _navigateToTimeline  ....');
-    if (mounted) {
-      navigateWithScale(
-          ProjectMediaTimeline(
-              projectBloc: widget.projectBloc,
-              prefsOGx: widget.prefsOGx,
-              organizationBloc: widget.organizationBloc,
-              cacheManager: widget.cacheManager,
-              dataApiDog: widget.dataApiDog,
-              geoUploader: widget.geoUploader,
-              cloudStorageBloc: widget.cloudStorageBloc,
-              fcmBloc: widget.fcmBloc),
-          context);
-    }
-  }
-
-  void _navigateToActivities() async {
-    pp(' 🌀🌀🌀🌀 .................. _navigateToActivities  ....');
-    final deviceScreenType = getThisDeviceType();
-    if (mounted) {
-      navigateWithScale(
-          GioActivities(
-            fcmBloc: widget.fcmBloc,
-            organizationBloc: widget.organizationBloc,
-            projectBloc: widget.projectBloc,
-            dataApiDog: widget.dataApiDog,
-            geoUploader: widget.geoUploader,
-            cloudStorageBloc: widget.cloudStorageBloc,
-            project: null,
-            onPhotoTapped: (p) {
-              pp('$mm navigateWithScale ... onPhotoTapped');
-              if ((deviceScreenType == 'phone')) {
-                navigateWithScale(
-                    PhotoFrame(
-                        photo: p,
-                        onMapRequested: (p) {},
-                        onRatingRequested: (p) {},
-                        elevation: 0,
-                        onPhotoCardClose: (p) {},
-                        translatedDate: 'translatedDate',
-                        locale: settings.locale!,
-                        cacheManager: cacheManager,
-                        dataApiDog: dataApiDog,
-                        prefsOGx: prefsOGx,
-                        fcmBloc: fcmBloc,
-                        projectBloc: projectBloc,
-                        organizationBloc: organizationBloc,
-                        geoUploader: geoUploader,
-                        cloudStorageBloc: cloudStorageBloc),
-                    context);
-              }
-            },
-            onVideoTapped: (p) {
-              pp('$mm navigateWithScale ... onVideoTapped');
-            },
-            onAudioTapped: (p) {
-              pp('$mm navigateWithScale ... onAudioTapped');
-            },
-            onRefreshRequested: () {
-              _getData(true);
-            },
-            onUserTapped: (p) {},
-            onProjectTapped: (p) {},
-            onProjectPositionTapped: (p) {},
-            onPolygonTapped: (p) {},
-            onGeofenceEventTapped: (p) {},
-            onOrgMessage: (p) {},
-            onLocationResponse: (p) {},
-            onLocationRequest: (p) {},
-            prefsOGx: widget.prefsOGx,
-            cacheManager: widget.cacheManager,
-          ),
-          context);
-    }
-  }
-
-  bool showPhoto = false;
-  bool showVideo = false;
-  bool showAudio = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final type = getThisDeviceType();
-    var padding1 = 16.0;
-    var padding2 = 48.0;
-    if (type == 'phone') {
-      padding1 = 8;
-      padding2 = 24;
-    }
-    // if (dataBag == null) {
-    //   return const Center(
-    //     child: SizedBox(
-    //       width: 12,
-    //       height: 12,
-    //       child: CircularProgressIndicator(
-    //         strokeWidth: 4,
-    //         backgroundColor: Colors.pink,
-    //       ),
-    //     ),
-    //   );
-    // }
-    var color = getTextColorForBackground(Theme.of(context).primaryColor);
-    var brightness = MediaQuery.of(context).platformBrightness;
-    bool isDarkMode = brightness == Brightness.dark;
-
-    if (!isDarkMode) {
-      color = Colors.black;
-    }
-    return Stack(children: [
-      SizedBox(
-        height: 144,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: busy
-              ? const Center(
-                  child: SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 4,
-                      backgroundColor: Colors.greenAccent,
-                    ),
-                  ),
-                )
-              : ListView(
-                  scrollDirection: Axis.horizontal,
-                  shrinkWrap: true,
-                  children: [
-                    DashboardTopCard(
-                        width: events > 999 ? 140 : 128,
-                        number: events,
-                        title: eventsText,
-                        onTapped: () {
-                          _onTapped(0);
-                        }),
-                    SizedBox(
-                      width: padding1,
-                    ),
-                    DashboardTopCard(
-                        width: projects > 999 ? 140 : 128,
-                        number: projects,
-                        title: projectsText,
-                        onTapped: () {
-                          _onTapped(1);
-                        }),
-                    SizedBox(
-                      width: padding1,
-                    ),
-                    DashboardTopCard(
-                        width: members > 999 ? 140 : 128,
-                        number: members,
-                        title: membersText,
-                        onTapped: () {
-                          _onTapped(2);
-                        }),
-                    SizedBox(
-                      width: padding2,
-                    ),
-                    DashboardTopCard(
-                        width: photos > 999 ? 140 : 128,
-                        textStyle:
-                            myNumberStyleLargerPrimaryColorLight(context),
-                        number: photos,
-                        title: photosText,
-                        onTapped: () {
-                          _onTapped(3);
-                        }),
-                    SizedBox(
-                      width: padding1,
-                    ),
-                    DashboardTopCard(
-                        textStyle:
-                            myNumberStyleLargerPrimaryColorLight(context),
-                        width: videos > 999 ? 140 : 128,
-                        number: videos,
-                        title: videosText,
-                        onTapped: () {
-                          _onTapped(4);
-                        }),
-                    SizedBox(
-                      width: padding1,
-                    ),
-                    DashboardTopCard(
-                        width: audios > 999 ? 140 : 128,
-                        textStyle:
-                            myNumberStyleLargerPrimaryColorLight(context),
-                        number: audios,
-                        title: audiosText,
-                        onTapped: () {
-                          _onTapped(5);
-                        }),
-                    SizedBox(
-                      width: padding2,
-                    ),
-                    DashboardTopCard(
-                        textStyle: myNumberStyleLargerPrimaryColorDark(context),
-                        width: locations > 999 ? 140 : 128,
-                        number: locations,
-                        title: locationsText,
-                        onTapped: () {
-                          _onTapped(6);
-                        }),
-                    SizedBox(
-                      width: padding1,
-                    ),
-                    DashboardTopCard(
-                        textStyle: myNumberStyleLargerPrimaryColorDark(context),
-                        width: areas > 999 ? 140 : 128,
-                        number: areas,
-                        title: areasText,
-                        onTapped: () {
-                          _onTapped(7);
-                        }),
-                  ],
-                ),
-        ),
-      ),
-      showAudio
-          ? const Positioned(child: Text('show audio'))
-          : const SizedBox(),
-      showPhoto
-          ? const Positioned(child: Text('show photo'))
-          : const SizedBox(),
-      showVideo
-          ? const Positioned(child: Text('show video'))
-          : const SizedBox(),
-    ]);
-  }
-
-  void _onTapped(int id) {
-    pp('$mm top card tapped: id: $id ............');
-    switch (id) {
-      case 0:
-        _navigateToActivities();
-        break;
-      case 1:
-        _navigateToProjects();
-        break;
-      case 2:
-        _navigateToMembers();
-        break;
-      case 3:
-        _navigateToTimeline();
-        break;
-      case 4:
-        _navigateToTimeline();
-        break;
-      case 5:
-        _navigateToTimeline();
-        break;
-      case 6:
-        _navigateToMap();
-        break;
-      case 7:
-        _navigateToMap();
-        break;
-    }
   }
 }
 

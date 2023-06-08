@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/api/prefs_og.dart';
@@ -8,9 +9,11 @@ import 'package:geo_monitor/library/bloc/refresh_bloc.dart';
 import 'package:geo_monitor/library/data/activity_model.dart';
 import 'package:geo_monitor/library/data/activity_type_enum.dart';
 import 'package:geo_monitor/library/data/settings_model.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 import 'package:realm/realm.dart';
 
 import '../library/data/data_bag.dart';
+import '../library/emojis.dart';
 import '../library/functions.dart';
 import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 
@@ -20,6 +23,7 @@ class RecentEventList extends StatefulWidget {
   final OrganizationBloc organizationBloc;
   final PrefsOGx prefsOGx;
   final FCMBloc fcmBloc;
+  final RealmSyncApi realmSyncApi;
 
   const RecentEventList(
       {super.key,
@@ -27,88 +31,53 @@ class RecentEventList extends StatefulWidget {
       required this.locale,
       required this.organizationBloc,
       required this.prefsOGx,
-      required this.fcmBloc});
+      required this.fcmBloc,
+      required this.realmSyncApi});
 
   @override
   State<RecentEventList> createState() => _RecentEventListState();
 }
 
 class _RecentEventListState extends State<RecentEventList> {
-  // late StreamSubscription<ActivityModel> actSub;
-  // late StreamSubscription<DataBag> bagSub;
-  // late StreamSubscription<bool> refreshSub;
-  // late StreamSubscription<SettingsModel> settingsSub;
-
   var activities = <mrm.ActivityModel>[];
   bool busy = false;
   final mm = '🔵🔵🔵 RecentEventList 🔵🔵🔵🔵🔵🔵 : ';
-  RealmResults<mrm.ActivityModel>? query;
 
   @override
   void initState() {
     super.initState();
     pp('$mm initState ..............');
-    // _listen();
-    // _getData(false);
+    _getData();
   }
 
-  // void _listen() {
-  //   settingsSub = widget.fcmBloc.settingsStream.listen((event) {
-  //     pp('$mm settingsStream delivered a setting ');
-  //     _getData(true);
-  //   });
-  //   actSub = widget.fcmBloc.activityStream.listen((event) {
-  //     pp('$mm activityStream delivered an activity, insert received activity in list: 🔆${activities.length}');
-  //     activities.insert(0, event);
-  //     _sort();
-  //     if (mounted) {
-  //       pp('$mm activityStream delivered an activity: setting state with: 🔆 ${activities.length} activities');
-  //       setState(() {
-  //
-  //       });
-  //     }
-  //   });
-  //
-  //   bagSub = widget.organizationBloc.dataBagStream.listen((bag) {
-  //     pp('$mm dataBagStream delivered a bag, set ui .');
-  //     activities = bag.activityModels!;
-  //     _sort();
-  //     if (mounted) {
-  //       setState(() {
-  //
-  //       });
-  //     }
-  //   });
-  //
-  //   refreshSub = refreshBloc.refreshStream.listen((event) {
-  //     pp('$mm refreshStream delivered a refresh command: $event, ');
-  //     _getData(true);
-  //   });
-  // }
-
-  // Future _getData(bool forceRefresh) async {
-  //   setState(() {
-  //     busy = true;
-  //   });
-  //   try {
-  //     pp('$mm ........ getting activity data .....');
-  //     final sett = await widget.prefsOGx.getSettings();
-  //     activities = await widget.organizationBloc.getOrganizationActivity(
-  //         organizationId: sett.organizationId!,
-  //         hours: sett.activityStreamHours!,
-  //         forceRefresh: forceRefresh);
-  //
-  //     _sort();
-  //   } catch (e) {
-  //     showSnackBar(message: '$e', context: context);
-  //   }
-  //   if (mounted) {
-  //     setState(() {
-  //       busy = false;
-  //     });
-  //   }
-  // }
-
+  Future _getData() async {
+    setState(() {
+      busy = true;
+    });
+    try {
+      pp('$mm ........ getting activity data .....');
+      final sett = await widget.prefsOGx.getSettings();
+      var dates = getStartEndDatesFromDays(numberOfDays: sett.numberOfDays!);
+      var actQuery = widget.realmSyncApi
+          .getOrganizationActivitiesQuery(sett.organizationId!, dates.$1);
+      actQuery.changes.listen((event) {
+        pp('$mm ........ getting activity stream fired! ..... ${E.appleRed} '
+            '${event.results.length} documents delivered');
+        activities.clear();
+        for (var act in event.results) {
+          activities.add(act);
+        }
+        setState(() {});
+      });
+    } catch (e) {
+      showSnackBar(message: '$e', context: context);
+    }
+    if (mounted) {
+      setState(() {
+        busy = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -126,31 +95,30 @@ class _RecentEventListState extends State<RecentEventList> {
     if (deviceType == 'phone') {
       width = 332.0;
     }
-    return  StreamBuilder(builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-
-      if (snapshot.hasData) {
-
-      }
-      return SizedBox(
-        height: 64,
-        child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: activities.length,
-            itemBuilder: (_, index) {
-              final act = activities.elementAt(index);
-              return GestureDetector(
-                  onTap: () {
-                    widget.onEventTapped(act);
-                  },
-                  child: EventView(
-                    activity: act,
-                    height: 84,
-                    width: width,
-                    locale: widget.locale,
-                  ));
-            }),
-      );
-    },);
+    return StreamBuilder(
+      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        if (snapshot.hasData) {}
+        return SizedBox(
+          height: 64,
+          child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: activities.length,
+              itemBuilder: (_, index) {
+                final act = activities.elementAt(index);
+                return GestureDetector(
+                    onTap: () {
+                      widget.onEventTapped(act);
+                    },
+                    child: EventView(
+                      activity: act,
+                      height: 84,
+                      width: width,
+                      locale: widget.locale,
+                    ));
+              }),
+        );
+      },
+    );
   }
 }
 
@@ -168,56 +136,62 @@ class EventView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // pp(' ${activity.toJson()}');
-    String? typeName, userUrl;
+    String? userUrl;
     Icon icon = const Icon(Icons.access_time);
     if (activity.photo != null) {
       icon = const Icon(
         Icons.camera_alt_outlined,
         color: Colors.teal,
       );
-      userUrl = activity.photo!.userUrl!;
+      var json = jsonDecode(activity.photo!);
+      userUrl = json['userUrl'];
     }
     if (activity.audio != null) {
       icon = const Icon(
         Icons.mic,
         color: Colors.deepOrange,
       );
-      userUrl = activity.audio!.userUrl!;
+      var json = jsonDecode(activity.audio!);
+      userUrl = json['userUrl'];
     }
     if (activity.video != null) {
       icon = const Icon(Icons.video_camera_back_outlined);
-      userUrl = activity.video!.userUrl!;
+      var json = jsonDecode(activity.video!);
+      userUrl = json['userUrl'];
     }
     if (activity.geofenceEvent != null) {
       icon = const Icon(
         Icons.person,
         color: Colors.blue,
       );
-      userUrl = activity.geofenceEvent!.userUrl;
+      var json = jsonDecode(activity.geofenceEvent!);
+      userUrl = json['userUrl'];
     }
     if (activity.project != null) {
       icon = const Icon(
         Icons.home,
         color: Colors.deepPurple,
       );
-      userUrl = activity.userThumbnailUrl;
+      var json = jsonDecode(activity.project!);
+      userUrl = json['userUrl'];
     }
     if (activity.projectPosition != null) {
       icon = const Icon(
         Icons.location_on_sharp,
         color: Colors.green,
       );
-      userUrl = activity.userThumbnailUrl;
+      var json = jsonDecode(activity.projectPosition!);
+      userUrl = json['userUrl'];
     }
     if (activity.projectPolygon != null) {
       icon = const Icon(
         Icons.location_on_rounded,
         color: Colors.yellow,
       );
-      userUrl = activity.userThumbnailUrl;
+      var json = jsonDecode(activity.projectPolygon!);
+      userUrl = json['userUrl'];
     }
-    if (activity.activityType == ActivityType.settingsChanged) {
+    if (activity.activityType == 'settingsChanged') {
       icon = const Icon(
         Icons.settings,
         color: Colors.pink,
@@ -279,5 +253,96 @@ class EventView extends StatelessWidget {
             ),
           ),
         ));
+  }
+}
+
+class RecentActivitiesHorizontal extends StatefulWidget {
+  const RecentActivitiesHorizontal(
+      {Key? key,
+      required this.realmSyncApi,
+      required this.organizationId,
+      this.projectId,
+      this.userId,
+      required this.onEventTapped,
+      required this.startDate, required this.locale})
+      : super(key: key);
+
+  final RealmSyncApi realmSyncApi;
+  final String organizationId, startDate, locale;
+  final String? projectId, userId;
+  final Function(mrm.ActivityModel) onEventTapped;
+
+  @override
+  State<RecentActivitiesHorizontal> createState() => _RecentActivitiesHorizontalState();
+}
+
+class _RecentActivitiesHorizontalState extends State<RecentActivitiesHorizontal> {
+
+  bool busy = false;
+  @override
+  void initState() {
+    super.initState();
+    _subscribe();
+
+  }
+  void _subscribe() {
+    setState(() {
+      busy = true;
+    });
+    widget.realmSyncApi.setSubscriptions(
+        organizationId: widget.organizationId,
+        countryId: null,
+        projectId: widget.projectId,
+        startDate: widget.startDate);
+    setState(() {
+      busy = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _subscribe();
+    var width = 340.0;
+    final deviceType = getThisDeviceType();
+    if (deviceType == 'phone') {
+      width = 332.0;
+    }
+    if (busy) {
+      return const Center(
+        child: SizedBox(width: 28, height: 28,
+          child: CircularProgressIndicator(
+            strokeWidth: 6, backgroundColor: Colors.pink,
+          ),
+        ),
+      );
+    }
+    return StreamBuilder<List<mrm.ActivityModel>>(
+      stream: widget.realmSyncApi.activityStream,
+      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        var activities = <mrm.ActivityModel>[];
+        if (snapshot.hasData) {
+          activities = snapshot.data!;
+        }
+        return SizedBox(
+          height: 64,
+          child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: activities.length,
+              itemBuilder: (_, index) {
+                final act = activities.elementAt(index);
+                return GestureDetector(
+                    onTap: () {
+                      widget.onEventTapped(act);
+                    },
+                    child: EventView(
+                      activity: act,
+                      height: 84,
+                      width: width,
+                      locale: widget.locale,
+                    ));
+              }),
+        );
+      },
+    );
   }
 }

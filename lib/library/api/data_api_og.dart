@@ -1045,9 +1045,9 @@ class DataApiDog {
       list.add(City.fromJson(m));
     }
     pp('$xz findCitiesByLocation: 🍏 found: ${list.length} cities');
-    await cacheManager.addCities(cities: list);
+    // await cacheManager.addCities(cities: list);
     for (var city in list) {
-      pp('$xz city found by findCitiesByLocation call: ${city.toJson()} \n');
+      pp('$xz city found by findCitiesByLocation call: ${city.name} - ${city.stateName}, ${city.countryName}  \n');
     }
     return list;
   }

@@ -13,6 +13,7 @@ import 'package:geo_monitor/library/bloc/organization_bloc.dart';
 import 'package:geo_monitor/library/bloc/photo_for_upload.dart';
 import 'package:geo_monitor/library/bloc/video_for_upload.dart';
 import 'package:geo_monitor/library/errors/error_handler.dart';
+import 'package:geo_monitor/realm_data/data/realm_sync_api.dart';
 
 import '../../device_location/device_location_bloc.dart';
 import '../../l10n/translation_handler.dart';
@@ -44,6 +45,7 @@ class GeoUploader {
   final ErrorHandler errorHandler;
   final CacheManager cacheManager;
   final DataApiDog dataApiDog;
+
 
   GeoUploader(this.errorHandler, this.cacheManager, this.dataApiDog);
 
@@ -226,7 +228,9 @@ class GeoUploader {
           messageFromGeo: messageFromGeo,
           distance: distance));
 
+
       if (photo != null) {
+        realmSyncApi.addPhotos([photo]);
         await cacheManager.removeUploadedPhoto(photo: photoForUploading);
       }
 

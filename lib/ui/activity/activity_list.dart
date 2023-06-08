@@ -1,26 +1,22 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/cache_manager.dart';
-import 'package:geo_monitor/library/data/location_request.dart';
-import 'package:geo_monitor/library/data/location_response.dart';
 import 'package:geo_monitor/ui/activity/activity_header.dart';
 import 'package:geo_monitor/ui/activity/activity_stream_card.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
 import '../../l10n/translation_handler.dart';
 import '../../library/api/prefs_og.dart';
-import '../../library/data/activity_model.dart';
 import '../../library/data/audio.dart';
 import '../../library/data/geofence_event.dart';
-import '../../library/data/org_message.dart';
+import '../../library/data/location_request.dart';
+import '../../library/data/location_response.dart';
 import '../../library/data/photo.dart';
-import '../../library/data/project.dart';
-import '../../library/data/project_polygon.dart';
 import '../../library/data/project_position.dart';
 import '../../library/data/settings_model.dart';
-import '../../library/data/user.dart';
 import '../../library/data/video.dart';
 import '../../library/functions.dart';
 import '../../library/ui/loading_card.dart';
@@ -136,31 +132,45 @@ class ActivityListState extends State<ActivityList>
 
   Future<void> _handleTappedActivity(mrm.ActivityModel act) async {
     if (act.photo != null) {
-      widget.onPhotoTapped(act.photo!);
+      var bb = Photo.fromJson(jsonDecode(act.photo!));
+      var mp = OldToRealm.getPhoto(bb);
+      widget.onPhotoTapped(mp);
     }
     if (act.video != null) {
-      widget.onVideoTapped(act.video!);
+      var bb = Video.fromJson(jsonDecode(act.video!));
+      var mp = OldToRealm.getVideo(bb);
+      widget.onVideoTapped(mp);
     }
 
     if (act.audio != null) {
-      widget.onAudioTapped(act.audio!);
+      var bb = Audio.fromJson(jsonDecode(act.audio!));
+      var mp = OldToRealm.getAudio(bb);
+      widget.onAudioTapped(mp);
     }
 
     if (act.user != null) {}
     if (act.projectPosition != null) {
-      widget.onProjectPositionTapped(act.projectPosition!);
+      var bb = ProjectPosition.fromJson(jsonDecode(act.projectPosition!));
+      var mp = OldToRealm.getProjectPosition(bb);
+      widget.onProjectPositionTapped(mp);
     }
     if (act.locationRequest != null) {
-      widget.onLocationRequest(act.locationRequest!);
+      var bb = LocationRequest.fromJson(jsonDecode(act.locationRequest!));
+      var mp = OldToRealm.getLocationRequest(bb);
+      widget.onLocationRequest(mp);
     }
     if (act.locationResponse != null) {
-      widget.onLocationResponse(act.locationResponse!);
+      var bb = LocationResponse.fromJson(jsonDecode(act.locationResponse!));
+      var mp = OldToRealm.getLocationResponse(bb);
+      widget.onLocationResponse(mp);
     }
     if (act.geofenceEvent != null) {
-      widget.onGeofenceEventTapped(act.geofenceEvent!);
+      var bb = GeofenceEvent.fromJson(jsonDecode(act.geofenceEvent!));
+      var mp = OldToRealm.getGeofenceEvent(bb);
+      widget.onGeofenceEventTapped(mp);
     }
     if (act.orgMessage != null) {
-      widget.onOrgMessage(act.orgMessage!);
+      // widget.onOrgMessage(act.orgMessage!);
     }
   }
 

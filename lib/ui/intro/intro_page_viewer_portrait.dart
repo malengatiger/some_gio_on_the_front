@@ -4,6 +4,7 @@ import 'package:dots_indicator/dots_indicator.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/data/settings_model.dart';
 import 'package:geo_monitor/library/ui/settings/settings_form.dart';
 import 'package:geo_monitor/ui/auth/auth_registration_main.dart';
@@ -30,6 +31,7 @@ import '../../library/generic_functions.dart';
 import '../../realm_data/data/realm_sync_api.dart';
 import '../../stitch/stitch_service.dart';
 import '../intro/intro_page_one.dart';
+import '../../../realm_data/data/schemas.dart' as mrm;
 
 class IntroPageViewerPortrait extends StatefulWidget {
   const IntroPageViewerPortrait({
@@ -73,7 +75,7 @@ class IntroPageViewerPortraitState extends State<IntroPageViewerPortrait>
   final PageController _pageController = PageController();
   bool authed = false;
   fb.FirebaseAuth firebaseAuth = fb.FirebaseAuth.instance;
-  ur.User? user;
+  mrm.User? user;
   String? signInFailed;
 
   final mm =
@@ -170,12 +172,13 @@ class IntroPageViewerPortraitState extends State<IntroPageViewerPortrait>
             )));
 
     pp('$mm _navigateToSignIn ....... back from PhoneLogin with maybe a user ..');
-    user = await prefsOGx.getUser();
+    var p = await prefsOGx.getUser();
+    user = OldToRealm.getUser(p!);
     pp('\n\n$mm 😡😡Returned from sign in, checking if login succeeded 😡');
 
     if (user != null) {
       pp('$mm _navigateToSignIn: 👌👌👌 Returned from sign in; '
-          'will navigate to Dashboard :  👌👌👌 ${user!.toJson()}');
+          'will navigate to Dashboard :  👌👌👌 ${user!.name}');
       setState(() {});
       _navigateToDashboard();
     } else {
@@ -208,14 +211,14 @@ class IntroPageViewerPortraitState extends State<IntroPageViewerPortrait>
               firebaseAuth: firebaseAuth,
             )));
 
-    if (result is ur.User) {
-      pp(' 👌👌👌 Returned from sign in; will navigate to Dashboard :  👌👌👌 ${result.toJson()}');
+    if (result is mrm.User) {
+      pp('$mm 👌👌👌 Returned from sign in; will navigate to Dashboard :  👌👌👌 ${result.name}');
       setState(() {
         user = result;
       });
       _navigateToDashboard();
     } else {
-      pp(' 😡  😡  Returned from sign in is NOT a user :  😡 $result');
+      pp('$mm 😡  😡  Returned from sign in is NOT a user :  😡 $result');
     }
   }
 

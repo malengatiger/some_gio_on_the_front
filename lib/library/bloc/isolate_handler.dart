@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 import 'package:geo_monitor/library/api/prefs_og.dart';
 import 'package:geo_monitor/library/bloc/data_refresher.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/bloc/project_bloc.dart';
 import 'package:geo_monitor/library/bloc/user_bloc.dart';
 import 'package:geo_monitor/library/data/activity_model.dart' as old;
@@ -200,14 +201,18 @@ class IsolateDataHandler {
         '${end.difference(start).inSeconds} seconds elapsed');
   }
 
-
-  Future migrateOneOrganization({required String organizationId, required String name}) async {
+  Future migrateOneOrganization(
+      {required String organizationId, required String name}) async {
     pp('\n\n\n$x2 migrateOneOrganization: '
         ' ..................... $nn adding to Realm DB ... $name');
     //todo REMOVE the data migration code when done!!!!!
 
     final start = DateTime.now();
-    await realmSyncApi.setSubscriptions(organizationId: organizationId, countryId: null, startDate: null);
+    await realmSyncApi.setSubscriptions(
+        organizationId: organizationId,
+        countryId: null,
+        startDate: null,
+        projectId: null,);
 
     await migrateUsers(organizationId: organizationId, name: name);
     await migrateProjects(organizationId: organizationId, name: name);
@@ -226,51 +231,39 @@ class IsolateDataHandler {
 
     pp('\n\n$x2$x2$x2$x2$x2$x2 CHECKING DATA MIGRATED .... $x2$x2');
 
-    var users = realmSyncApi.getOrganizationUsers(organizationId: organizationId);
+    var users =
+        realmSyncApi.getOrganizationUsers(organizationId: organizationId);
     pp('$x2 realmSyncApi.getOrganizationUsers: $name has ${users.length} users');
-    var setts = realmSyncApi.getOrganizationSettings(organizationId: organizationId);
+    var setts =
+        realmSyncApi.getOrganizationSettings(organizationId: organizationId);
     pp('$x2 realmSyncApi.getOrganizationSettings: $name has ${setts.length} settings');
-
 
     var projects = realmSyncApi.getProjects(organizationId);
     pp('$x2 realmSyncApi. $name has ${projects.length} projects');
 
     for (var p in projects) {
-      var videos = realmSyncApi.getProjectVideos(projectId: p.projectId!, numberOfDays: 400);
+      var videos = realmSyncApi.getProjectVideos(
+          projectId: p.projectId!, numberOfDays: 400);
       pp('$x2 realmSyncApi.getProjectVideos: $name has ${videos.length} videos');
-      var photos = realmSyncApi.getProjectPhotos(projectId: p.projectId!, numberOfDays: 400);
+      var photos = realmSyncApi.getProjectPhotos(
+          projectId: p.projectId!, numberOfDays: 400);
       pp('$x2 realmSyncApi.getProjectPhotos: $name has ${photos.length} photos');
-      var audios = realmSyncApi.getProjectAudios(projectId: p.projectId!, numberOfDays: 400);
+      var audios = realmSyncApi.getProjectAudios(
+          projectId: p.projectId!, numberOfDays: 400);
       pp('$x2 realmSyncApi.getProjectAudios: $name has ${audios.length} audios');
-      var acts = realmSyncApi.getProjectActivities(projectId: p.projectId!, numberOfHours: 365 * 400);
+      var acts = realmSyncApi.getProjectActivities(
+          projectId: p.projectId!, numberOfHours: 365 * 400);
       pp('$x2 realmSyncApi.getProjectActivities: $name has ${acts.length} activities');
-      var geos = realmSyncApi.getProjectGeofenceEvents(projectId: p.projectId!, numberOfDays: 400);
+      var geos = realmSyncApi.getProjectGeofenceEvents(
+          projectId: p.projectId!, numberOfDays: 400);
       pp('$x2 realmSyncApi.getProjectGeofenceEvents: $name has ${geos.length} geofence events');
 
       var poss = realmSyncApi.getProjectPositions(projectId: p.projectId!);
       pp('$x2 realmSyncApi.getProjectPositions: $name has ${poss.length} ProjectPositions');
-
     }
     return '$name - data migration completed';
   }
 
-  Future migrateCities() async {
-
-    var countries = await dataApiDog.getCountries();
-
-    pp('\n\n$x2 migrating ${countries.length} countries\'s cities .....');
-    for (var country in countries) {
-      await realmSyncApi.setSubscriptionsForCities(countryId: country.countryId);
-      var cities = await dataApiDog.getCitiesByCountry(country.countryId!);
-      var countryCities = <City>[];
-      for (var c in cities) {
-        final k = _getCity(c);
-        countryCities.add(k);
-      }
-      realmSyncApi.addCities(countryCities);
-      pp('$x2 added ${countryCities.length} cities for country: ${country.name} \n');
-    }
-  }
 
   Future migrateSettings(
       {required String organizationId, required String name}) async {
@@ -304,7 +297,11 @@ class IsolateDataHandler {
   Future migrateOrganizations() async {
     pp('$x2 ..................... $nn process organizations ... ');
     var orgs = await dataApiDog.getOrganizations();
-    await realmSyncApi.setSubscriptions(organizationId: null, countryId: null, startDate: null);
+    await realmSyncApi.setSubscriptions(
+        organizationId: null,
+        countryId: null,
+        startDate: null,
+        projectId: null);
     var mOrgs = <Organization>[];
     for (var element in orgs) {
       var f = _getOrganization(element);
@@ -318,8 +315,7 @@ class IsolateDataHandler {
       {required String organizationId, required String name}) async {
     pp('$x2 ..................... $nn process activities ... $name');
 
-    var actions =
-        await dataApiDog.getAllOrganizationActivity(organizationId);
+    var actions = await dataApiDog.getAllOrganizationActivity(organizationId);
 
     try {
       var mList = <ActivityModel>[];
@@ -358,8 +354,7 @@ class IsolateDataHandler {
       {required String organizationId, required String name}) async {
     pp('$x2 ..................... $nn process videos ... $name');
 
-    var videos = await dataApiDog.getOrganizationVideos(
-        organizationId);
+    var videos = await dataApiDog.getOrganizationVideos(organizationId);
 
     try {
       var mList = <Video>[];
@@ -396,8 +391,7 @@ class IsolateDataHandler {
   Future migratePolygons(
       {required String organizationId, required String name}) async {
     pp('$x2 ..................... $nn process project polygons ...');
-    var positions =
-        await dataApiDog.getOrganizationPolygons(organizationId);
+    var positions = await dataApiDog.getOrganizationPolygons(organizationId);
 
     try {
       var mList = <ProjectPolygon>[];
@@ -416,8 +410,7 @@ class IsolateDataHandler {
   Future migratePositions(
       {required String organizationId, required String name}) async {
     pp('$x2 ..................... $nn process project positions ... $name');
-    var positions =
-        await dataApiDog.getOrganizationPositions(organizationId);
+    var positions = await dataApiDog.getOrganizationPositions(organizationId);
 
     try {
       var mList = <ProjectPosition>[];
@@ -474,7 +467,11 @@ class IsolateDataHandler {
     pp('$x2 ..................... $nn process countries ...');
     var countries = await dataApiDog.getCountries();
     try {
-      await realmSyncApi.setSubscriptions(organizationId: null, countryId: null, startDate: null);
+      await realmSyncApi.setSubscriptions(
+          organizationId: null,
+          countryId: null,
+          startDate: null,
+          projectId: null);
 
       realmSyncApi.deleteCountries();
       var mList = <Country>[];
@@ -513,7 +510,9 @@ class IsolateDataHandler {
           latitude: x.position!.coordinates.last,
           longitude: x.position!.coordinates.first,
         ),
-        userId:x.userId, userName: x.userName, userUrl: x.userUrl);
+        userId: x.userId,
+        userName: x.userName,
+        userUrl: x.userUrl);
     return g;
   }
 
@@ -803,13 +802,13 @@ class IsolateDataHandler {
       translatedUserType: x.translatedUserType,
       intDate: x.intDate,
       userThumbnailUrl: x.userThumbnailUrl,
-      geofenceEvent: event,
-      project: project,
-      photo: photo,
-      video: video,
-      audio: audio,
-      projectPolygon: projectPolygon,
-      projectPosition: projectPosition,
+      geofenceEvent: event == null? null: OldToRealm.getGeofenceString(event),
+      project: project == null? null: OldToRealm.getProjectString(project),
+      photo: photo == null? null: OldToRealm.getPhotoString(photo),
+      video: video == null? null: OldToRealm.getVideoString(video),
+      audio: audio == null? null: OldToRealm.getAudioString(audio),
+      projectPolygon: projectPolygon == null? null: OldToRealm.getProjectPolygonString(projectPolygon),
+      projectPosition: projectPosition  == null? null: OldToRealm.getProjectPositionString(projectPosition),
     );
 
     return proj;

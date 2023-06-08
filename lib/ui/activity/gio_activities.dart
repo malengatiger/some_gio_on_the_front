@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:geo_monitor/library/api/data_api_og.dart';
@@ -16,6 +17,7 @@ import 'package:responsive_builder/responsive_builder.dart';
 import '../../l10n/translation_handler.dart';
 import '../../library/bloc/cloud_storage_bloc.dart';
 import '../../library/bloc/geo_uploader.dart';
+import '../../library/bloc/old_to_realm.dart';
 import '../../library/cache_manager.dart';
 import '../../library/data/audio.dart';
 import '../../library/data/geofence_event.dart';
@@ -114,31 +116,47 @@ class GioActivitiesState extends State<GioActivities>
     super.dispose();
   }
 
-  void _onTapped(mrm.ActivityModel activity) async {
+  void _onTapped(mrm.ActivityModel act) async {
     pp('${E.redDot} GioActivitiesState: onTapped - ActivityModel');
-    if (activity.photo != null) {
-      widget.onPhotoTapped(activity.photo!);
+    if (act.photo != null) {
+      var bb = Photo.fromJson(jsonDecode(act.photo!));
+      var mp = OldToRealm.getPhoto(bb);
+      widget.onPhotoTapped(mp);
     }
-    if (activity.audio != null) {
-      widget.onAudioTapped(activity.audio!);
+    if (act.audio != null) {
+      var bb = Audio.fromJson(jsonDecode(act.audio!));
+      var mp = OldToRealm.getAudio(bb);
+      widget.onAudioTapped(mp);
     }
-    if (activity.video != null) {
-      widget.onVideoTapped(activity.video!);
+    if (act.video != null) {
+      var bb = Video.fromJson(jsonDecode(act.video!));
+      var mp = OldToRealm.getVideo(bb);
+      widget.onVideoTapped(mp);
     }
-    if (activity.user != null) {
-      widget.onUserTapped(activity.user!);
+    if (act.user != null) {
+      var bb = User.fromJson(jsonDecode(act.user!));
+      var mp = OldToRealm.getUser(bb);
+      widget.onUserTapped(mp);
     }
-    if (activity.geofenceEvent != null) {
-      widget.onGeofenceEventTapped(activity.geofenceEvent!);
+    if (act.geofenceEvent != null) {
+      var bb = GeofenceEvent.fromJson(jsonDecode(act.geofenceEvent!));
+      var mp = OldToRealm.getGeofenceEvent(bb);
+      widget.onGeofenceEventTapped(mp);
     }
-    if (activity.project != null) {
-      widget.onProjectTapped(activity.project!);
+    if (act.project != null) {
+      var bb = Project.fromJson(jsonDecode(act.project!));
+      var mp = OldToRealm.getProject(bb);
+      widget.onProjectTapped(mp);
     }
-    if (activity.projectPosition != null) {
-      widget.onProjectPositionTapped(activity.projectPosition!);
+    if (act.projectPosition != null) {
+      var bb = ProjectPosition.fromJson(jsonDecode(act.projectPosition!));
+      var mp = OldToRealm.getProjectPosition(bb);
+      widget.onProjectPositionTapped(mp);
     }
-    if (activity.projectPolygon != null) {
-      widget.onPolygonTapped(activity.projectPolygon!);
+    if (act.projectPolygon != null) {
+      var bb = ProjectPolygon.fromJson(jsonDecode(act.projectPolygon!));
+      var mp = OldToRealm.getProjectPolygon(bb);
+      widget.onPolygonTapped(mp);
     }
   }
 

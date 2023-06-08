@@ -35,6 +35,7 @@ Future<mrm.Photo?> uploadPhotoFile(
     required String messageFromGeo,
     required double distance}) async {
   pp('$xx 🍐🍐🍐🍐🍐🍐 _uploadPhotoFile: objectName: $objectName url: $url');
+  pp('$xx 🍐🍐🍐🍐🍐🍐 _uploadPhotoFile: photoForUpload: $mJson');
 
   var map = json.decode(mJson);
   var photoForUpload = PhotoForUpload.fromJson(map);
@@ -60,8 +61,10 @@ Future<mrm.Photo?> uploadPhotoFile(
       userName: photoForUpload.userName,
       translatedMessage: photoArrived,
       translatedTitle: messageFromGeo,
-      projectPosition: mrm.Position(type: 'Point', coordinates: photoForUpload.position!.coordinates,
-          latitude: photoForUpload.position!.coordinates[1], longitude: photoForUpload.position!.coordinates[0]),
+      projectPosition: mrm.Position(type: 'Point',
+          coordinates: photoForUpload.position!.coordinates,
+          latitude: photoForUpload.position!.coordinates[1],
+          longitude: photoForUpload.position!.coordinates[0]),
       distanceFromProjectPosition: distance,
       projectId: photoForUpload.projectId,
       thumbnailUrl: thumbUrl,
@@ -72,7 +75,8 @@ Future<mrm.Photo?> uploadPhotoFile(
       photoId: photoForUpload.photoId,
       landscape: width > height ? 0 : 1);
 
-  realmSyncApi.addPhotos([photo]);
+  var res = realmSyncApi.addPhotos([photo]);
+  pp('$xx realmSyncApi.addPhotos: photo added to db: orgId:  ${photo.organizationId} - ${photo.projectName} - result: $res');
   return photo;
 }
 
@@ -123,7 +127,9 @@ Future<mrm.Audio?> uploadAudioFile(
       durationInSeconds: audioForUpload.durationInSeconds,
       audioId: audioForUpload.audioId);
 
-  realmSyncApi.addAudios([audio]);
+  var res = realmSyncApi.addAudios([audio]);
+  pp('$xx realmSyncApi.addAudios: audio added to db: ${audio.projectName} - result: $res');
+
   return audio;
 }
 
@@ -178,7 +184,9 @@ Future<mrm.Video?> uploadVideoFile(
       projectPolygonId: videoForUpload.projectPolygonId,
       videoId: videoForUpload.videoId);
 
-  realmSyncApi.addVideos([video]);
+  var res = realmSyncApi.addVideos([video]);
+  pp('$xx realmSyncApi.addVideos: video added to db: ${video.projectName} - result: $res');
+
   return video;
 }
 

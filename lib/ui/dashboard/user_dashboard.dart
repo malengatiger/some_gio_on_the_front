@@ -80,7 +80,7 @@ class UserDashboardState extends State<UserDashboard>
   late StreamSubscription<User> userSubscriptionFCM;
   late StreamSubscription<SettingsModel> settingsSubscriptionFCM;
   late StreamSubscription<String> killSubscriptionFCM;
-  late StreamSubscription<GeofenceEvent> geofenceSubscription;
+  late StreamSubscription<mrm.GeofenceEvent> geofenceSubscription;
   late StreamSubscription<ActivityModel> activitySubscription;
 
   var busy = false;

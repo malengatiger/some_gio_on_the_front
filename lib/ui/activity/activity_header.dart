@@ -1,6 +1,5 @@
 import 'package:badges/badges.dart' as bd;
 import 'package:flutter/material.dart';
-import 'package:geo_monitor/library/ui/maps_field_monitor/field_monitor_map_tablet.dart';
 import 'package:intl/intl.dart';
 
 import '../../library/functions.dart';

@@ -78,6 +78,14 @@ class Project extends HiveObject {
     created = data['created'];
     organizationName = data['organizationName'];
     // //pp('Project.fromJson 😑 😑 😑 log 1 ...');
+
+    if (data['monitorMaxDistanceInMetres'] != null) {
+      if (data['monitorMaxDistanceInMetres'] is int) {
+        monitorMaxDistanceInMetres = double.parse(data['monitorMaxDistanceInMetres']);
+      } else if (data['monitorMaxDistanceInMetres'] is double) {
+        monitorMaxDistanceInMetres = data['monitorMaxDistanceInMetres'];
+      }
+    }
     monitorMaxDistanceInMetres = data['monitorMaxDistanceInMetres'];
     translatedMessage = data['translatedMessage'];
     translatedTitle = data['translatedTitle'];

@@ -2,21 +2,18 @@ import 'dart:async';
 
 import 'package:geo_monitor/library/api/data_api_og.dart';
 import 'package:geo_monitor/library/bloc/geo_exception.dart';
-import 'package:geo_monitor/library/data/position.dart';
+import 'package:geo_monitor/library/bloc/old_to_realm.dart';
 import 'package:geo_monitor/library/data/settings_model.dart';
 import 'package:geo_monitor/library/errors/error_handler.dart';
+import 'package:geo_monitor/realm_data/data/schemas.dart' as mrm;
 import 'package:geofence_service/geofence_service.dart';
 import 'package:geofence_service/models/geofence.dart' as geo;
-import 'package:uuid/uuid.dart';
+import 'package:realm/realm.dart';
 
 import '../../device_location/device_location_bloc.dart';
 import '../../l10n/translation_handler.dart';
+import '../../realm_data/data/realm_sync_api.dart';
 import '../api/prefs_og.dart';
-import '../bloc/organization_bloc.dart';
-import '../cache_manager.dart';
-import '../data/geofence_event.dart';
-import '../data/project_position.dart';
-import '../data/user.dart';
 import '../functions.dart';
 
 final geofenceService = GeofenceService.instance.setup(
@@ -36,18 +33,20 @@ class TheGreatGeofencer {
 
   final DataApiDog dataApiDog;
   final PrefsOGx prefsOGx;
+  final RealmSyncApi realmSyncApi;
 
-  final StreamController<GeofenceEvent> _streamController =
+  final StreamController<mrm.GeofenceEvent> _streamController =
       StreamController.broadcast();
 
-  TheGreatGeofencer(this.dataApiDog, this.prefsOGx);
-  Stream<GeofenceEvent> get geofenceEventStream => _streamController.stream;
+  TheGreatGeofencer(this.prefsOGx, this.realmSyncApi, this.dataApiDog);
+
+  Stream<mrm.GeofenceEvent> get geofenceEventStream => _streamController.stream;
 
   final _geofenceList = <geo.Geofence>[];
-  User? _user;
+  mrm.User? _user;
   late SettingsModel settingsModel;
 
-  Future<List<ProjectPosition>> _findProjectPositionsByLocation(
+  Future<List<mrm.ProjectPosition>> _findProjectPositionsByLocation(
       {required String organizationId,
       required double latitude,
       required double longitude,
@@ -58,47 +57,40 @@ class TheGreatGeofencer {
         longitude: longitude,
         radiusInKM: radiusInKM);
     pp('$xx _getProjectPositionsByLocation: found ${mList.length}\n');
-    return mList;
+    final fList = <mrm.ProjectPosition>[];
+    for (var value in mList) {
+      fList.add(OldToRealm.getProjectPosition(value));
+    }
+    return fList;
   }
 
   Future buildGeofences({double? radiusInKM}) async {
     pp('$xx buildGeofences .... build geofences for the organization started ... 🌀 ');
-    _user ??= await prefsOGx.getUser();
+    var p = await prefsOGx.getUser();
+    _user = OldToRealm.getUser(p!);
     settingsModel = await prefsOGx.getSettings();
     if (_user == null) {
       return;
     }
 
-    // pp('$xx buildGeofences .... build geofences for the organization 🌀 ${_user!.organizationName}  🌀');
 
-    //await locationBloc.requestPermission();
-    var startDate = DateTime.now()
-        .subtract(const Duration(days: (365 * 2)))
-        .toUtc()
-        .toIso8601String();
-    var endDate = DateTime.now().toUtc().toIso8601String();
-
-    var mList = await organizationBloc.getProjectPositions(
+    var finalList = <mrm.ProjectPosition>[];
+    var loc = await locationBloc.getLocation();
+    finalList = await _findProjectPositionsByLocation(
         organizationId: _user!.organizationId!,
-        forceRefresh: false,
-        startDate: startDate,
-        endDate: endDate);
-    try {
-      if (mList.isEmpty || mList.length > 98) {
-        var loc = await locationBloc.getLocation();
-        mList = await _findProjectPositionsByLocation(
-            organizationId: _user!.organizationId!,
-            latitude: loc!.latitude!,
-            longitude: loc.longitude!,
-            radiusInKM: radiusInKM ?? 50);
-        pp('$xx buildGeofences .... project positions found by location: ${mList.length} ');
-      }
-    } catch (e) {
-      pp(e);
+        latitude: loc.latitude,
+        longitude: loc.longitude!,
+        radiusInKM: radiusInKM ?? 50);
+
+    pp('$xx buildGeofences .... project positions found by location: ${finalList.length} ');
+    if (finalList.isEmpty) {
+      finalList = realmSyncApi.getOrganizationPositions(
+        organizationId: _user!.organizationId!,
+      );
     }
 
     int cnt = 0;
-    for (var pos in mList) {
+    for (var pos in finalList) {
       await addGeofence(
           projectPosition: pos,
           radius: settingsModel.distanceFromProject!.toDouble());
@@ -148,6 +140,7 @@ class TheGreatGeofencer {
   }
 
   final reds = '🔴 🔴 🔴 🔴 🔴 🔴 TheGreatGeofencer: ';
+
   void onError() {}
 
   Future _processGeofenceEvent(
@@ -159,27 +152,33 @@ class TheGreatGeofencer {
         '🔵geofenceStatus: ${geofenceStatus.toString()}');
 
     var loc = await locationBloc.getLocation();
-    //use org settings rather than possibly changed settings from prefs
-    final sett = await cacheManager.getSettings();
+    //todo use org settings rather than possibly changed settings from prefs
+    final sett = await prefsOGx.getSettings();
+    var orgSetting = realmSyncApi.getOrganizationSettings(
+        organizationId: sett.organizationId!);
+    orgSetting.sort((a, b) => b.created!.compareTo(a.created!));
+    if (orgSetting.isNotEmpty) {
+      final settings = orgSetting.first;
 
-    String message = 'A member has arrived at ${geofence.data['projectName']}';
-    String title = 'Message from Geo';
-    final arr = await translator.translate('arrivedAt', sett.locale!);
-    message = arr.replaceAll('\$project', geofence.data['projectName']);
-    final tit = await translator.translate('messageFromGeo', sett.locale!);
-    title = tit.replaceAll('\$geo', 'Geo');
+      String message =
+          'A member has arrived at ${geofence.data['projectName']}';
+      String title = 'Message from Gio';
+      final arr = await translator.translate('arrivedAt', settings.locale!);
+      message = arr.replaceAll('\$project', geofence.data['projectName']);
+      final tit =
+          await translator.translate('messageFromGeo', settings.locale!);
+      title = tit.replaceAll('\$geo', 'Gio');
 
-    if (loc != null) {
-      var event = GeofenceEvent(
+      var event = mrm.GeofenceEvent(ObjectId(),
           status: geofenceStatus.toString(),
-          organizationId: geofence.data['organizationId'],
+          organizationId: settings.organizationId,
           translatedMessage: message,
           userId: _user!.userId!,
           userUrl: _user!.thumbnailUrl,
           userName: _user!.name,
-          position: Position(
+          position: mrm.Position(
               coordinates: [loc.longitude, loc.latitude], type: 'Point'),
-          geofenceEventId: const Uuid().v4(),
+          geofenceEventId: Uuid.v4().toString(),
           projectPositionId: geofence.id,
           projectId: geofence.data['projectId'],
           projectName: geofence.data['projectName'],
@@ -201,23 +200,33 @@ class TheGreatGeofencer {
           addObject(event);
           break;
       }
-    } else {
-      pp('$xx $reds UNABLE TO PROCESS GEOFENCE - location not available');
-      errorHandler.handleError(
-          exception: GeoException(
-              message: 'No location available, add geofenceEvent failed',
-              translationKey: 'serverProblem',
-              errorType: GeoException.formatException,
-              url: '/geo/v1/addGeofenceEvent'));
+      //
+      final act = mrm.ActivityModel(ObjectId(),
+      geofenceEvent: OldToRealm.getGeofenceString(event),
+        projectId: event.projectId,
+        organizationId: event.organizationId,
+        organizationName: _user!.organizationName,
+        userName: _user!.name,
+        projectName: event.projectName,
+        userId: _user!.userId,
+        userType: _user!.userType,
+        activityModelId: Uuid.v4().toString(),
+        intDate: DateTime.now().toUtc().millisecondsSinceEpoch,
+        date: DateTime.now().toUtc().toIso8601String(),
+        userThumbnailUrl: _user!.thumbnailUrl,
+      );
+      realmSyncApi.addActivities([act]);
+      pp('$xx realmSyncApi: activity added : ${act.date} - ${act.projectName}');
     }
   }
 
-  Future addObject(GeofenceEvent event) async {
+  Future addObject(mrm.GeofenceEvent event) async {
     pp('$xx about to send geofence event to backend ... ');
     try {
-      var gfe = await dataApiDog.addGeofenceEvent(event);
-      pp('$xx geofence event added to database for ${event.projectName} - 🍎 ${event.date} 🍎');
-      _streamController.sink.add(gfe);
+      realmSyncApi.addGeofenceEvents([event]);
+      pp('$xx realmSyncApi: geofence event added to database for '
+          '${event.projectName} - 🍎 ${event.date} 🍎');
+      _streamController.sink.add(event);
     } catch (e) {
       pp('$xx failed to add geofence event');
       if (e is GeoException) {
@@ -225,22 +234,31 @@ class TheGreatGeofencer {
       } else {
         errorHandler.handleError(
             exception: GeoException(
-                message: 'Failed to add geofenceEvent',
+                message: 'Failed to add geofenceEvent: $e',
                 translationKey: 'serverProblem',
                 errorType: GeoException.httpException,
-                url: '/geo/v1/addGeofenceEvent'));
+                url: getUrl()));
       }
     }
   }
 
   Future addGeofence(
-      {required ProjectPosition projectPosition,
+      {required mrm.ProjectPosition projectPosition,
       required double radius}) async {
-    projectPosition.nearestCities = [];
+
     if (projectPosition.position != null) {
+      var data = {
+        'projectId': projectPosition.projectId,
+        'projectName': projectPosition.projectName,
+        'organizationId': projectPosition.organizationId,
+        'userId': _user!.userId,
+        'userName': _user!.name,
+        'userUrl': _user!.thumbnailUrl,
+        'dateGeofenceAdded': DateTime.now().toUtc().toIso8601String(),
+      };
       var fence = Geofence(
         id: '${projectPosition.projectId!}_${DateTime.now().microsecondsSinceEpoch}',
-        data: projectPosition.toJson(),
+        data: data,
         latitude: projectPosition.position!.coordinates[1],
         longitude: projectPosition.position!.coordinates[0],
         radius: [
@@ -249,12 +267,10 @@ class TheGreatGeofencer {
       );
 
       _geofenceList.add(fence);
-      // pp('$xx added Geofence : 👽👽👽 ${projectPosition.projectName} 👽👽 ${projectPosition.position!.coordinates}'
-      //     '  🍎 ');
+
     } else {
       pp('🔴🔴🔴🔴🔴🔴 project position is null, WTF??? ${projectPosition.projectName}');
     }
-
   }
 
   var defaultRadiusInKM = 100.0;
